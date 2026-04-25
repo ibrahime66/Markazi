@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "218846846846",
+    "project_id": "markazi-65c39",
+    "storage_bucket": "markazi-65c39.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:218846846846:android:c8d146546b8c4a86811d2f",
+        "android_client_info": {
+          "package_name": "com.example.markazi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "218846846846-d77fii1kuid4r0tt102cm3g00n41bt3d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNoYewz_7bkUA3yICFUbc5Rgx-Uiy4aR0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "218846846846-d77fii1kuid4r0tt102cm3g00n41bt3d.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "218846846846-i5ogth6l32dcnv1n04pe0ma95835r3d0.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.markazi"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fond du splash screen avec gradient vert Markazi -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="45"
+        android:type="linear"
+        android:startColor="#0D5C3C"
+        android:centerColor="#1A7F55"
+        android:endColor="#2EAA73" />
+</shape>

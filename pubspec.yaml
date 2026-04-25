@@ -1,0 +1,58 @@
+name: markazi
+description: Application vitrine Markazi - Gestion de Markaz islamiques
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  google_fonts: ^8.0.2
+  smooth_page_indicator: ^2.0.1
+  flutter_svg: ^2.0.7
+  lottie: ^3.3.3
+  provider: ^6.0.0
+  equatable: ^2.0.5
+  uuid: ^4.0.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.1
+  
+  # Firebase
+  firebase_core: ^4.6.0
+  firebase_auth: ^6.3.0
+  cloud_firestore: ^6.2.0
+  
+  # Packages pour le logo et splash screen
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.0
+  hive_generator: ^2.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/logo/
+
+# Configuration pour l'icône de l'application
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo/app_icon.png"
+  min_sdk_android: 21
+
+# Configuration pour le splash screen
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/logo/splash_logo.png
+  android_12:
+    image: assets/logo/splash_logo.png
+    color: "#ffffff"
