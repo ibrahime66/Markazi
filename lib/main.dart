@@ -38,15 +38,18 @@ void main() async {
   Hive.registerAdapter(AttendanceAdapter());
   Hive.registerAdapter(PaymentStatusAdapter());
   Hive.registerAdapter(AttendanceStatusAdapter());
+  Hive.registerAdapter(ClassModelAdapter());
 
   // Initialiser les repositories
   final studentRepository = StudentRepository();
   final paymentRepository = PaymentRepository();
   final attendanceRepository = AttendanceRepository();
+  final classRepository = ClassRepository();
 
   await studentRepository.init();
   await paymentRepository.init();
   await attendanceRepository.init();
+  await classRepository.init();
 
   // Initialiser AuthService
   final authService = AuthService();
@@ -60,6 +63,7 @@ void main() async {
     studentRepository,
     authService,
   );
+  final classService = ClassService(classRepository, authService);
 
   // Initialiser la session utilisateur (Firebase)
   // Phase 5: Authentification réelle
@@ -73,6 +77,7 @@ void main() async {
         Provider<StudentService>(create: (_) => studentService),
         Provider<PaymentService>(create: (_) => paymentService),
         Provider<AttendanceService>(create: (_) => attendanceService),
+        Provider<ClassService>(create: (_) => classService),
 
         // UI Providers
         ChangeNotifierProvider(
@@ -83,6 +88,9 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => AttendanceProvider(attendanceService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ClassProvider(classService),
         ),
       ],
       child: const MarkaziApp(),

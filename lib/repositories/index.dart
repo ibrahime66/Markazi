@@ -2,3 +2,4 @@
 export 'student_repository.dart';
 export 'payment_repository.dart';
 export 'attendance_repository.dart';
+export 'class_repository.dart';

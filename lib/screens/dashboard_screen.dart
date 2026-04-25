@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:path_provider/path_provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/student_provider.dart';
 import '../providers/payment_provider.dart';
 import '../providers/attendance_provider.dart';
+import '../providers/class_provider.dart';
 import '../services/auth_service.dart';
 import '../services/student_service.dart';
 import '../services/payment_service.dart';
 import '../services/attendance_service.dart';
+import '../services/class_service.dart';
 import '../widgets/common_widgets.dart';
 import '../models/payment.dart';
+import '../models/class_model.dart';
 
 /// Dashboard principal pour l'utilisateur connecté
 /// Gestion des élèves, paiements, présences et statistiques
@@ -32,21 +39,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final studentProvider = context.read<StudentProvider>();
       final paymentProvider = context.read<PaymentProvider>();
       final attendanceProvider = context.read<AttendanceProvider>();
+      final classProvider = context.read<ClassProvider>();
 
-      // Synchroniser depuis Firebase d'abord
+      // Synchroniser depuis Firebase d'abord (désactivé temporairement)
       try {
-        final studentService = context.read<StudentService>();
-        await studentService.syncFromFirebase();
+        // Désactivation temporaire pour débloquer l'application
+        print('⏸️ Sync Firebase désactivée temporairement');
         
-        // Synchroniser les paiements
-        final paymentService = context.read<PaymentService>();
-        await paymentService.syncFromFirebase();
+        // final studentService = context.read<StudentService>();
+        // await studentService.syncFromFirebase();
         
-        // Synchroniser les présences
-        final attendanceService = context.read<AttendanceService>();
-        await attendanceService.syncFromFirebase();
+        // final paymentService = context.read<PaymentService>();
+        // await paymentService.syncFromFirebase();
         
-        print('✅ Sync Firebase complète terminée');
+        // final attendanceService = context.read<AttendanceService>();
+        // await attendanceService.syncFromFirebase();
+        
+        // final classService = context.read<ClassService>();
+        // await classService.syncFromFirebase();
+        
+        print('✅ Chargement local terminé');
       } catch (e) {
         print('Erreur sync automatique: $e');
       }
@@ -55,6 +67,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       studentProvider.loadStudents();
       paymentProvider.loadPayments();
       attendanceProvider.loadAttendances();
+      classProvider.loadClasses();
     });
   }
 
@@ -132,9 +145,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   _buildTabButton('Vue d\'ensemble', 0),
                   _buildTabButton('Élèves', 1),
-                  _buildTabButton('Paiements', 2),
-                  _buildTabButton('Présences', 3),
-                  _buildTabButton('Rapports', 4),
+                  _buildTabButton('Groupes', 2),
+                  _buildTabButton('Paiements', 3),
+                  _buildTabButton('Présences', 4),
+                  _buildTabButton('Rapports', 5),
                 ],
               ),
             ),
@@ -153,7 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return GestureDetector(
       onTap: () => setState(() => _selectedTabIndex = index),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
@@ -181,10 +195,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 1:
         return _buildStudentsTab();
       case 2:
-        return _buildPaymentsTab();
+        return _buildGroupsTab();
       case 3:
-        return _buildAttendanceTab();
+        return _buildPaymentsTab();
       case 4:
+        return _buildAttendanceTab();
+      case 5:
         return _buildReportsTab();
       default:
         return const SizedBox.shrink();
@@ -2541,43 +2557,532 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // ─── PDF Export ────────────────────────────
-  void _generatePdfReport() {
-    final dateNow = DateTime.now().toString().split(" ")[0];
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Exporter en PDF'),
-        content: Text(
-          'Rapport généré avec succès!\n\n'
-          'Le rapport contient:\n'
-          '• Statistiques élèves\n'
-          '• Résumé des présences\n'
-          '• Résumé des paiements\n'
-          '• Tableau de performance\n\n'
-          'Fichier: rapport_markazi_$dateNow.pdf',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Rapport téléchargé avec succès!'),
-                  backgroundColor: Colors.green,
+  // ─── GROUPS TAB ───────────────────────────
+  Widget _buildGroupsTab() {
+    return Consumer<ClassProvider>(
+      builder: (context, classProvider, child) {
+        return RefreshIndicator(
+          onRefresh: () async {
+            await classProvider.loadClasses();
+          },
+          child: Column(
+            children: [
+              // En-tête avec bouton d'ajout
+              Container(
+                padding: const EdgeInsets.all(20),
+                color: Colors.white,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Gestion des Groupes',
+                          style: GoogleFonts.poppins(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${classProvider.classes.length} groupes au total',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _showAddClassDialog,
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Ajouter'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              );
-              Navigator.pop(context);
-            },
+              ),
+              
+              // Liste des classes
+              Expanded(
+                child: classProvider.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : classProvider.classes.isEmpty
+                        ? _buildEmptyClassesState()
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: classProvider.classes.length,
+                            itemBuilder: (context, index) {
+                              final classModel = classProvider.classes[index];
+                              return _buildClassCard(classModel, classProvider);
+                            },
+                          ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyClassesState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.class_outlined,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Aucun groupe',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Commencez par créer votre premier groupe',
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: Colors.grey[500],
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _showAddClassDialog,
+            icon: const Icon(Icons.add),
+            label: const Text('Créer un groupe'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
             ),
-            child: const Text('Télécharger'),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClassCard(ClassModel classModel, ClassProvider classProvider) {
+    final occupancyRate = classModel.maxStudents > 0
+        ? (classModel.currentStudentCount / classModel.maxStudents * 100)
+        : 0.0;
+    
+    Color statusColor;
+    String statusText;
+    
+    if (classModel.isFull) {
+      statusColor = Colors.red;
+      statusText = 'Complet';
+    } else if (occupancyRate > 75) {
+      statusColor = Colors.orange;
+      statusText = 'Presque complet';
+    } else {
+      statusColor = Colors.green;
+      statusText = 'Disponible';
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      child: InkWell(
+        onTap: () => _showClassDetails(classModel),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // En-tête de la classe
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          classModel.name,
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          classModel.level,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      statusText,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: statusColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Informations détaillées
+              Row(
+                children: [
+                  Icon(Icons.person, size: 16, color: Colors.grey[600]),
+                  const SizedBox(width: 4),
+                  Text(
+                    classModel.teacherName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
+              
+              if (classModel.schedule != null) ...[
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      classModel.schedule!,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              
+              if (classModel.room != null) ...[
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.room, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      classModel.room!,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              
+              const SizedBox(height: 12),
+              
+              // Barre de progression
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Occupation',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      Text(
+                        '${classModel.currentStudentCount}/${classModel.maxStudents}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  LinearProgressIndicator(
+                    value: occupancyRate / 100,
+                    backgroundColor: Colors.grey[200],
+                    valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Actions
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => _showAddStudentToGroupDialog(classModel),
+                    icon: const Icon(Icons.person_add, size: 16),
+                    label: const Text('Ajouter élève'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () => _showEditClassDialog(classModel),
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('Modifier'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                    ),
+                  ),
+                  if (classModel.studentIds.isEmpty)
+                    TextButton.icon(
+                      onPressed: () => _showDeleteClassDialog(classModel, classProvider),
+                      icon: const Icon(Icons.delete, size: 16),
+                      label: const Text('Supprimer'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── PDF Export ────────────────────────────
+  Future<void> _generatePdfReport() async {
+    try {
+      // Afficher le dialogue de chargement
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Génération du PDF en cours...'),
+            ],
+          ),
+        ),
+      );
+
+      // Récupérer les données
+      final studentProvider = context.read<StudentProvider>();
+      final paymentProvider = context.read<PaymentProvider>();
+      final attendanceProvider = context.read<AttendanceProvider>();
+      final authService = context.read<AuthService>();
+
+      final students = studentProvider.students;
+      final payments = paymentProvider.payments;
+      final attendances = attendanceProvider.attendances;
+
+      // Créer le document PDF
+      final pdf = pw.Document();
+      final dateNow = DateTime.now();
+      final dateStr = '${dateNow.day.toString().padLeft(2, '0')}/${dateNow.month.toString().padLeft(2, '0')}/${dateNow.year}';
+
+      // Ajouter la page principale
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(32),
+          build: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // En-tête
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          'RAPPORT MARKAZI',
+                          style: pw.TextStyle(
+                            fontSize: 24,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColor.fromHex(AppColors.primary.value.toRadixString(16).padLeft(8, '0')),
+                          ),
+                        ),
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          'Markaz: ${authService.currentMarkazId ?? 'N/A'}',
+                          style: const pw.TextStyle(fontSize: 14),
+                        ),
+                        pw.Text(
+                          'Date: $dateStr',
+                          style: const pw.TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 20),
+                
+                // Statistiques élèves
+                _buildPdfSection('STATISTIQUES ÉLÈVES', [
+                  'Nombre total d\'élèves: ${students.length}',
+                  'Élèves actifs: ${students.where((s) => true).length}',
+                ]),
+                
+                pw.SizedBox(height: 16),
+                
+                // Statistiques paiements
+                _buildPdfSection('STATISTIQUES PAIEMENTS', [
+                  'Total des paiements: ${payments.length}',
+                  'Montant total: ${payments.fold(0.0, (sum, p) => sum + p.amount).toStringAsFixed(2)} MAD',
+                  'Paiements en attente: ${payments.where((p) => p.status.name == 'unpaid').length}',
+                ]),
+                
+                pw.SizedBox(height: 16),
+                
+                // Statistiques présences
+                _buildPdfSection('STATISTIQUES PRÉSENCES', [
+                  'Total des présences: ${attendances.length}',
+                  'Présents aujourd\'hui: ${attendances.where((a) => 
+                    a.status.name == 'present' && 
+                    a.date.day == dateNow.day && 
+                    a.date.month == dateNow.month && 
+                    a.date.year == dateNow.year
+                  ).length}',
+                  'Absents aujourd\'hui: ${attendances.where((a) => 
+                    a.status.name == 'absent' && 
+                    a.date.day == dateNow.day && 
+                    a.date.month == dateNow.month && 
+                    a.date.year == dateNow.year
+                  ).length}',
+                ]),
+                
+                pw.SizedBox(height: 20),
+                
+                // Tableau des élèves
+                pw.Text(
+                  'LISTE DES ÉLÈVES',
+                  style: pw.TextStyle(
+                    fontSize: 16,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                pw.SizedBox(height: 8),
+                
+                // Tableau
+                pw.Table.fromTextArray(
+                  context: context,
+                  data: [
+                    ['Nom', 'Téléphone', 'Statut'],
+                    ...students.map((student) => [
+                      student.name,
+                      student.parentPhone,
+                      'Actif',
+                    ]),
+                  ],
+                  border: pw.TableBorder.all(color: PdfColors.grey300),
+                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  headerDecoration: const pw.BoxDecoration(color: PdfColors.grey100),
+                  cellAlignments: {
+                    0: pw.Alignment.centerLeft,
+                    1: pw.Alignment.center,
+                    2: pw.Alignment.center,
+                  },
+                ),
+              ],
+            );
+          },
+        ),
+      );
+
+      // Sauvegarder et imprimer
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+        name: 'rapport_markazi_${dateNow.day}${dateNow.month}${dateNow.year}.pdf',
+      );
+
+      if (mounted) {
+        Navigator.pop(context); // Fermer le dialogue de chargement
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PDF généré avec succès!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Fermer le dialogue de chargement
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de la génération du PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Helper pour construire une section PDF
+  pw.Widget _buildPdfSection(String title, List<String> items) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(12),
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: PdfColors.grey300),
+        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            title,
+            style: pw.TextStyle(
+              fontSize: 14,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+          pw.SizedBox(height: 8),
+          ...items.map((item) => pw.Text(
+            item,
+            style: const pw.TextStyle(fontSize: 12),
+          )),
         ],
       ),
     );
@@ -2666,5 +3171,533 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       }
     }
+  }
+
+  // ─── CLASS MANAGEMENT DIALOGS ─────────────────────
+  void _showAddClassDialog() {
+    final nameController = TextEditingController();
+    final levelController = TextEditingController();
+    final descriptionController = TextEditingController();
+    final teacherController = TextEditingController();
+    final maxStudentsController = TextEditingController(text: '20');
+    final scheduleController = TextEditingController();
+    final roomController = TextEditingController();
+
+    String selectedLevel = 'Débutant';
+    String selectedSchedule = '';
+    String selectedRoom = '';
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Ajouter un groupe'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nom de la classe',
+                    hintText: 'Ex: Classe A',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: selectedLevel,
+                  decoration: const InputDecoration(
+                    labelText: 'Niveau',
+                  ),
+                  items: ClassService.predefinedLevels.map((level) {
+                    return DropdownMenuItem(
+                      value: level,
+                      child: Text(level),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedLevel = value!;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                    hintText: 'Description de la classe',
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: teacherController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nom de l\'enseignant',
+                    hintText: 'Ex: Cheikh Ibrahim',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: maxStudentsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre maximum d\'élèves',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: selectedSchedule.isEmpty ? null : selectedSchedule,
+                  decoration: const InputDecoration(
+                    labelText: 'Emploi du temps (optionnel)',
+                  ),
+                  items: ClassService.predefinedSchedules.map((schedule) {
+                    return DropdownMenuItem(
+                      value: schedule,
+                      child: Text(schedule),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedSchedule = value!;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: selectedRoom.isEmpty ? null : selectedRoom,
+                  decoration: const InputDecoration(
+                    labelText: 'Salle (optionnel)',
+                  ),
+                  items: ClassService.predefinedRooms.map((room) {
+                    return DropdownMenuItem(
+                      value: room,
+                      child: Text(room),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedRoom = value!;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  final classProvider = context.read<ClassProvider>();
+                  await classProvider.addClass(
+                    name: nameController.text,
+                    level: selectedLevel,
+                    description: descriptionController.text,
+                    teacherName: teacherController.text,
+                    maxStudents: int.tryParse(maxStudentsController.text) ?? 20,
+                    schedule: selectedSchedule.isEmpty ? null : selectedSchedule,
+                    room: selectedRoom.isEmpty ? null : selectedRoom,
+                  );
+                  
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Classe ajoutée avec succès!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Erreur: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: const Text('Ajouter'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditClassDialog(ClassModel classModel) {
+    final nameController = TextEditingController(text: classModel.name);
+    final levelController = TextEditingController(text: classModel.level);
+    final descriptionController = TextEditingController(text: classModel.description);
+    final teacherController = TextEditingController(text: classModel.teacherName);
+    final maxStudentsController = TextEditingController(text: classModel.maxStudents.toString());
+    final scheduleController = TextEditingController(text: classModel.schedule ?? '');
+    final roomController = TextEditingController(text: classModel.room ?? '');
+
+    String selectedLevel = classModel.level;
+    String selectedSchedule = classModel.schedule ?? '';
+    String selectedRoom = classModel.room ?? '';
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text('Modifier: ${classModel.name}'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nom de la classe',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: selectedLevel,
+                  decoration: const InputDecoration(
+                    labelText: 'Niveau',
+                  ),
+                  items: ClassService.predefinedLevels.map((level) {
+                    return DropdownMenuItem(
+                      value: level,
+                      child: Text(level),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedLevel = value!;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: teacherController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nom de l\'enseignant',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: maxStudentsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre maximum d\'élèves',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: selectedSchedule.isEmpty ? null : selectedSchedule,
+                  decoration: const InputDecoration(
+                    labelText: 'Emploi du temps (optionnel)',
+                  ),
+                  items: ClassService.predefinedSchedules.map((schedule) {
+                    return DropdownMenuItem(
+                      value: schedule,
+                      child: Text(schedule),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedSchedule = value!;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: selectedRoom.isEmpty ? null : selectedRoom,
+                  decoration: const InputDecoration(
+                    labelText: 'Salle (optionnel)',
+                  ),
+                  items: ClassService.predefinedRooms.map((room) {
+                    return DropdownMenuItem(
+                      value: room,
+                      child: Text(room),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedRoom = value!;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  final classProvider = context.read<ClassProvider>();
+                  await classProvider.updateClass(
+                    classId: classModel.id,
+                    name: nameController.text,
+                    level: selectedLevel,
+                    description: descriptionController.text,
+                    teacherName: teacherController.text,
+                    maxStudents: int.tryParse(maxStudentsController.text) ?? 20,
+                    schedule: selectedSchedule.isEmpty ? null : selectedSchedule,
+                    room: selectedRoom.isEmpty ? null : selectedRoom,
+                  );
+                  
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Classe modifiée avec succès!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Erreur: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: const Text('Modifier'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteClassDialog(ClassModel classModel, ClassProvider classProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Supprimer: ${classModel.name}'),
+        content: Text('Êtes-vous sûr de vouloir supprimer cette classe? Cette action est irréversible.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await classProvider.deleteClass(classModel.id);
+                
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Classe supprimée avec succès!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Erreur: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showClassDetails(ClassModel classModel) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(classModel.name),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDetailRow('Niveau', classModel.level),
+              _buildDetailRow('Description', classModel.description),
+              _buildDetailRow('Enseignant', classModel.teacherName),
+              _buildDetailRow('Capacité', '${classModel.currentStudentCount}/${classModel.maxStudents} élèves'),
+              if (classModel.schedule != null)
+                _buildDetailRow('Emploi du temps', classModel.schedule!),
+              if (classModel.room != null)
+                _buildDetailRow('Salle', classModel.room!),
+              _buildDetailRow('Statut', classModel.isActive ? 'Active' : 'Inactive'),
+              _buildDetailRow('Date de création', '${classModel.createdAt.day}/${classModel.createdAt.month}/${classModel.createdAt.year}'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.poppins(
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddStudentToGroupDialog(ClassModel groupModel) {
+    final studentProvider = context.read<StudentProvider>();
+    final classProvider = context.read<ClassProvider>();
+    final students = studentProvider.students;
+    
+    // Filtrer les élèves qui ne sont pas déjà dans ce groupe
+    final availableStudents = students.where((student) => 
+        !groupModel.studentIds.contains(student.id)
+    ).toList();
+
+    if (availableStudents.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Ajouter un élève'),
+          content: const Text('Tous les élèves sont déjà dans ce groupe.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Fermer'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    String? selectedStudentId;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Ajouter un élève à ${groupModel.name}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Sélectionnez un élève à ajouter:'),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: selectedStudentId,
+              decoration: const InputDecoration(
+                labelText: 'Élève',
+                hintText: 'Choisissez un élève',
+              ),
+              items: availableStudents.map((student) {
+                return DropdownMenuItem(
+                  value: student.id,
+                  child: Text('${student.name} - ${student.parentPhone}'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                selectedStudentId = value;
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (selectedStudentId != null) {
+                try {
+                  await classProvider.addStudentToClass(groupModel.id, selectedStudentId!);
+                  
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Élève ajouté au groupe avec succès!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Erreur: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+            child: const Text('Ajouter'),
+          ),
+        ],
+      ),
+    );
   }
 }

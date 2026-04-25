@@ -25,6 +25,10 @@ dependencies:
   firebase_auth: ^6.3.0
   cloud_firestore: ^6.2.0
   
+  # PDF Generation
+  pdf: ^3.10.7
+  printing: ^5.12.0
+  
   # Packages pour le logo et splash screen
   flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.3.6

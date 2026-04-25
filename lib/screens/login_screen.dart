@@ -75,8 +75,8 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final authService = context.read<AuthService>();
 
-      // Vérifier que markazId n'est pas vide
-      const markazId = 'default-markaz'; // À remplacer par UI réelle
+      // Utiliser le même markazId unique basé sur l'email
+      final markazId = 'markaz-${_emailController.text.replaceAll('@', '-').replaceAll('.', '-')}';
 
       await authService.login(
         email: _emailController.text,
@@ -133,8 +133,8 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final authService = context.read<AuthService>();
 
-      // Vérifier que markazId n'est pas vide
-      const markazId = 'default-markaz'; // À remplacer par UI réelle
+      // Créer un markazId unique pour cet utilisateur
+      final markazId = 'markaz-${_emailController.text.replaceAll('@', '-').replaceAll('.', '-')}';
 
       await authService.register(
         name: _nameController.text,
