@@ -18,6 +18,7 @@ import '../services/class_service.dart';
 import '../widgets/common_widgets.dart';
 import '../models/payment.dart';
 import '../models/class_model.dart';
+import 'group_details_screen.dart';
 
 /// Dashboard principal pour l'utilisateur connecté
 /// Gestion des élèves, paiements, présences et statistiques
@@ -143,12 +144,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildTabButton('Vue d\'ensemble', 0),
+                  _buildTabButton('Vue', 0),
                   _buildTabButton('Élèves', 1),
                   _buildTabButton('Groupes', 2),
-                  _buildTabButton('Paiements', 3),
-                  _buildTabButton('Présences', 4),
-                  _buildTabButton('Rapports', 5),
+                  _buildTabButton('Pay', 3),
+                  _buildTabButton('Prés', 4),
+                  _buildTabButton('Rap', 5),
                 ],
               ),
             ),
@@ -167,21 +168,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return GestureDetector(
       onTap: () => setState(() => _selectedTabIndex = index),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
               color: isActive ? AppColors.primary : Colors.transparent,
-              width: 3,
+              width: 2,
             ),
           ),
         ),
         child: Text(
           label,
           style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-            color: isActive ? AppColors.primary : Colors.grey,
+            fontSize: 11,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+            color: isActive ? AppColors.primary : Colors.grey[600],
           ),
         ),
       ),
@@ -269,8 +270,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          Wrap(
+            alignment: WrapAlignment.spaceEvenly,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _buildActionButton('Ajouter', Icons.person_add),
               _buildActionButton('Paiement', Icons.add_card),
@@ -2569,7 +2572,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               // En-tête avec bouton d'ajout
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 color: Colors.white,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2578,18 +2581,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Gestion des Groupes',
+                          'Groupes',
                           style: GoogleFonts.poppins(
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
-                          '${classProvider.classes.length} groupes au total',
+                          '${classProvider.classes.length} groupes',
                           style: GoogleFonts.poppins(
-                            fontSize: 14,
+                            fontSize: 12,
                             color: Colors.grey[600],
                           ),
                         ),
@@ -2603,8 +2606,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                          horizontal: 12,
+                          vertical: 6,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -2850,35 +2853,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 12),
               
               // Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 4,
+                runSpacing: 4,
                 children: [
                   TextButton.icon(
-                    onPressed: () => _showAddStudentToGroupDialog(classModel),
-                    icon: const Icon(Icons.person_add, size: 16),
-                    label: const Text('Ajouter élève'),
+                    onPressed: () => _showGroupDetails(classModel),
+                    icon: const Icon(Icons.visibility, size: 14),
+                    label: const Text('Voir'),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: Size(0, 32),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  TextButton.icon(
-                    onPressed: () => _showEditClassDialog(classModel),
-                    icon: const Icon(Icons.edit, size: 16),
-                    label: const Text('Modifier'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                    ),
-                  ),
-                  if (classModel.studentIds.isEmpty)
+                  if (classModel.studentIds.isNotEmpty)
                     TextButton.icon(
-                      onPressed: () => _showDeleteClassDialog(classModel, classProvider),
-                      icon: const Icon(Icons.delete, size: 16),
-                      label: const Text('Supprimer'),
+                      onPressed: () => _showRemoveStudentFromGroupDialog(classModel),
+                      icon: const Icon(Icons.person_remove, size: 14),
+                      label: const Text('Retirer'),
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.red,
+                        foregroundColor: Colors.orange,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size(0, 32),
                       ),
                     ),
+                  TextButton.icon(
+                    onPressed: () => _showAddStudentToGroupDialog(classModel),
+                    icon: const Icon(Icons.person_add, size: 14),
+                    label: const Text('Ajouter'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: Size(0, 32),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => _showEditClassDialog(classModel),
+                    icon: const Icon(Icons.edit, size: 14),
+                    label: const Text('Modif'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: Size(0, 32),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => _showDeleteClassDialog(classModel, classProvider),
+                    icon: const Icon(Icons.delete, size: 14),
+                    label: const Text('Suppr'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: Size(0, 32),
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -3180,12 +3210,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final descriptionController = TextEditingController();
     final teacherController = TextEditingController();
     final maxStudentsController = TextEditingController(text: '20');
-    final scheduleController = TextEditingController();
-    final roomController = TextEditingController();
-
-    String selectedLevel = 'Débutant';
-    String selectedSchedule = '';
-    String selectedRoom = '';
 
     showDialog(
       context: context,
@@ -3199,34 +3223,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 TextField(
                   controller: nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Nom de la classe',
-                    hintText: 'Ex: Classe A',
+                    labelText: 'Nom du groupe',
+                    hintText: 'Ex: Groupe Nouroul Bayan',
                   ),
                 ),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: selectedLevel,
+                TextField(
+                  controller: levelController,
                   decoration: const InputDecoration(
-                    labelText: 'Niveau',
+                    labelText: 'Niveau du groupe',
+                    hintText: 'Ex: Djouzou Amma, Nouroul Bayan, etc.',
                   ),
-                  items: ClassService.predefinedLevels.map((level) {
-                    return DropdownMenuItem(
-                      value: level,
-                      child: Text(level),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedLevel = value!;
-                    });
-                  },
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: descriptionController,
                   decoration: const InputDecoration(
                     labelText: 'Description',
-                    hintText: 'Description de la classe',
+                    hintText: 'Description du groupe',
                   ),
                   maxLines: 3,
                 ),
@@ -3246,42 +3260,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   keyboardType: TextInputType.number,
                 ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: selectedSchedule.isEmpty ? null : selectedSchedule,
-                  decoration: const InputDecoration(
-                    labelText: 'Emploi du temps (optionnel)',
-                  ),
-                  items: ClassService.predefinedSchedules.map((schedule) {
-                    return DropdownMenuItem(
-                      value: schedule,
-                      child: Text(schedule),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedSchedule = value!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: selectedRoom.isEmpty ? null : selectedRoom,
-                  decoration: const InputDecoration(
-                    labelText: 'Salle (optionnel)',
-                  ),
-                  items: ClassService.predefinedRooms.map((room) {
-                    return DropdownMenuItem(
-                      value: room,
-                      child: Text(room),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedRoom = value!;
-                    });
-                  },
-                ),
               ],
             ),
           ),
@@ -3296,12 +3274,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   final classProvider = context.read<ClassProvider>();
                   await classProvider.addClass(
                     name: nameController.text,
-                    level: selectedLevel,
+                    level: levelController.text,
                     description: descriptionController.text,
                     teacherName: teacherController.text,
                     maxStudents: int.tryParse(maxStudentsController.text) ?? 20,
-                    schedule: selectedSchedule.isEmpty ? null : selectedSchedule,
-                    room: selectedRoom.isEmpty ? null : selectedRoom,
                   );
                   
                   if (mounted) {
@@ -3341,12 +3317,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final descriptionController = TextEditingController(text: classModel.description);
     final teacherController = TextEditingController(text: classModel.teacherName);
     final maxStudentsController = TextEditingController(text: classModel.maxStudents.toString());
-    final scheduleController = TextEditingController(text: classModel.schedule ?? '');
-    final roomController = TextEditingController(text: classModel.room ?? '');
-
-    String selectedLevel = classModel.level;
-    String selectedSchedule = classModel.schedule ?? '';
-    String selectedRoom = classModel.room ?? '';
 
     showDialog(
       context: context,
@@ -3360,26 +3330,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 TextField(
                   controller: nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Nom de la classe',
+                    labelText: 'Nom du groupe',
                   ),
                 ),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: selectedLevel,
+                TextField(
+                  controller: levelController,
                   decoration: const InputDecoration(
-                    labelText: 'Niveau',
+                    labelText: 'Niveau du groupe',
                   ),
-                  items: ClassService.predefinedLevels.map((level) {
-                    return DropdownMenuItem(
-                      value: level,
-                      child: Text(level),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedLevel = value!;
-                    });
-                  },
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -3404,42 +3363,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   keyboardType: TextInputType.number,
                 ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: selectedSchedule.isEmpty ? null : selectedSchedule,
-                  decoration: const InputDecoration(
-                    labelText: 'Emploi du temps (optionnel)',
-                  ),
-                  items: ClassService.predefinedSchedules.map((schedule) {
-                    return DropdownMenuItem(
-                      value: schedule,
-                      child: Text(schedule),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedSchedule = value!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: selectedRoom.isEmpty ? null : selectedRoom,
-                  decoration: const InputDecoration(
-                    labelText: 'Salle (optionnel)',
-                  ),
-                  items: ClassService.predefinedRooms.map((room) {
-                    return DropdownMenuItem(
-                      value: room,
-                      child: Text(room),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedRoom = value!;
-                    });
-                  },
-                ),
               ],
             ),
           ),
@@ -3455,12 +3378,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   await classProvider.updateClass(
                     classId: classModel.id,
                     name: nameController.text,
-                    level: selectedLevel,
+                    level: levelController.text,
                     description: descriptionController.text,
                     teacherName: teacherController.text,
                     maxStudents: int.tryParse(maxStudentsController.text) ?? 20,
-                    schedule: selectedSchedule.isEmpty ? null : selectedSchedule,
-                    room: selectedRoom.isEmpty ? null : selectedRoom,
                   );
                   
                   if (mounted) {
@@ -3499,7 +3420,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Supprimer: ${classModel.name}'),
-        content: Text('Êtes-vous sûr de vouloir supprimer cette classe? Cette action est irréversible.'),
+        content: Text('Êtes-vous sûr de vouloir supprimer ce groupe? Cette action est irréversible et retirera tous les élèves du groupe.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -3603,6 +3524,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  void _showGroupDetails(ClassModel groupModel) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GroupDetailsScreen(group: groupModel),
+      ),
+    );
+  }
+
   void _showAddStudentToGroupDialog(ClassModel groupModel) {
     final studentProvider = context.read<StudentProvider>();
     final classProvider = context.read<ClassProvider>();
@@ -3695,6 +3625,104 @@ class _DashboardScreenState extends State<DashboardScreen> {
               backgroundColor: AppColors.primary,
             ),
             child: const Text('Ajouter'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRemoveStudentFromGroupDialog(ClassModel groupModel) {
+    final studentProvider = context.read<StudentProvider>();
+    final classProvider = context.read<ClassProvider>();
+    final students = studentProvider.students;
+    
+    // Filtrer les élèves qui sont dans ce groupe
+    final groupStudents = students.where((student) => 
+        groupModel.studentIds.contains(student.id)
+    ).toList();
+
+    if (groupStudents.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Retirer un élève'),
+          content: const Text('Ce groupe ne contient aucun élève.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Fermer'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    String? selectedStudentId;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Retirer un élève de ${groupModel.name}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Sélectionnez un élève à retirer:'),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: selectedStudentId,
+              decoration: const InputDecoration(
+                labelText: 'Élève',
+                hintText: 'Choisissez un élève',
+              ),
+              items: groupStudents.map((student) {
+                return DropdownMenuItem(
+                  value: student.id,
+                  child: Text('${student.name} - ${student.parentPhone}'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                selectedStudentId = value;
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (selectedStudentId != null) {
+                try {
+                  await classProvider.removeStudentFromClass(groupModel.id, selectedStudentId!);
+                  
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Élève retiré du groupe avec succès!'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Erreur: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+            ),
+            child: const Text('Retirer'),
           ),
         ],
       ),
