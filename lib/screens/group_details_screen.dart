@@ -60,17 +60,16 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       ),
       body: Consumer4<ClassProvider, StudentProvider, PaymentProvider, AttendanceProvider>(
         builder: (context, classProvider, studentProvider, paymentProvider, attendanceProvider, _) {
-          // Récupérer les élèves du groupe
+          // Récupérer les élèves du groupe (uniquement les élèves existants)
           final groupStudents = widget.group.studentIds
-              .map((studentId) => studentProvider.students.firstWhere(
-                  (student) => student.id == studentId,
-                  orElse: () => Student(
-                    id: studentId,
-                    name: 'Élève inconnu',
-                    parentPhone: '',
-                    markazId: '',
-                    createdAt: DateTime.now(),
-                  )))
+              .map((studentId) {
+                final student = studentProvider.students
+                    .where((s) => s.id == studentId)
+                    .firstOrNull;
+                return student;
+              })
+              .where((student) => student != null)
+              .cast<Student>()
               .toList();
 
           // Calculer les statistiques

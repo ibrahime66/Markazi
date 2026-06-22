@@ -56,6 +56,7 @@ void main() async {
 
   // Initialiser les services (couche métier)
   final studentService = StudentService(studentRepository, authService);
+  final classService = ClassService(classRepository, authService, studentService);
   final paymentService =
       PaymentService(paymentRepository, studentRepository, authService);
   final attendanceService = AttendanceService(
@@ -63,7 +64,6 @@ void main() async {
     studentRepository,
     authService,
   );
-  final classService = ClassService(classRepository, authService);
 
   // Initialiser la session utilisateur (Firebase)
   // Phase 5: Authentification réelle

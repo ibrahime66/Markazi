@@ -59,6 +59,12 @@ class StudentProvider extends ChangeNotifier {
       await _service.deleteStudent(studentId);
       _students =
           _students.where((student) => student.id != studentId).toList();
+      
+      // Retirer l'élève de tous les groupes où il était inscrit
+      // Note: Cette opération nécessite d'accéder au ClassProvider
+      // mais on ne peut pas injecter de provider dans un autre provider
+      // On va gérer cela au niveau du service
+      
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();

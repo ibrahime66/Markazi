@@ -2,14 +2,16 @@ import 'package:uuid/uuid.dart';
 import '../models/student.dart';
 import '../repositories/student_repository.dart';
 import 'auth_service.dart';
+import 'class_service.dart';
 
 /// Service métier pour la gestion des élèves
 /// Centralise la logique métier et les validations
 class StudentService {
   final StudentRepository _repository;
   final AuthService _authService;
+  final ClassService? _classService;
 
-  StudentService(this._repository, this._authService);
+  StudentService(this._repository, this._authService, [this._classService]);
 
   /// Crée un nouvel élève avec validations métier
   Future<Student> createStudent({
@@ -109,6 +111,21 @@ class StudentService {
     // Vérifier l'accès multi-markaz
     if (!_authService.hasAccessToMarkaz(student.markazId)) {
       throw Exception('Accès refusé à cette Markaz');
+    }
+
+    // Retirer l'élève de tous les groupes où il était inscrit
+    if (_classService != null) {
+      try {
+        final allClasses = _classService!.getAllClasses();
+        for (final classModel in allClasses) {
+          if (classModel.studentIds.contains(studentId)) {
+            await _classService!.removeStudentFromClass(classModel.id, studentId);
+          }
+        }
+      } catch (e) {
+        // Si erreur lors du retrait des groupes, on continue quand même
+        print('Erreur lors du retrait de l\'élève des groupes: $e');
+      }
     }
 
     await _repository.removeStudent(studentId);

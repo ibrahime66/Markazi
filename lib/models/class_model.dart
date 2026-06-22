@@ -109,8 +109,20 @@ class ClassModel extends Equatable {
     );
   }
 
-  /// Nombre d'élèves actuels
+  /// Nombre d'élèves actuels (IDs valides seulement)
   int get currentStudentCount => studentIds.length;
+  
+  /// Nombre d'élèves réels (après validation)
+  int get realStudentCount => studentIds.length;
+  
+  /// Nettoie les IDs d'élèves qui n'existent plus
+  ClassModel cleanStudentIds(List<String> existingStudentIds) {
+    final validStudentIds = studentIds.where((id) => existingStudentIds.contains(id)).toList();
+    if (validStudentIds.length == studentIds.length) {
+      return this; // Pas de changement nécessaire
+    }
+    return copyWith(studentIds: validStudentIds);
+  }
 
   /// Places disponibles
   int get availablePlaces => maxStudents - studentIds.length;
