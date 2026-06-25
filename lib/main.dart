@@ -11,11 +11,18 @@ import 'services/index.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/dashboard_screen.dart';
-import 'screens/login_screen.dart';
 import 'screens/features_screen.dart';
 import 'screens/about_screen.dart';
 import 'utils/app_colors.dart';
+import 'utils/app_strings.dart';
+import 'datasources/hive_student_datasource.dart';
+import 'datasources/hive_payment_datasource.dart';
+import 'datasources/hive_attendance_datasource.dart';
+import 'datasources/hive_class_datasource.dart';
+import 'datasources/firebase_student_datasource.dart';
+import 'datasources/firebase_payment_datasource.dart';
+import 'datasources/firebase_attendance_datasource.dart';
+import 'datasources/firebase_class_datasource.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,26 +33,36 @@ void main() async {
     ),
   );
 
-  // Initialiser Firebase (graceful degradation si non disponible/configuré)
   await FirebaseHelper.init();
-
-  // Initialiser Hive
   await Hive.initFlutter();
 
-  // Enregistrer les adapters Hive
+  // Enregistrer les adaptateurs Hive
   Hive.registerAdapter(StudentAdapter());
   Hive.registerAdapter(PaymentAdapter());
   Hive.registerAdapter(AttendanceAdapter());
-  Hive.registerAdapter(PaymentStatusAdapter());
-  Hive.registerAdapter(AttendanceStatusAdapter());
   Hive.registerAdapter(ClassModelAdapter());
 
-  // Initialiser les repositories
-  final studentRepository = StudentRepository();
-  final paymentRepository = PaymentRepository();
-  final attendanceRepository = AttendanceRepository();
-  final classRepository = ClassRepository();
+  // Créer les data sources
+  final hiveStudentDataSource = HiveStudentDataSource();
+  final firebaseStudentDataSource = FirebaseStudentDataSource();
+  final hivePaymentDataSource = HivePaymentDataSource();
+  final firebasePaymentDataSource = FirebasePaymentDataSource();
+  final hiveAttendanceDataSource = HiveAttendanceDataSource();
+  final firebaseAttendanceDataSource = FirebaseAttendanceDataSource();
+  final hiveClassDataSource = HiveClassDataSource();
+  final firebaseClassDataSource = FirebaseClassDataSource();
 
+  // Créer les repositories avec injection de dépendances
+  final studentRepository = StudentRepository(
+      hiveStudentDataSource, firebaseStudentDataSource);
+  final paymentRepository = PaymentRepository(
+      hivePaymentDataSource, firebasePaymentDataSource);
+  final attendanceRepository = AttendanceRepository(
+      hiveAttendanceDataSource, firebaseAttendanceDataSource);
+  final classRepository = ClassRepository(
+      hiveClassDataSource, firebaseClassDataSource);
+
+  // Initialiser les repositories
   await studentRepository.init();
   await paymentRepository.init();
   await attendanceRepository.init();
@@ -57,16 +74,14 @@ void main() async {
   // Initialiser les services (couche métier)
   final studentService = StudentService(studentRepository, authService);
   final classService = ClassService(classRepository, authService, studentService);
-  final paymentService =
-      PaymentService(paymentRepository, studentRepository, authService);
+  final paymentService = PaymentService(paymentRepository, studentRepository, authService);
   final attendanceService = AttendanceService(
     attendanceRepository,
     studentRepository,
     authService,
   );
 
-  // Initialiser la session utilisateur (Firebase)
-  // Phase 5: Authentification réelle
+  // Initialiser l'utilisateur (Phase 5 : Authentification réelle)
   await authService.initializeUser();
 
   runApp(
@@ -149,8 +164,8 @@ class MarkaziApp extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle:
-              GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.w700),
+          textStyle: GoogleFonts.cairo(
+              fontSize: 15, fontWeight: FontWeight.w700),
           elevation: 0,
         ),
       ),
@@ -161,8 +176,8 @@ class MarkaziApp extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle:
-              GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.w700),
+          textStyle: GoogleFonts.cairo(
+              fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
       cardTheme: CardThemeData(

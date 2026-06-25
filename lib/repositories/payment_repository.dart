@@ -1,19 +1,20 @@
-import 'package:hive_flutter/hive_flutter.dart';
 import '../models/payment.dart';
+import '../datasources/hive_payment_datasource.dart';
 import '../datasources/firebase_payment_datasource.dart';
 import '../services/firebase_helper.dart';
 
 /// Repository pour la gestion des données Payment
 /// Utilise Firebase avec cache Hive local pour mode hors ligne
 class PaymentRepository {
-  static const String _boxName = 'payments';
-  late Box<Payment> _box;
-  final FirebasePaymentDatasource _firebaseDatasource = FirebasePaymentDatasource();
+  final HivePaymentDataSource _hiveDataSource;
+  final FirebasePaymentDataSource _firebaseDataSource;
 
-  /// Initialise le repository et ouvre la box Hive
+  PaymentRepository(this._hiveDataSource, this._firebaseDataSource);
+
+  /// Initialise le repository et ouvre la box Hive via le data source
   Future<void> init() async {
-    _box = await Hive.openBox<Payment>(_boxName);
-    
+    await _hiveDataSource.init();
+
     // Synchroniser depuis Firebase au démarrage si disponible
     if (FirebaseHelper.isAvailable) {
       await Future.delayed(const Duration(seconds: 1));
@@ -24,12 +25,12 @@ class PaymentRepository {
   /// Ajoute un nouveau paiement
   Future<void> addPayment(Payment payment) async {
     // Sauvegarder localement d'abord (cache)
-    await _box.put(payment.id, payment);
-    
+    await _hiveDataSource.addPayment(payment);
+
     // Synchroniser avec Firebase si disponible
     if (FirebaseHelper.isAvailable) {
       try {
-        await _firebaseDatasource.addPayment(payment, payment.markazId);
+        await _firebaseDataSource.addPayment(payment, payment.markazId);
       } catch (e) {
         print('Erreur sync Firebase payment: $e');
       }
@@ -39,12 +40,12 @@ class PaymentRepository {
   /// Supprime un paiement par ID
   Future<void> removePayment(String paymentId) async {
     // Supprimer localement
-    await _box.delete(paymentId);
-    
+    await _hiveDataSource.deletePayment(paymentId);
+
     // Synchroniser avec Firebase si disponible
     if (FirebaseHelper.isAvailable) {
       try {
-        await _firebaseDatasource.deletePayment(paymentId);
+        await _firebaseDataSource.deletePayment(paymentId);
       } catch (e) {
         print('Erreur sync Firebase payment: $e');
       }
@@ -54,12 +55,12 @@ class PaymentRepository {
   /// Met à jour un paiement
   Future<void> updatePayment(Payment payment) async {
     // Mettre à jour localement
-    await _box.put(payment.id, payment);
-    
+    await _hiveDataSource.updatePayment(payment);
+
     // Synchroniser avec Firebase si disponible
     if (FirebaseHelper.isAvailable) {
       try {
-        await _firebaseDatasource.updatePayment(payment);
+        await _firebaseDataSource.updatePayment(payment);
       } catch (e) {
         print('Erreur sync Firebase payment: $e');
       }
@@ -68,68 +69,52 @@ class PaymentRepository {
 
   /// Récupère un paiement par ID
   Payment? getPaymentById(String paymentId) {
-    return _box.get(paymentId);
+    return _hiveDataSource.getPaymentById(paymentId);
   }
 
   /// Récupère tous les paiements
   List<Payment> getAllPayments() {
-    return _box.values.toList();
+    return _hiveDataSource.getAllPayments();
   }
 
   /// Récupère tous les paiements d'un élève
   List<Payment> getPaymentsByStudent(String studentId) {
-    return _box.values
-        .where((payment) => payment.studentId == studentId)
-        .toList();
+    return _hiveDataSource.getPaymentsByStudent(studentId);
   }
 
   /// Récupère tous les paiements d'une Markaz
   List<Payment> getPaymentsByMarkaz(String markazId) {
-    return _box.values
-        .where((payment) => payment.markazId == markazId)
-        .toList();
+    return _hiveDataSource.getPaymentsByMarkaz(markazId);
   }
 
   /// Récupère les paiements en attente d'une Markaz
   List<Payment> getPendingPaymentsByMarkaz(String markazId) {
-    return _box.values
-        .where((payment) =>
-            payment.markazId == markazId && payment.status.name == 'unpaid')
-        .toList();
+    return _hiveDataSource.getPendingPaymentsByMarkaz(markazId);
   }
 
   /// Retourne le montant total payé pour un élève
   double getTotalPaymentForStudent(String studentId) {
-    return _box.values
-        .where((payment) =>
-            payment.studentId == studentId && payment.status.name == 'paid')
-        .fold(0.0, (sum, payment) => sum + payment.amount);
+    return _hiveDataSource.getTotalPaymentForStudent(studentId);
   }
 
   /// Retourne le montant total des paiements en attente
   double getTotalPendingPayments(String markazId) {
-    return _box.values
-        .where((payment) =>
-            payment.markazId == markazId && payment.status.name == 'unpaid')
-        .fold(0.0, (sum, payment) => sum + payment.amount);
+    return _hiveDataSource.getTotalPendingPayments(markazId);
   }
 
   /// Retourne le nombre de paiements en attente
   int getPendingPaymentsCount(String markazId) {
-    return _box.values
-        .where((payment) =>
-            payment.markazId == markazId && payment.status.name == 'unpaid')
-        .length;
+    return _hiveDataSource.getPendingPaymentsCount(markazId);
   }
 
   /// Efface tous les paiements (utile pour les tests)
   Future<void> clearAll() async {
-    await _box.clear();
+    await _hiveDataSource.clearAll();
   }
 
   /// Ferme la box (utile à l'arrêt de l'app)
   Future<void> close() async {
-    await _box.close();
+    await _hiveDataSource.close();
   }
 
   /// Synchronise les données depuis Firebase vers le cache local
@@ -137,14 +122,14 @@ class PaymentRepository {
     try {
       if (markazId != null) {
         // Récupérer les paiements de cette markaz depuis Firebase
-        final firebasePayments = await _firebaseDatasource.getPaymentsByMarkaz(markazId);
-        
+        final firebasePayments = await _firebaseDataSource.getPaymentsByMarkaz(markazId);
+
         // Vider le cache local et mettre à jour avec les données Firebase
-        await _box.clear();
+        await _hiveDataSource.clearAll();
         for (final payment in firebasePayments) {
-          await _box.put(payment.id, payment);
+          await _hiveDataSource.addPayment(payment);
         }
-        
+
         print('Sync Firebase: ${firebasePayments.length} paiements synchronisés pour markaz $markazId');
       } else {
         print('Sync Firebase: markazId non spécifié, sync ignorée');

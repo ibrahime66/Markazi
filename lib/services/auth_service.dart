@@ -1,3 +1,4 @@
+import 'dart:developer' show debugPrint;
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -6,13 +7,14 @@ import 'firebase_helper.dart';
 
 /// Service d'authentification Firebase
 /// Phase 5: Authentification réelle avec Firebase
-/// Graceful degradation si Firebase n'est pas disponible
+/// Gestion de la restauration de session sur toutes les plateformes
 class AuthService {
   // Lazy getters pour éviter l'instanciation avant Firebase.initializeApp()
   fb_auth.FirebaseAuth get _auth => fb_auth.FirebaseAuth.instance;
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   User? _currentUser;
+  StreamSubscription<fb_auth.User?>? _authStateSubscription;
 
   /// Utilisateur actuellement authentifié
   User? get currentUser => _currentUser;
@@ -21,38 +23,51 @@ class AuthService {
   bool get isAuthenticated => _currentUser != null;
 
   /// Initialiser l'utilisateur au démarrage
-  /// IMPORTANT: On skip complètement sur web pour éviter les erreurs Firebase
+  /// Met en place l'écouteur d'état d'authentification Firebase
   Future<void> initializeUser() async {
     try {
-      // Skip sur web - Firebase s'auto-initialise mais n'est pas prêt au démarrage
-      if (kIsWeb) {
-        print('AuthService.initializeUser: Skip sur web');
-        return;
-      }
-
-      // Skip si Firebase n'est pas disponible
+      // Ne rien faire si Firebase n'est pas disponible
       if (!FirebaseHelper.isAvailable) {
-        print('AuthService.initializeUser: Firebase non disponible');
+        debugPrint('AuthService.initializeUser: Firebase non disponible');
         return;
       }
 
-      try {
-        final firebaseUser = _auth.currentUser;
-        if (firebaseUser != null) {
-          await _loadUserFromFirestore(firebaseUser.uid);
-        }
-      } on Exception catch (e) {
-        // Gérer les FirebaseExceptions et autres erreurs d'initialisation
-        print('AuthService.initializeUser Firebase error: $e');
-        // Continuer sans interruption - pas critique au démarrage
+      // Si un écouteur existe déjà, on ne le réinstalle pas
+      if (_authStateSubscription != null) {
+        return;
       }
+
+      // Chargement immédiat de l'utilisateur actuel (au cas où le stream n'émet pas immédiatement)
+      final firebaseUser = _auth.currentUser;
+      if (firebaseUser != null) {
+        await _loadUserFromFirestore(firebaseUser.uid);
+      }
+
+      // Écoute les changements d'état d'authentification (login, logout, token refresh)
+      _authStateSubscription = _auth.authStateChanges().listen(
+        (fbUser) async {
+          if (fbUser != null) {
+            try {
+              await _loadUserFromFirestore(fbUser.uid);
+            } catch (e) {
+              // En cas d'erreur Firestore, on garde l'utilisateur Firebase mais on nettoie le profil local
+              debugPrint('AuthService: Erreur lors du chargement du profil Firestore: $e');
+              _currentUser = null; // on considère l'utilisateur non authentifié côté app
+            }
+          } else {
+            _currentUser = null;
+          }
+        },
+        onError: (error) {
+          debugPrint('AuthService: Erreur du flux d\'authentification: $error');
+        },
+      );
     } catch (e) {
-      // Fallback pour les erreurs non-prévues
-      print('AuthService.initializeUser unexpected error: $e');
+      debugPrint('AuthService.initializeUser erreur inattendue: $e');
     }
   }
 
-  /// Login avec Firebase Authentication
+  /// Se connecter avec Firebase Authentication
   Future<User> login({
     required String email,
     required String password,
@@ -75,65 +90,51 @@ class AuthService {
         );
       }
 
-      // Authentifier avec Firebase - utiliser une détection sécurisée pour web et native
+      // Authentifier avec Firebase
       late final fb_auth.UserCredential userCredential;
       try {
         userCredential = await _auth.signInWithEmailAndPassword(
           email: email,
           password: password,
         );
-      } catch (authError) {
-        // Essayer de caster en FirebaseAuthException (native)
-        if (authError is fb_auth.FirebaseAuthException) {
-          // DEBUG: Afficher le code et message exacts pour le débogage
-          print(
-              'DEBUG Login FirebaseAuthException Code: ${authError.code}, Message: ${authError.message}');
-
-          // Gérer selon le code d'erreur
-          switch (authError.code) {
-            case 'user-not-found':
-              throw Exception('Utilisateur non trouvé');
-            case 'wrong-password':
-              throw Exception('Mot de passe incorrect');
-            case 'invalid-email':
-              throw Exception('Email invalide');
-            case 'user-disabled':
-              throw Exception('Compte désactivé');
-            case 'too-many-requests':
-              throw Exception(
-                  'Trop de tentatives. Réessayez dans quelques minutes.');
-            default:
-              throw Exception(
-                  'Erreur d\'authentification: ${authError.message ?? authError.code}');
-          }
-        } else {
-          // Fallback pour web où le casting FirebaseAuthException peut échouer
-          // Utiliser string-based error detection
-          String errorMsg = authError.toString().toLowerCase();
-
-          if (errorMsg.contains('user-not-found')) {
+      } on fb_auth.FirebaseAuthException catch (authError) {
+        debugPrint('AuthService.login FirebaseAuthException: ${authError.code} - ${authError.message}');
+        switch (authError.code) {
+          case 'user-not-found':
             throw Exception('Utilisateur non trouvé');
-          } else if (errorMsg.contains('wrong-password')) {
+          case 'wrong-password':
             throw Exception('Mot de passe incorrect');
-          } else if (errorMsg.contains('invalid-email')) {
+          case 'invalid-email':
             throw Exception('Email invalide');
-          } else if (errorMsg.contains('user-disabled')) {
+          case 'user-disabled':
             throw Exception('Compte désactivé');
-          } else if (errorMsg.contains('too-many-requests')) {
-            throw Exception(
-                'Trop de tentatives. Réessayez dans quelques minutes.');
-          } else if (errorMsg.contains('network')) {
-            throw Exception(
-                'Erreur réseau. Vérifiez votre connexion internet.');
-          } else {
-            // Pour web: afficher plus de détails au debug
-            print('DEBUG Login Error (Web): $authError');
-            throw Exception('Erreur d\'authentification');
-          }
+          case 'too-many-requests':
+            throw Exception('Trop de tentatives. Réessayez dans quelques minutes.');
+          default:
+            throw Exception('Erreur d\'authentification: ${authError.message ?? authError.code}');
+        }
+      } catch (e) {
+        // Fallback pour les plateformes où l'exception n'est pas FirebaseAuthException
+        debugPrint('AuthService.login erreur inattendue: $e');
+        String errorMsg = e.toString().toLowerCase();
+        if (errorMsg.contains('user-not-found')) {
+          throw Exception('Utilisateur non trouvé');
+        } else if (errorMsg.contains('wrong-password')) {
+          throw Exception('Mot de passe incorrect');
+        } else if (errorMsg.contains('invalid-email')) {
+          throw Exception('Email invalide');
+        } else if (errorMsg.contains('user-disabled')) {
+          throw Exception('Compte désactivé');
+        } else if (errorMsg.contains('too-many-requests')) {
+          throw Exception('Trop de tentatives. Réessayez dans quelques minutes.');
+        } else if (errorMsg.contains('network')) {
+          throw Exception('Erreur réseau. Vérifiez votre connexion internet.');
+        } else {
+          throw Exception('Erreur d\'authentification');
         }
       }
 
-      // Charger les données utilisateur - aussi des opérations Firestore
+      // Charger les données utilisateur depuis Firestore
       try {
         await _loadUserFromFirestore(userCredential.user!.uid);
       } catch (firestoreError) {
@@ -145,8 +146,7 @@ class AuthService {
           throw Exception('Erreur d\'accès au profil utilisateur.');
         } else {
           // Le document n'existe pas - créer un profil par défaut
-          print(
-              'Warning: User not in Firestore, creating default profile: $firestoreError');
+          debugPrint('AuthService: Utilisateur absent de Firestore, création d\'un profil par défaut: $firestoreError');
 
           // Créer automatiquement le profil utilisateur avec les infos Firebase
           _currentUser = User(
@@ -158,16 +158,15 @@ class AuthService {
             createdAt: DateTime.now(),
           );
 
-          // Sauvegarder dans Firestore en background (ne pas bloquer la connexion)
+          // Sauvegarder dans Firestore en arrière‑plan (ne pas bloquer la connexion)
           try {
             await _firestore
                 .collection('users')
                 .doc(_currentUser!.id)
                 .set(_currentUser!.toJson());
-            print('User profile créé automatiquement dans Firestore');
+            debugPrint('AuthService: Profil utilisateur créé automatiquement dans Firestore');
           } catch (saveError) {
-            print(
-                'Warning: Could not save user profile to Firestore: $saveError');
+            debugPrint('AuthService: Impossible d\'enregistrer le profil utilisateur dans Firestore: $saveError');
             // Continuer quand même - l'utilisateur est au moins en mémoire
           }
         }
@@ -184,10 +183,10 @@ class AuthService {
 
       return _currentUser!;
     } on Exception catch (e) {
-      print('Login Exception: $e');
+      debugPrint('AuthService.login Exception: $e');
       rethrow;
     } catch (e) {
-      print('Login Unexpected error: $e');
+      debugPrint('AuthService.login erreur inattendue: $e');
       throw Exception('Erreur inconnue lors de la connexion');
     }
   }
@@ -216,52 +215,39 @@ class AuthService {
         );
       }
 
-      // Créer l'utilisateur dans Firebase Auth - détection sécurisée pour web et native
+      // Créer l'utilisateur dans Firebase Auth
       late final fb_auth.UserCredential userCredential;
       try {
         userCredential = await _auth.createUserWithEmailAndPassword(
           email: email,
           password: password,
         );
-      } catch (authError) {
-        // Essayer de caster en FirebaseAuthException (native)
-        if (authError is fb_auth.FirebaseAuthException) {
-          // DEBUG: Afficher le code et message exacts pour le débogage
-          print(
-              'DEBUG Register FirebaseAuthException Code: ${authError.code}, Message: ${authError.message}');
-
-          // Gérer selon le code d'erreur
-          switch (authError.code) {
-            case 'weak-password':
-              throw Exception(
-                  'Mot de passe trop faible. Utilisez au moins 6 caractères.');
-            case 'email-already-in-use':
-              throw Exception('Cet email est déjà utilisé');
-            case 'invalid-email':
-              throw Exception('Email invalide');
-            default:
-              throw Exception(
-                  'Erreur d\'enregistrement: ${authError.message ?? authError.code}');
-          }
-        } else {
-          // Fallback pour web où le casting FirebaseAuthException peut échouer
-          String errorMsg = authError.toString().toLowerCase();
-
-          if (errorMsg.contains('weak-password')) {
-            throw Exception(
-                'Mot de passe trop faible. Utilisez au moins 6 caractères.');
-          } else if (errorMsg.contains('email-already-in-use')) {
+      } on fb_auth.FirebaseAuthException catch (authError) {
+        debugPrint('AuthService.register FirebaseAuthException: ${authError.code} - ${authError.message}');
+        switch (authError.code) {
+          case 'weak-password':
+            throw Exception('Mot de passe trop faible. Utilisez au moins 6 caractères.');
+          case 'email-already-in-use':
             throw Exception('Cet email est déjà utilisé');
-          } else if (errorMsg.contains('invalid-email')) {
+          case 'invalid-email':
             throw Exception('Email invalide');
-          } else if (errorMsg.contains('network')) {
-            throw Exception(
-                'Erreur réseau. Vérifiez votre connexion internet.');
-          } else {
-            // Pour web: afficher plus de détails au debug
-            print('DEBUG Register Error (Web): $authError');
-            throw Exception('Erreur lors de la création du compte');
-          }
+          default:
+            throw Exception('Erreur d\'enregistrement: ${authError.message ?? authError.code}');
+        }
+      } catch (e) {
+        // Fallback pour les plateformes où l'exception n'est pas FirebaseAuthException
+        debugPrint('AuthService.register erreur inattendue: $e');
+        String errorMsg = e.toString().toLowerCase();
+        if (errorMsg.contains('weak-password')) {
+          throw Exception('Mot de passe trop faible. Utilisez au moins 6 caractères.');
+        } else if (errorMsg.contains('email-already-in-use')) {
+          throw Exception('Cet email est déjà utilisé');
+        } else if (errorMsg.contains('invalid-email')) {
+          throw Exception('Email invalide');
+        } else if (errorMsg.contains('network')) {
+          throw Exception('Erreur réseau. Vérifiez votre connexion internet.');
+        } else {
+          throw Exception('Erreur lors de la création du compte');
         }
       }
 
@@ -281,14 +267,12 @@ class AuthService {
         // Gérer les erreurs Firestore (peuvent être TypeError sur web)
         String errorMsg = firestoreError.toString().toLowerCase();
         if (errorMsg.contains('network')) {
-          print(
-              'Warning: Network error writing user to Firestore: $firestoreError');
+          debugPrint('AuthService: Erreur réseau lors de l\'écriture du profil Firestore: $firestoreError');
         } else if (errorMsg.contains('permission')) {
-          print(
-              'Warning: Permission error writing user to Firestore: $firestoreError');
+          debugPrint('AuthService: Erreur de permission lors de l\'écriture du profil Firestore: $firestoreError');
         } else {
           // Autres erreurs - log seulement
-          print('Warning: Firestore write failed: $firestoreError');
+          debugPrint('AuthService: Écriture Firestore échouée: $firestoreError');
         }
         // Continuer malgré l'erreur - au moins l'utilisateur est créé dans Auth
       }
@@ -296,15 +280,15 @@ class AuthService {
       _currentUser = user;
       return user;
     } on Exception catch (e) {
-      print('Register Exception: $e');
+      debugPrint('AuthService.register Exception: $e');
       rethrow;
     } catch (e) {
-      print('Register Unexpected error: $e');
+      debugPrint('AuthService.register erreur inattendue: $e');
       throw Exception('Erreur inconnue lors de la création du compte');
     }
   }
 
-  /// Logout de l'utilisateur
+  /// Déconnexion de l'utilisateur
   Future<void> logout() async {
     try {
       try {
@@ -313,9 +297,9 @@ class AuthService {
         // Gérer les erreurs de logout (peuvent être TypeError sur web)
         String errorMsg = signOutError.toString().toLowerCase();
         if (errorMsg.contains('network')) {
-          print('Warning: Network error during logout: $signOutError');
+          debugPrint('AuthService: Erreur réseau lors de la déconnexion: $signOutError');
         } else {
-          print('Warning: Error during logout: $signOutError');
+          debugPrint('AuthService: Erreur lors de la déconnexion: $signOutError');
         }
         // Continuer malgré l'erreur - l'important c'est de vider les données locales
       }
@@ -324,6 +308,7 @@ class AuthService {
     } catch (e) {
       // Au minimum vider les données locales
       _currentUser = null;
+      debugPrint('AuthService.logout erreur inattendue: $e');
       throw Exception('Erreur lors de la déconnexion.');
     }
   }
@@ -332,21 +317,7 @@ class AuthService {
   Future<void> _loadUserFromFirestore(String uid) async {
     try {
       // Récupérer le document de l'utilisateur depuis Firestore
-      late final DocumentSnapshot<Map<String, dynamic>> doc;
-      try {
-        doc = await _firestore.collection('users').doc(uid).get();
-      } catch (firestoreError) {
-        // Gérer les erreurs Firestore (peuvent être TypeError sur web)
-        String errorMsg = firestoreError.toString().toLowerCase();
-        if (errorMsg.contains('network')) {
-          throw Exception('Erreur réseau lors de la récupération du profil.');
-        } else if (errorMsg.contains('permission')) {
-          throw Exception('Erreur d\'accès au profil utilisateur.');
-        } else {
-          // Réessayer ou ignorer selon le besoin
-          throw Exception('Impossible de charger le profil utilisateur.');
-        }
-      }
+      final doc = await _firestore.collection('users').doc(uid).get();
 
       if (!doc.exists) {
         throw Exception('Profil utilisateur non trouvé.');
@@ -372,5 +343,11 @@ class AuthService {
   /// Vérifier que l'utilisateur a accès à un markazId spécifique
   bool hasAccessToMarkaz(String markazId) {
     return _currentUser != null && _currentUser!.markazId == markazId;
+  }
+
+  /// Nettoyer les ressources (appelé lors de la.dispose si besoin)
+  void dispose() {
+    _authStateSubscription?.cancel();
+    _authStateSubscription = null;
   }
 }
