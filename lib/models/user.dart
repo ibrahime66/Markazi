@@ -1,9 +1,11 @@
 import 'package:equatable/equatable.dart';
 
-/// Énumération des rôles utilisateurs
+/// Énumération des rôles utilisateurs (CDC section 9 : seul "teacher" est
+/// actif en V1, les autres sont scaffoldés pour les évolutions futures).
 enum UserRole {
   teacher,
   admin,
+  superAdmin,
   parent,
 }
 
@@ -69,6 +71,35 @@ class User extends Equatable {
       markazId: json['markazId'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
+  }
+
+  /// Crée un User depuis la réponse JSON de l'API Laravel (champs snake_case,
+  /// id numérique). Utilisé par AuthService.
+  factory User.fromApiJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'].toString(),
+      name: json['name'] as String,
+      email: json['email'] as String,
+      role: _roleFromApi(json['role'] as String?),
+      markazId: (json['markaz_id'] ?? json['markazId'])?.toString() ?? '',
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
+    );
+  }
+
+  static UserRole _roleFromApi(String? apiRole) {
+    switch (apiRole) {
+      case 'admin':
+        return UserRole.admin;
+      case 'super_admin':
+        return UserRole.superAdmin;
+      case 'parent':
+        return UserRole.parent;
+      case 'teacher':
+      default:
+        return UserRole.teacher;
+    }
   }
 
   @override

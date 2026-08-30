@@ -1,13 +1,12 @@
 plugins {
     id("com.android.application")
-    id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.markazi"
-    compileSdk = flutter.compileSdkVersion
+    // flutter_secure_storage exige SDK 37 (backward-compatible) — voir avertissement de build.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

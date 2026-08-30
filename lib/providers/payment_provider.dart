@@ -29,12 +29,16 @@ class PaymentProvider extends ChangeNotifier {
     }
   }
 
-  /// Ajoute un nouveau paiement
-  Future<void> addPayment({
+  /// Ajoute un nouveau paiement. Retourne le paiement tel que persisté côté
+  /// serveur (avec son numéro de reçu s'il est marqué payé), pour permettre
+  /// de générer immédiatement le reçu PDF (CDC section 21).
+  Future<Payment> addPayment({
     required String studentId,
     required double amount,
     required PaymentStatus status,
     String? markazId,
+    DateTime? date,
+    bool confirmDuplicate = false,
   }) async {
     try {
       _errorMessage = null;
@@ -43,9 +47,12 @@ class PaymentProvider extends ChangeNotifier {
         amount: amount,
         status: status,
         markazId: markazId,
+        date: date,
+        confirmDuplicate: confirmDuplicate,
       );
       _payments = [..._payments, newPayment];
       notifyListeners();
+      return newPayment;
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();
@@ -53,8 +60,10 @@ class PaymentProvider extends ChangeNotifier {
     }
   }
 
-  /// Marque un paiement comme payé
-  Future<void> markAsPaid(String paymentId) async {
+  /// Marque un paiement comme payé. Retourne le paiement tel que persisté
+  /// côté serveur (avec son numéro de reçu), pour permettre de proposer
+  /// immédiatement le reçu PDF (CDC section 21).
+  Future<Payment> markAsPaid(String paymentId) async {
     try {
       _errorMessage = null;
       final updatedPayment = await _service.markAsPaid(paymentId);
@@ -65,6 +74,7 @@ class PaymentProvider extends ChangeNotifier {
         return payment;
       }).toList();
       notifyListeners();
+      return updatedPayment;
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();

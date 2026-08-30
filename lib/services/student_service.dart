@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/student.dart';
 import '../repositories/student_repository.dart';
@@ -31,7 +32,7 @@ class StudentService {
     // Validation du numéro parent
     if (!_isValidPhoneNumber(parentPhone)) {
       throw Exception(
-        'Numéro de téléphone invalide. Format accepté: 9 chiffres (ex: 622180933)',
+        'Numéro de téléphone invalide',
       );
     }
 
@@ -47,7 +48,8 @@ class StudentService {
       throw Exception('Accès refusé à cette Markaz');
     }
 
-    // Créer l'élève
+    // Objet local temporaire : son id sera remplacé par celui attribué par le
+    // serveur (clé primaire MySQL) dès la réponse de l'API.
     const uuid = Uuid();
     final student = Student(
       id: uuid.v4(),
@@ -57,10 +59,8 @@ class StudentService {
       createdAt: DateTime.now(),
     );
 
-    // Persister
-    await _repository.addStudent(student);
-
-    return student;
+    // Persister et retourner l'élève tel qu'enregistré côté serveur
+    return await _repository.addStudent(student);
   }
 
   /// Valide et met à jour un élève
@@ -87,7 +87,7 @@ class StudentService {
 
     if (!_isValidPhoneNumber(parentPhone)) {
       throw Exception(
-          'Numéro de téléphone invalide. Format accepté: 9 chiffres (ex: 622180933)');
+          'Numéro de téléphone invalide');
     }
 
     // Mettre à jour
@@ -124,11 +124,26 @@ class StudentService {
         }
       } catch (e) {
         // Si erreur lors du retrait des groupes, on continue quand même
-        print('Erreur lors du retrait de l\'élève des groupes: $e');
+        debugPrint('Erreur lors du retrait de l\'élève des groupes: $e');
       }
     }
 
     await _repository.removeStudent(studentId);
+  }
+
+  /// Rattache (ou détache si [guardianId] est null) un élève à un tuteur
+  /// (doc/audit.md, point I5).
+  Future<Student> setGuardian(String studentId, String? guardianId) async {
+    final existingStudent = _repository.getStudentById(studentId);
+    if (existingStudent == null) {
+      throw Exception('Élève non trouvé');
+    }
+
+    if (!_authService.hasAccessToMarkaz(existingStudent.markazId)) {
+      throw Exception('Accès refusé à cette Markaz');
+    }
+
+    return await _repository.setGuardian(studentId, guardianId);
   }
 
   /// Récupère tous les élèves de la Markaz actuelle
@@ -166,13 +181,13 @@ class StudentService {
     };
   }
 
-  /// Valide un numéro de téléphone guinéen (9 chiffres)
+  /// Valide un numéro de téléphone. Auparavant limité à exactement 9
+  /// chiffres (numéro guinéen) — bloquant pour un déploiement Play Store
+  /// touchant d'autres pays (doc/audit.md, point I3). On se contente
+  /// désormais d'une longueur plausible pour un numéro réel.
   bool _isValidPhoneNumber(String phoneNumber) {
     final cleanedPhone = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
-
-    // Format accepté: 9 chiffres (numéro guinéen)
-    // Exemple: 622180933
-    return RegExp(r'^\d{9}$').hasMatch(cleanedPhone);
+    return cleanedPhone.length >= 6 && cleanedPhone.length <= 15;
   }
 
   /// Groupe les élèves par mois de création
@@ -186,19 +201,19 @@ class StudentService {
     return grouped;
   }
 
-  /// Synchronise les données depuis Firebase pour la markaz actuelle
-  Future<void> syncFromFirebase() async {
+  /// Synchronise les données depuis l'API pour la markaz actuelle
+  Future<void> syncFromApi() async {
     final markazId = _authService.currentMarkazId;
     if (markazId != null) {
-      print('Début sync Firebase pour markaz: $markazId');
+      debugPrint('Début sync API pour markaz: $markazId');
       await _repository.syncFromMarkaz(markazId);
-      print('Sync Firebase terminée');
+      debugPrint('Sync API terminée');
     } else {
-      print('Impossible de sync: markazId null');
+      debugPrint('Impossible de sync: markazId null');
     }
   }
 
-  /// Synchronise les données depuis Firebase pour un markaz spécifique
+  /// Synchronise les données depuis l'API pour un markaz spécifique
   Future<void> syncFromMarkaz(String markazId) async {
     await _repository.syncFromMarkaz(markazId);
   }

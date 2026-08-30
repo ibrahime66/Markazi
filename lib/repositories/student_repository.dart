@@ -1,101 +1,64 @@
+import 'package:flutter/foundation.dart';
 import '../models/student.dart';
 import '../datasources/hive_student_datasource.dart';
-import '../datasources/firebase_student_datasource.dart';
-import '../services/firebase_helper.dart';
+import '../datasources/api_student_datasource.dart';
 
-/// Repository for the gestion des données Student.
-/// Utilise Firebase avec cache Hive local pour mode hors ligne
+/// Repository pour la gestion des données Student.
+/// Utilise l'API Laravel avec cache Hive local pour mode hors ligne (CDC section 20).
+///
+/// La création est "API-first" : contrairement à l'ancien schéma Firestore,
+/// l'identifiant est attribué par le serveur (clé primaire MySQL) et ne peut
+/// pas être choisi côté client. Une création requiert donc une connexion ;
+/// les modifications restent tolérantes au mode hors ligne (cache local
+/// mis à jour immédiatement, synchronisation best-effort en arrière-plan).
 class StudentRepository {
   final HiveStudentDataSource _hiveDataSource;
-  final FirebaseStudentDataSource _firebaseDataSource;
+  final ApiStudentDatasource _apiDataSource;
 
-  StudentRepository(this._hiveDataSource, this._firebaseDataSource);
+  StudentRepository(this._hiveDataSource, this._apiDataSource);
 
   /// Initialise le repository et ouvre la box Hive via le data source.
   Future<void> init() async {
     await _hiveDataSource.init();
-
-    // Synchroniser depuis Firebase au démarrage si disponible
-    if (FirebaseHelper.isAvailable) {
-      // Attendre un peu pour que Firebase soit complètement initialisé
-      await Future.delayed(const Duration(seconds: 1));
-      await _syncFromFirebase();
-    }
   }
 
-  /// Synchronise les données depuis Firebase vers le cache local.
-  Future<void> _syncFromFirebase({String? markazId}) async {
-    try {
-      if (markazId != null) {
-        // Récupérer les élèves de cette markaz depuis Firebase
-        final firebaseStudents = await _firebaseDataSource.getStudentsByMarkaz(markazId);
-
-        // Vider le cache local et mettre à jour avec les données Firebase
-        await _hiveDataSource.clearAll();
-        for (final student in firebaseStudents) {
-          await _hiveDataSource.addStudent(student);
-        }
-
-        print('Sync Firebase: ${firebaseStudents.length} élèves synchronisés pour markaz $markazId');
-      } else {
-        // Si pas de markazId, récupérer tous les élèves et filtrer localement
-        // Pour l'instant, on ne fait rien pour éviter de charger des données d'autres markaz
-        print('Sync Firebase: markazId non spécifié, sync ignorée');
-      }
-    } catch (e) {
-      print('Erreur sync depuis Firebase: $e');
-    }
-  }
-
-  /// Force la synchronisation depuis Firebase pour une markaz spécifique.
-  Future<void> syncFromMarkaz(String markazId) async {
-    await _syncFromFirebase(markazId: markazId);
-  }
-
-  /// Ajoute un nouvel élève.
-  Future<void> addStudent(Student student) async {
-    // Sauvegarder localement d'abord (cache)
-    await _hiveDataSource.addStudent(student);
-
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        await _firebaseDataSource.addStudent(student, student.markazId);
-      } catch (e) {
-        print('Erreur sync Firebase: $e');
-        // Continue en mode local même si Firebase échoue
-      }
-    }
+  /// Ajoute un nouvel élève. Retourne l'élève tel que persisté côté serveur
+  /// (avec son identifiant réel), qui est aussi celui mis en cache local.
+  Future<Student> addStudent(Student student) async {
+    final saved = await _apiDataSource.addStudent(student, student.markazId);
+    await _hiveDataSource.addStudent(saved);
+    return saved;
   }
 
   /// Supprime un élève par ID.
   Future<void> removeStudent(String studentId) async {
-    // Supprimer localement
     await _hiveDataSource.deleteStudent(studentId);
-
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        await _firebaseDataSource.deleteStudent(studentId);
-      } catch (e) {
-        print('Erreur sync Firebase: $e');
-      }
+    try {
+      await _apiDataSource.deleteStudent(studentId);
+    } catch (e) {
+      debugPrint('Erreur sync API (suppression élève) : $e');
     }
   }
 
   /// Met à jour un élève.
   Future<void> updateStudent(Student student) async {
-    // Mettre à jour localement
     await _hiveDataSource.updateStudent(student);
-
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        await _firebaseDataSource.updateStudent(student, student.markazId);
-      } catch (e) {
-        print('Erreur sync Firebase: $e');
-      }
+    try {
+      final saved = await _apiDataSource.updateStudent(student, student.markazId);
+      await _hiveDataSource.updateStudent(saved);
+    } catch (e) {
+      debugPrint('Erreur sync API (mise à jour élève) : $e');
     }
+  }
+
+  /// Rattache (ou détache si [guardianId] est null) un élève à un tuteur
+  /// (doc/audit.md, point I5). Comme pour l'affectation à un groupe, c'est
+  /// une modification légère : on renvoie la version serveur (avec le
+  /// lien à jour) et on met à jour le cache local en conséquence.
+  Future<Student> setGuardian(String studentId, String? guardianId) async {
+    final saved = await _apiDataSource.setGuardian(studentId, guardianId);
+    await _hiveDataSource.updateStudent(saved);
+    return saved;
   }
 
   /// Récupère un élève par ID.
@@ -131,5 +94,19 @@ class StudentRepository {
   /// Ferme la box (utile à l'arrêt de l'app).
   Future<void> close() async {
     await _hiveDataSource.close();
+  }
+
+  /// Recharge le cache local depuis l'API pour la Markaz donnée
+  /// (à appeler après connexion, CDC section 20).
+  Future<void> syncFromMarkaz(String markazId) async {
+    try {
+      final students = await _apiDataSource.getStudentsByMarkaz(markazId);
+      await _hiveDataSource.clearAll();
+      for (final student in students) {
+        await _hiveDataSource.addStudent(student);
+      }
+    } catch (e) {
+      debugPrint('Erreur sync API (élèves) : $e');
+    }
   }
 }

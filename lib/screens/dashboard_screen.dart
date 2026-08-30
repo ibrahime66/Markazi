@@ -1,23 +1,28 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
-import 'package:path_provider/path_provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/student_provider.dart';
 import '../providers/payment_provider.dart';
 import '../providers/attendance_provider.dart';
 import '../providers/class_provider.dart';
+import '../providers/markaz_provider.dart';
+import '../providers/sync_queue_provider.dart';
 import '../services/auth_service.dart';
 import '../services/student_service.dart';
 import '../services/payment_service.dart';
 import '../services/attendance_service.dart';
 import '../services/class_service.dart';
-import '../widgets/common_widgets.dart';
+import '../services/api_client.dart';
+import '../datasources/api_payment_datasource.dart' show PaymentDuplicateException;
 import '../models/payment.dart';
 import '../models/class_model.dart';
+import '../models/student.dart';
+import '../models/attendance.dart';
+import '../document_engine/document_service.dart';
+import '../document_engine/models/document_metadata.dart';
+import '../document_engine/models/markaz_branding.dart';
 import 'group_details_screen.dart';
 
 /// Dashboard principal pour l'utilisateur connecté
@@ -32,36 +37,42 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedTabIndex = 0;
 
+  /// Devise configurée pour ce Markaz, utilisée partout où un montant est
+  /// affiché (doc/audit.md, point I4 : auparavant "FGN" codé en dur dans
+  /// toute l'app, incompatible avec un déploiement dans d'autres pays).
+  String get _currency => context.read<MarkazProvider>().markaz?.currency ?? 'GNF';
+
   @override
   void initState() {
     super.initState();
     // Charger les données au démarrage du dashboard
     Future.microtask(() async {
+      // Tous les lookups Provider sont faits ici, avant tout `await` (donc
+      // avant tout "gap" async) : on capture des objets Dart classiques
+      // (services/providers), pas le BuildContext lui-même, donc leur usage
+      // plus bas dans ce microtask reste valide même une fois l'écran démonté.
+      if (!mounted) return;
       final studentProvider = context.read<StudentProvider>();
       final paymentProvider = context.read<PaymentProvider>();
       final attendanceProvider = context.read<AttendanceProvider>();
       final classProvider = context.read<ClassProvider>();
+      final studentService = context.read<StudentService>();
+      final paymentService = context.read<PaymentService>();
+      final attendanceService = context.read<AttendanceService>();
+      final classService = context.read<ClassService>();
+      final markazProvider = context.read<MarkazProvider>();
 
-      // Synchroniser depuis Firebase d'abord (désactivé temporairement)
+      // Synchroniser depuis l'API avant de charger les données locales
       try {
-        // Désactivation temporaire pour débloquer l'application
-        print('⏸️ Sync Firebase désactivée temporairement');
-        
-        // final studentService = context.read<StudentService>();
-        // await studentService.syncFromFirebase();
-        
-        // final paymentService = context.read<PaymentService>();
-        // await paymentService.syncFromFirebase();
-        
-        // final attendanceService = context.read<AttendanceService>();
-        // await attendanceService.syncFromFirebase();
-        
-        // final classService = context.read<ClassService>();
-        // await classService.syncFromFirebase();
-        
-        print('✅ Chargement local terminé');
+        await studentService.syncFromApi();
+        await paymentService.syncFromApi();
+        await attendanceService.syncFromApi();
+        await classService.syncFromApi();
+        await markazProvider.load();
+
+        debugPrint('✅ Synchronisation API terminée');
       } catch (e) {
-        print('Erreur sync automatique: $e');
+        debugPrint('Erreur sync automatique: $e');
       }
 
       // Puis charger les données locales
@@ -85,16 +96,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // ─── Utility Methods ───────────────────────
-  /// Valide qu'un numéro de téléphone guinéen a exactement 9 chiffres
+  /// Valide un numéro de téléphone. Auparavant limité à exactement 9
+  /// chiffres (format guinéen) — bloquant pour un déploiement Play Store
+  /// où les utilisateurs peuvent être dans n'importe quel pays. On se
+  /// contente désormais d'une longueur plausible pour un numéro réel.
   bool _isValidGuineanPhone(String phone) {
     final digits = phone.replaceAll(RegExp(r'[^0-9]'), '');
-    return digits.length == 9;
+    return digits.length >= 6 && digits.length <= 15;
   }
 
-  /// Formate un numéro de téléphone guinéen (ex: 622 18 09 33)
+  /// Formate un numéro de téléphone pour l'affichage. Le groupement par
+  /// paires façon "622 18 09 33" ne reste appliqué qu'aux numéros à 9
+  /// chiffres (format guinéen) ; les autres longueurs sont affichées
+  /// telles quelles plutôt que tronquées ou mal découpées.
   String _formatGuineanPhone(String phone) {
     final digits = phone.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digits.length < 9) return digits;
+    if (digits.length != 9) return digits;
     return '${digits.substring(0, 3)} ${digits.substring(3, 5)} ${digits.substring(5, 7)} ${digits.substring(7, 9)}';
   }
 
@@ -125,7 +142,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             Text(
-              'Tableau de bord Markazi',
+              _tabTitles[_selectedTabIndex],
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -135,69 +152,178 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.sync, color: Colors.white),
-            onPressed: _syncFromFirebase,
-            tooltip: 'Synchroniser avec Firebase',
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: _handleLogout,
-            tooltip: 'Déconnexion',
+          Consumer<SyncQueueProvider>(
+            builder: (context, syncQueueProvider, _) {
+              final pending = syncQueueProvider.pendingCount;
+              return IconButton(
+                icon: Badge(
+                  isLabelVisible: pending > 0,
+                  label: Text('$pending'),
+                  child: const Icon(Icons.sync, color: Colors.white),
+                ),
+                onPressed: _syncFromApi,
+                tooltip: pending > 0
+                    ? '$pending action(s) en attente de synchronisation'
+                    : 'Synchroniser avec le serveur',
+              );
+            },
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Onglets
-          Container(
-            color: Colors.white,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
+      drawer: _buildNavigationDrawer(context, userName),
+      body: _buildTabContent(),
+    );
+  }
+
+  // Titres pleins affichés dans l'AppBar (les onglets ont migré dans le
+  // tiroir de navigation ci-dessous, avec icônes et libellés complets —
+  // plus d'abréviations tronquées ni de menu masqué derrière un bouton
+  // "⋮" flottant).
+  static const List<String> _tabTitles = [
+    'Vue d\'ensemble',
+    'Élèves',
+    'Groupes',
+    'Paiements',
+    'Présences',
+    'Rapports',
+  ];
+
+  /// Tiroir de navigation principal : réunit les onglets internes du
+  /// tableau de bord et les destinations autrefois cachées derrière le
+  /// menu "⋮" (Mon Markaz, Tuteurs/Parents, Récitations), toutes avec de
+  /// vraies icônes vectorielles et un libellé complet.
+  Widget _buildNavigationDrawer(BuildContext context, String userName) {
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+              decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
               child: Row(
                 children: [
-                  _buildTabButton('Vue', 0),
-                  _buildTabButton('Élèves', 1),
-                  _buildTabButton('Groupes', 2),
-                  _buildTabButton('Pay', 3),
-                  _buildTabButton('Prés', 4),
-                  _buildTabButton('Rap', 5),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.mosque_rounded,
+                        color: Colors.white, size: 26),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          'Markazi',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-          // Contenu des onglets
-          Expanded(
-            child: _buildTabContent(),
-          ),
-        ],
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  _buildDrawerTab(Icons.dashboard_rounded, 'Vue d\'ensemble', 0),
+                  _buildDrawerTab(Icons.people_rounded, 'Élèves', 1),
+                  _buildDrawerTab(Icons.groups_rounded, 'Groupes', 2),
+                  _buildDrawerTab(Icons.payments_rounded, 'Paiements', 3),
+                  _buildDrawerTab(Icons.event_available_rounded, 'Présences', 4),
+                  _buildDrawerTab(Icons.bar_chart_rounded, 'Rapports', 5),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Divider(height: 24),
+                  ),
+                  _buildDrawerRoute(Icons.mosque_outlined, 'Mon Markaz', '/markaz-settings'),
+                  _buildDrawerRoute(Icons.family_restroom_rounded, 'Tuteurs / Parents', '/guardians'),
+                  _buildDrawerRoute(Icons.menu_book_rounded, 'Récitations', '/recitations'),
+                ],
+              ),
+            ),
+            // Déconnexion : séparée en bas du tiroir, loin des actions
+            // courantes de l'AppBar où elle n'avait pas sa place.
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.logout_rounded, color: Colors.red),
+              title: Text(
+                'Déconnexion',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _handleLogout();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildTabButton(String label, int index) {
+  /// Item de tiroir pour un onglet interne du tableau de bord.
+  Widget _buildDrawerTab(IconData icon, String label, int index) {
     final isActive = _selectedTabIndex == index;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedTabIndex = index),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: isActive ? AppColors.primary : Colors.transparent,
-              width: 2,
-            ),
-          ),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 11,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-            color: isActive ? AppColors.primary : Colors.grey[600],
-          ),
+    return ListTile(
+      leading: Icon(icon, color: isActive ? AppColors.primary : Colors.grey[600]),
+      title: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 14,
+          fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+          color: isActive ? AppColors.primary : AppColors.textDark,
         ),
       ),
+      selected: isActive,
+      selectedTileColor: AppColors.primary.withValues(alpha: 0.08),
+      onTap: () {
+        setState(() => _selectedTabIndex = index);
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  /// Item de tiroir qui navigue vers un écran séparé (route nommée).
+  Widget _buildDrawerRoute(IconData icon, String label, String route) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.grey[600]),
+      title: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textDark,
+        ),
+      ),
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.pushNamed(context, route);
+      },
     );
   }
 
@@ -250,7 +376,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisCount: 2,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: 1.5,
+                // 1.5 débordait de 31px sur certains téléphones (icône +
+                // 2 lignes de texte ne tenaient pas dans la hauteur allouée
+                // — vérifié sur un TECNO CK6 réel). 1.15 laisse assez de
+                // marge verticale.
+                childAspectRatio: 1.15,
                 children: [
                   _buildStatCard(
                     'Élèves',
@@ -289,15 +419,234 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          Wrap(
-            alignment: WrapAlignment.spaceEvenly,
-            spacing: 8,
-            runSpacing: 8,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildActionButton('Ajouter', Icons.person_add),
-              _buildActionButton('Paiement', Icons.add_card),
-              _buildActionButton('Présence', Icons.check_circle),
+              Expanded(child: _buildActionButton('Ajouter', Icons.person_add)),
+              const SizedBox(width: 12),
+              Expanded(child: _buildActionButton('Paiement', Icons.add_card)),
+              const SizedBox(width: 12),
+              Expanded(child: _buildActionButton('Présence', Icons.check_circle)),
             ],
+          ),
+          const SizedBox(height: 32),
+          Text(
+            'Mes groupes',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Consumer<ClassProvider>(
+            builder: (context, classProvider, _) {
+              return _buildGroupsSummaryCard(classProvider);
+            },
+          ),
+          const SizedBox(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Paiements récents',
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              TextButton(
+                onPressed: () => setState(() => _selectedTabIndex = 3),
+                child: Text(
+                  'Tout voir',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Consumer2<StudentProvider, PaymentProvider>(
+            builder: (context, studentProvider, paymentProvider, _) {
+              final recent = [...paymentProvider.payments]
+                ..sort((a, b) => b.date.compareTo(a.date));
+              return _buildRecentPaymentsCard(
+                  recent.take(4).toList(), studentProvider);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Carte de résumé des groupes : nombre de groupes actifs et taux
+  /// d'occupation global, pour combler l'espace vide de la vue d'ensemble
+  /// avec une information utile plutôt qu'un simple remplissage visuel.
+  Widget _buildGroupsSummaryCard(ClassProvider classProvider) {
+    final activeCount = classProvider.activeClassesCount;
+    final occupied = classProvider.totalStudentsInClasses;
+    final capacity = classProvider.totalCapacity;
+    final occupancyRate = capacity > 0 ? (occupied / capacity * 100) : 0.0;
+
+    if (activeCount == 0) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.groups_outlined, color: Colors.grey[400], size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Aucun groupe créé pour l\'instant',
+                style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[600]),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.groups_rounded, color: AppColors.primary, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$activeCount groupe${activeCount > 1 ? 's' : ''} actif${activeCount > 1 ? 's' : ''}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$occupied / $capacity places occupées',
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '${occupancyRate.toStringAsFixed(0)}%',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Carte listant les derniers paiements enregistrés, avec le nom de
+  /// l'élève, le montant et le statut.
+  Widget _buildRecentPaymentsCard(
+      List<Payment> recentPayments, StudentProvider studentProvider) {
+    if (recentPayments.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.receipt_long_outlined, color: Colors.grey[400], size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Aucun paiement enregistré pour l\'instant',
+                style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[600]),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < recentPayments.length; i++) ...[
+            if (i > 0) const Divider(height: 1),
+            _buildRecentPaymentRow(recentPayments[i], studentProvider),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentPaymentRow(Payment payment, StudentProvider studentProvider) {
+    final student = studentProvider.students
+        .where((s) => s.id == payment.studentId)
+        .firstOrNull;
+    final isPaid = payment.status == PaymentStatus.paid;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Icon(
+            isPaid ? Icons.check_circle_rounded : Icons.hourglass_top_rounded,
+            color: isPaid ? Colors.green : Colors.orange,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              student?.name ?? 'Élève supprimé',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textDark,
+              ),
+            ),
+          ),
+          Text(
+            '${payment.amount.toStringAsFixed(0)} $_currency',
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: isPaid ? Colors.green : Colors.orange,
+            ),
           ),
         ],
       ),
@@ -310,29 +659,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: Icon(icon, color: color, size: 20),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 value,
                 style: GoogleFonts.poppins(
-                  fontSize: 24,
+                  fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -350,115 +700,174 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // Bouton d'action rapide : occupe toute la largeur que lui donne son
+  // Expanded parent (au lieu d'une taille fixe de 70px) pour que les 3
+  // boutons restent parfaitement alignés entre eux quelle que soit la
+  // largeur de l'écran, plutôt que de dépendre du calcul intrinsèque
+  // d'un Wrap.
   Widget _buildActionButton(String label, IconData icon) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: () {
-            if (label.contains('Ajouter')) {
-              _showAddStudentDialog();
-            } else if (label.contains('Paiement')) {
-              _showAddPaymentDialog();
-            } else if (label.contains('Présence')) {
-              _showMarkAttendanceDialog();
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Feature: $label - Coming soon!')),
-              );
-            }
-          },
-          child: Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: AppColors.primary, size: 28),
+    VoidCallback onTap;
+    switch (label) {
+      case 'Ajouter':
+        onTap = _showAddStudentDialog;
+        break;
+      case 'Paiement':
+        onTap = _showAddPaymentDialog;
+        break;
+      default:
+        onTap = _showMarkAttendanceDialog;
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: AppColors.primary, size: 26),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textDark,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   // ─── STUDENTS TAB ──────────────────────────
+  /// En-tête commun à un onglet liste : titre, compteur et bouton
+  /// "Ajouter" toujours visible (liste vide ou non) — Paiements et
+  /// Présences n'avaient aucun moyen d'ajouter un élément directement
+  /// depuis leur onglet (seulement via "Actions rapides" sur la vue
+  /// d'ensemble), contrairement aux Groupes qui avaient déjà ce bouton.
+  Widget _buildTabHeader(String title, String count, VoidCallback onAdd) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: Colors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                count,
+                style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+              ),
+            ],
+          ),
+          ElevatedButton.icon(
+            onPressed: onAdd,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Ajouter'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStudentsTab() {
     return Consumer<StudentProvider>(
       builder: (context, studentProvider, _) {
-        if (studentProvider.students.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.people_outline, size: 64, color: Colors.grey[300]),
-                const SizedBox(height: 16),
-                Text(
-                  'Aucun élève enregistré',
-                  style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: _showAddStudentDialog,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Ajouter un élève'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                  ),
-                ),
-              ],
+        return Column(
+          children: [
+            _buildTabHeader(
+              'Élèves',
+              '${studentProvider.students.length} élève(s)',
+              _showAddStudentDialog,
             ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: studentProvider.students.length,
-          itemBuilder: (context, index) {
-            final student = studentProvider.students[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: ListTile(
-                onTap: () => _showStudentDetails(student),
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.primary.withOpacity(0.2),
-                  child: Text(
-                    student.name.isNotEmpty
-                        ? student.name[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                        color: AppColors.primary, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                title: Text(student.name),
-                subtitle:
-                    Text('Tél: ${_formatGuineanPhone(student.parentPhone)}'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.edit, color: Colors.blue, size: 20),
-                      onPressed: () => _showEditStudentDialog(student),
-                      tooltip: 'Modifier l\'élève',
+            Expanded(
+              child: studentProvider.students.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.people_outline, size: 64, color: Colors.grey[300]),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Aucun élève enregistré',
+                            style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: studentProvider.students.length,
+                      itemBuilder: (context, index) {
+                        final student = studentProvider.students[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: ListTile(
+                            onTap: () => _showStudentDetails(student),
+                            leading: CircleAvatar(
+                              backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                              child: Text(
+                                student.name.isNotEmpty
+                                    ? student.name[0].toUpperCase()
+                                    : '?',
+                                style: TextStyle(
+                                    color: AppColors.primary, fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                            title: Text(student.name),
+                            subtitle:
+                                Text('Tél: ${_formatGuineanPhone(student.parentPhone)}'),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.edit, color: Colors.blue, size: 20),
+                                  onPressed: () => _showEditStudentDialog(student),
+                                  tooltip: 'Modifier l\'élève',
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.delete, color: Colors.red, size: 20),
+                                  onPressed: () => _showDeleteStudentDialog(student),
+                                  tooltip: 'Supprimer l\'élève',
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                    IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red, size: 20),
-                      onPressed: () => _showDeleteStudentDialog(student),
-                      tooltip: 'Supprimer l\'élève',
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+            ),
+          ],
         );
       },
     );
@@ -473,35 +882,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final validPayments = paymentProvider.payments
             .where((payment) => existingStudentIds.contains(payment.studentId))
             .toList();
-        
-        if (validPayments.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.payments_outlined,
-                    size: 64, color: Colors.grey[300]),
-                const SizedBox(height: 16),
-                Text(
-                  paymentProvider.payments.isEmpty 
-                      ? 'Aucun paiement enregistré'
-                      : 'Aucun paiement valide (élèves supprimés)',
-                  style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
-                ),
-                if (paymentProvider.payments.isNotEmpty && validPayments.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      '${paymentProvider.payments.length} paiement(s) lié(s) à des élèves supprimés',
-                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.orange),
-                    ),
-                  ),
-              ],
-            ),
-          );
-        }
 
-        return ListView.builder(
+        return Column(
+          children: [
+            _buildTabHeader(
+              'Paiements',
+              '${validPayments.length} paiement(s)',
+              _showAddPaymentDialog,
+            ),
+            Expanded(child: _buildPaymentsList(paymentProvider, studentProvider, validPayments)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPaymentsList(PaymentProvider paymentProvider, StudentProvider studentProvider,
+      List<Payment> validPayments) {
+    if (validPayments.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.payments_outlined, size: 64, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(
+              paymentProvider.payments.isEmpty
+                  ? 'Aucun paiement enregistré'
+                  : 'Aucun paiement valide (élèves supprimés)',
+              style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
+            ),
+            if (paymentProvider.payments.isNotEmpty && validPayments.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  '${paymentProvider.payments.length} paiement(s) lié(s) à des élèves supprimés',
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.orange),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: validPayments.length,
           itemBuilder: (context, index) {
@@ -520,8 +944,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: payment.status.toString().contains('paid')
-                        ? Colors.green.withOpacity(0.2)
-                        : Colors.orange.withOpacity(0.2),
+                        ? Colors.green.withValues(alpha: 0.2)
+                        : Colors.orange.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -536,7 +960,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 title: Text(studentName),
                 subtitle: Text(payment.date.toString().split(' ')[0]),
                 trailing: Text(
-                  '${payment.amount} FGN',
+                  '${payment.amount} $_currency',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     color: Colors.blue,
@@ -546,8 +970,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             );
           },
         );
-      },
-    );
   }
 
   // ─── ATTENDANCE TAB ────────────────────────
@@ -559,7 +981,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final validAttendances = attendanceProvider.attendances
             .where((attendance) => existingStudentIds.contains(attendance.studentId))
             .toList();
-        
+
+        return Column(
+          children: [
+            _buildTabHeader(
+              'Présences',
+              '${validAttendances.length} présence(s)',
+              _showMarkAttendanceDialog,
+            ),
+            Expanded(
+              child: _buildAttendanceList(attendanceProvider, studentProvider, validAttendances),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildAttendanceList(AttendanceProvider attendanceProvider,
+      StudentProvider studentProvider, List<Attendance> validAttendances) {
         if (validAttendances.isEmpty) {
           return Center(
             child: Column(
@@ -600,7 +1040,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // Déterminer le statut et la couleur
             final isPresent = attendance.status.toString().contains('present');
             final isAbsent = attendance.status.toString().contains('absent');
-            final isLate = attendance.status.toString().contains('late');
 
             Color statusColor;
             IconData statusIcon;
@@ -629,7 +1068,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.2),
+                    color: statusColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -659,8 +1098,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             );
           },
         );
-      },
-    );
   }
 
   // ─── REPORTS TAB ───────────────────────────
@@ -704,7 +1141,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: _generatePdfReport,
+              onPressed: _generateStudentReport,
               icon: const Icon(Icons.download),
               label: const Text('Exporter en PDF'),
               style: ElevatedButton.styleFrom(
@@ -726,20 +1163,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             Icon(icon, color: AppColors.primary, size: 24),
             const SizedBox(width: 12),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            // Expanded (plutôt que Spacer après un Text non contraint) :
+            // certains libellés de rapports sont longs ("Taux présence
+            // par élève") et débordaient sur les écrans étroits sans
+            // cette contrainte.
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-            const Spacer(),
             Icon(Icons.chevron_right, color: Colors.grey[400]),
           ],
         ),
@@ -776,21 +1220,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   controller: phoneController,
                   decoration: InputDecoration(
                     labelText: 'Téléphone du parent',
-                    hintText: '622180933',
-                    helperText: 'Format: 9 chiffres (ex: 622180933)',
+                    hintText: 'Ex: 622180933',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     prefixIcon: const Icon(Icons.phone),
                   ),
                   keyboardType: TextInputType.phone,
-                  onChanged: (value) {
-                    // Affiche le numéro formaté au fur et à mesure
-                    if (value.isNotEmpty) {
-                      final formatted = _formatGuineanPhone(value);
-                      // Optionnel: afficher la preview formatée
-                    }
-                  },
                 ),
               ],
             ),
@@ -817,7 +1253,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
-                          'Numéro invalide! Utilisez 9 chiffres (ex: 622180933)'),
+                          'Numéro de téléphone invalide'),
                       backgroundColor: Colors.orange,
                     ),
                   );
@@ -831,7 +1267,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     parentPhone: _cleanPhoneNumber(phoneController.text),
                   );
 
-                  if (mounted) {
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Élève ajouté avec succès!'),
@@ -841,7 +1277,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Navigator.pop(context);
                   }
                 } catch (e) {
-                  if (mounted) {
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Erreur: ${e.toString()}'),
@@ -891,8 +1327,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   controller: phoneController,
                   decoration: InputDecoration(
                     labelText: 'Téléphone du parent',
-                    hintText: '622180933',
-                    helperText: 'Format: 9 chiffres (ex: 622180933)',
+                    hintText: 'Ex: 622180933',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -925,7 +1360,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
-                          'Numéro invalide! Utilisez 9 chiffres (ex: 622180933)'),
+                          'Numéro de téléphone invalide'),
                       backgroundColor: Colors.orange,
                     ),
                   );
@@ -940,7 +1375,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     parentPhone: _cleanPhoneNumber(phoneController.text),
                   );
 
-                  if (mounted) {
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Élève modifié avec succès!'),
@@ -950,7 +1385,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Navigator.pop(context);
                   }
                 } catch (e) {
-                  if (mounted) {
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Erreur: ${e.toString()}'),
@@ -986,9 +1421,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1019,7 +1454,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final studentProvider = context.read<StudentProvider>();
                 await studentProvider.removeStudent(student.id);
 
-                if (mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Élève supprimé avec succès!'),
@@ -1029,7 +1464,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Navigator.pop(context);
                 }
               } catch (e) {
-                if (mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Erreur: ${e.toString()}'),
@@ -1051,56 +1486,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // ─── Add Payment Dialog ────────────────────
   // ─── Payment Dialog ───────────────────────
-  String _getCurrentMonth() {
-    final now = DateTime.now();
-    final months = [
-      'Janvier',
-      'Février',
-      'Mars',
-      'Avril',
-      'Mai',
-      'Juin',
-      'Juillet',
-      'Août',
-      'Septembre',
-      'Octobre',
-      'Novembre',
-      'Décembre'
-    ];
-    return '${months[now.month - 1]} ${now.year}';
-  }
+  static const List<String> _monthNames = [
+    'Janvier',
+    'Février',
+    'Mars',
+    'Avril',
+    'Mai',
+    'Juin',
+    'Juillet',
+    'Août',
+    'Septembre',
+    'Octobre',
+    'Novembre',
+    'Décembre'
+  ];
 
-  List<String> _getMonthsList() {
-    final months = [
-      'Janvier',
-      'Février',
-      'Mars',
-      'Avril',
-      'Mai',
-      'Juin',
-      'Juillet',
-      'Août',
-      'Septembre',
-      'Octobre',
-      'Novembre',
-      'Décembre'
-    ];
-    final now = DateTime.now();
-    final monthsList = <String>[];
+  /// Libellé affiché pour un mois (ex. "Août 2026").
+  String _formatMonthLabel(DateTime month) =>
+      '${_monthNames[month.month - 1]} ${month.year}';
 
-    // Afficher les 12 derniers mois
-    for (int i = 0; i < 12; i++) {
-      final date = DateTime(now.year, now.month - i, 1);
-      monthsList.add('${months[date.month - 1]} ${date.year}');
-    }
-    return monthsList;
+  /// Les 12 derniers mois (dont le mois en cours), premier jour de chaque
+  /// mois. Renvoie de vraies dates — et non de simples libellés — pour que
+  /// le mois choisi dans le formulaire de paiement soit réellement celui
+  /// envoyé au serveur (voir _submitPayment : auparavant le paiement était
+  /// toujours daté d'aujourd'hui quel que soit le mois sélectionné, rendant
+  /// impossible l'enregistrement d'un paiement pour un autre mois que le
+  /// mois en cours).
+  List<DateTime> _getMonthsList() {
+    final now = DateTime.now();
+    return List.generate(12, (i) => DateTime(now.year, now.month - i, 1));
   }
 
   void _showAddPaymentDialog() {
     String? selectedStudentId;
     final amountController = TextEditingController();
     String selectedStatus = 'paid';
-    String selectedMonth = _getCurrentMonth();
+    final now = DateTime.now();
+    DateTime selectedMonth = DateTime(now.year, now.month, 1);
 
     showDialog(
       context: context,
@@ -1129,7 +1551,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<String>(
-                      value: selectedStudentId,
+                      initialValue: selectedStudentId,
                       hint: const Text('Sélectionner un élève'),
                       isExpanded: true,
                       decoration: InputDecoration(
@@ -1153,7 +1575,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     TextField(
                       controller: amountController,
                       decoration: InputDecoration(
-                        labelText: 'Montant (FGN)',
+                        labelText: 'Montant ($_currency)',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -1162,8 +1584,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       keyboardType: TextInputType.number,
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: selectedMonth,
+                    DropdownButtonFormField<DateTime>(
+                      initialValue: selectedMonth,
                       isExpanded: true,
                       decoration: InputDecoration(
                         labelText: 'Mois',
@@ -1174,9 +1596,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                       items: _getMonthsList().map((month) {
-                        return DropdownMenuItem<String>(
+                        return DropdownMenuItem<DateTime>(
                           value: month,
-                          child: Text(month),
+                          child: Text(_formatMonthLabel(month)),
                         );
                       }).toList(),
                       onChanged: (value) {
@@ -1187,7 +1609,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: selectedStatus,
+                      initialValue: selectedStatus,
                       decoration: InputDecoration(
                         labelText: 'Statut',
                         border: OutlineInputBorder(
@@ -1226,37 +1648,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       return;
                     }
 
-                    try {
-                      final amount = double.parse(amountController.text);
-                      final paymentProvider = context.read<PaymentProvider>();
-                      await paymentProvider.addPayment(
-                        studentId: selectedStudentId!,
-                        amount: amount,
-                        status: selectedStatus == 'paid'
-                            ? PaymentStatus.paid
-                            : PaymentStatus.unpaid,
+                    // Le clavier numérique en français affiche souvent une
+                    // virgule plutôt qu'un point pour les décimales.
+                    final amount = double.tryParse(
+                        amountController.text.replaceAll(',', '.'));
+                    if (amount == null || amount <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Montant invalide'),
+                        ),
                       );
-
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                                'Paiement pour $selectedMonth enregistré!'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                        Navigator.pop(context);
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Erreur: ${e.toString()}'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
+                      return;
                     }
+
+                    await _submitPayment(
+                      dialogContext: context,
+                      studentId: selectedStudentId!,
+                      amount: amount,
+                      status: selectedStatus == 'paid'
+                          ? PaymentStatus.paid
+                          : PaymentStatus.unpaid,
+                      month: selectedMonth,
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -1269,6 +1682,87 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
+  }
+
+  /// Enregistre un paiement, avec confirmation explicite si le serveur
+  /// détecte qu'un paiement payé existe déjà pour cet élève ce mois-ci
+  /// (CDC 8.7). Sans ce circuit, ce refus légitime du serveur remontait
+  /// comme une erreur brute sans aucun moyen de la résoudre — l'utilisateur
+  /// ne pouvait tout simplement pas enregistrer le paiement.
+  Future<void> _submitPayment({
+    required BuildContext dialogContext,
+    required String studentId,
+    required double amount,
+    required PaymentStatus status,
+    required DateTime month,
+    bool confirmDuplicate = false,
+  }) async {
+    try {
+      final paymentProvider = dialogContext.read<PaymentProvider>();
+      final savedPayment = await paymentProvider.addPayment(
+        studentId: studentId,
+        amount: amount,
+        status: status,
+        date: month,
+        confirmDuplicate: confirmDuplicate,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Paiement pour ${_formatMonthLabel(month)} enregistré!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      if (dialogContext.mounted) {
+        Navigator.pop(dialogContext); // Ferme le formulaire de paiement
+      }
+
+      // Reçu PDF disponible seulement pour un paiement marqué payé
+      // (CDC section 8.7 / 21).
+      if (savedPayment.status == PaymentStatus.paid) {
+        _offerPaymentReceipt(savedPayment);
+      }
+    } on PaymentDuplicateException catch (e) {
+      if (!mounted) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Paiement déjà enregistré'),
+          content: Text(e.message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              child: const Text('Confirmer quand même'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed == true && dialogContext.mounted) {
+        await _submitPayment(
+          dialogContext: dialogContext,
+          studentId: studentId,
+          amount: amount,
+          status: status,
+          month: month,
+          confirmDuplicate: true,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   // ─── Mark Attendance Dialog ────────────────
@@ -1304,7 +1798,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<String>(
-                      value: selectedStudentId,
+                      initialValue: selectedStudentId,
                       hint: const Text('Sélectionner un élève'),
                       isExpanded: true,
                       decoration: InputDecoration(
@@ -1339,7 +1833,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: selectedStatus,
+                      initialValue: selectedStatus,
                       decoration: InputDecoration(
                         labelText: 'Statut',
                         border: OutlineInputBorder(
@@ -1436,7 +1930,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         );
                       }
 
-                      if (mounted) {
+                      if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Présence enregistrée avec succès!'),
@@ -1446,7 +1940,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Navigator.pop(context);
                       }
                     } catch (e) {
-                      if (mounted) {
+                      if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Erreur: ${e.toString()}'),
@@ -1619,14 +2113,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildReportStat('Total payé',
-                      '${totalPaid.toStringAsFixed(2)} FGN', Colors.green),
+                      '${totalPaid.toStringAsFixed(2)} $_currency', Colors.green),
                   const SizedBox(height: 12),
                   _buildReportStat('Total en attente',
-                      '${totalUnpaid.toStringAsFixed(2)} FGN', Colors.orange),
+                      '${totalUnpaid.toStringAsFixed(2)} $_currency', Colors.orange),
                   const SizedBox(height: 12),
                   _buildReportStat(
                       'Total général',
-                      '${(totalPaid + totalUnpaid).toStringAsFixed(2)} FGN',
+                      '${(totalPaid + totalUnpaid).toStringAsFixed(2)} $_currency',
                       AppColors.primary),
                   const SizedBox(height: 24),
                   Text(
@@ -1744,9 +2238,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1774,7 +2268,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Montant
               _buildPaymentDetailRow(
                 'Montant',
-                '${payment.amount} FGN',
+                '${payment.amount} $_currency',
                 Colors.green,
               ),
               const SizedBox(height: 12),
@@ -1837,20 +2331,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           if (!isPaid)
             ElevatedButton(
-              onPressed: () {
-                // Marquer comme payé
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Paiement marqué comme payé'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-                Navigator.pop(context);
+              onPressed: () async {
+                // Bouton auparavant factice : il affichait un message de
+                // succès sans rien enregistrer nulle part (ni API, ni
+                // cache local) — le paiement restait "en attente" partout
+                // dans l'app malgré le message affiché.
+                final paymentProvider = context.read<PaymentProvider>();
+                try {
+                  final updated = await paymentProvider.markAsPaid(payment.id);
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Paiement marqué comme payé'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  Navigator.pop(context);
+                  _offerPaymentReceipt(updated);
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Erreur: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
               ),
               child: const Text('Marquer comme payé'),
+            ),
+          // Auparavant, le reçu n'était proposé qu'une seule fois, juste
+          // après l'enregistrement du paiement — si on fermait cette
+          // fenêtre sans télécharger/partager, il n'y avait plus aucun
+          // moyen d'y accéder à nouveau depuis l'onglet Paiements.
+          if (isPaid)
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _offerPaymentReceipt(payment);
+              },
+              icon: const Icon(Icons.receipt_long, size: 18),
+              label: const Text('Reçu'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
             ),
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1880,9 +2407,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1998,7 +2525,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
@@ -2068,10 +2595,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border:
-                          Border.all(color: AppColors.primary.withOpacity(0.3)),
+                          Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2125,13 +2652,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 8),
                   _buildStudentDetailRow(
                     'Total payé',
-                    '$paidAmount FGN',
+                    '$paidAmount $_currency',
                     Colors.green,
                   ),
                   const SizedBox(height: 8),
                   _buildStudentDetailRow(
                     'Total en attente',
-                    '${totalPayments - paidAmount} FGN',
+                    '${totalPayments - paidAmount} $_currency',
                     Colors.orange,
                   ),
                   const SizedBox(height: 8),
@@ -2277,7 +2804,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
@@ -2311,7 +2838,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
@@ -2370,10 +2897,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       final weekPresent = weekAttendances
                           .where((a) => a.status.toString().contains('present'))
                           .length;
-
-                      final weekRate = weekAttendances.isNotEmpty
-                          ? ((weekPresent / weekAttendances.length) * 100)
-                          : 0.0;
 
                       // Calculer les stats du mois actuel
                       final monthStart = DateTime(now.year, now.month, 1);
@@ -2509,7 +3032,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                       );
-                    }).toList()
+                    })
                 ],
               ),
             ),
@@ -2530,19 +3053,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: GoogleFonts.poppins(fontSize: 14)),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: color,
+        // Expanded : un montant formaté ("1 234 567,00 FGN") est bien plus
+        // long qu'un simple nombre de sessions — sans contrainte, la ligne
+        // débordait sur le rapport des paiements.
+        Expanded(
+          child: Text(label, style: GoogleFonts.poppins(fontSize: 14)),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              value,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
             ),
           ),
         ),
@@ -2582,9 +3114,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -2760,7 +3292,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       child: InkWell(
-        onTap: () => _showClassDetails(classModel),
+        // La carte entière ouvre maintenant directement la fiche complète
+        // du groupe (déjà accessible via le bouton "Voir" ci-dessous, dans
+        // l'ancienne version) — le petit résumé en boîte de dialogue
+        // (`_showClassDetails`) faisait doublon et n'ajoutait rien que la
+        // fiche complète ne montre déjà.
+        onTap: () => _showGroupDetails(classModel),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -2800,7 +3337,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -2812,6 +3349,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                   ),
+                  // Menu d'actions secondaires : remplace la rangée de 4-5
+                  // petits boutons texte en bas de carte (dont deux
+                  // libellés tronqués, "Modif"/"Suppr") qui rendait la
+                  // carte encombrée et peu soignée.
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert, color: Colors.grey[600], size: 20),
+                    onSelected: (action) {
+                      switch (action) {
+                        case 'add_student':
+                          _showAddStudentToGroupDialog(classModel);
+                          break;
+                        case 'remove_student':
+                          _showRemoveStudentFromGroupDialog(classModel);
+                          break;
+                        case 'edit':
+                          _showEditClassDialog(classModel);
+                          break;
+                        case 'delete':
+                          _showDeleteClassDialog(classModel, classProvider);
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'add_student',
+                        child: ListTile(
+                          leading: Icon(Icons.person_add, size: 20),
+                          title: Text('Ajouter un élève'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      if (classModel.studentIds.isNotEmpty)
+                        const PopupMenuItem(
+                          value: 'remove_student',
+                          child: ListTile(
+                            leading: Icon(Icons.person_remove, size: 20, color: Colors.orange),
+                            title: Text('Retirer un élève'),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: ListTile(
+                          leading: Icon(Icons.edit, size: 20),
+                          title: Text('Modifier le groupe'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: ListTile(
+                          leading: Icon(Icons.delete, size: 20, color: Colors.red),
+                          title: Text('Supprimer le groupe'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
               
@@ -2822,44 +3417,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Icon(Icons.person, size: 16, color: Colors.grey[600]),
                   const SizedBox(width: 4),
-                  Text(
-                    classModel.teacherName,
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      color: Colors.grey[700],
+                  // Expanded + ellipsis : le nom d'un maître peut être long
+                  // et débordait sans contrainte de largeur.
+                  Expanded(
+                    child: Text(
+                      classModel.teacherName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        color: Colors.grey[700],
+                      ),
                     ),
                   ),
                 ],
               ),
-              
+
               if (classModel.schedule != null) ...[
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 4),
-                    Text(
-                      classModel.schedule!,
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: Colors.grey[700],
+                    // Un horaire détaillé ("Lundi, Mercredi, Vendredi
+                    // 14h-16h") dépasse facilement la largeur de la carte.
+                    Expanded(
+                      child: Text(
+                        classModel.schedule!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: Colors.grey[700],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ],
-              
+
               if (classModel.room != null) ...[
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     Icon(Icons.room, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 4),
-                    Text(
-                      classModel.room!,
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: Colors.grey[700],
+                    Expanded(
+                      child: Text(
+                        classModel.room!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: Colors.grey[700],
+                        ),
                       ),
                     ),
                   ],
@@ -2900,68 +3511,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
-              
-              const SizedBox(height: 12),
-              
-              // Actions
-              Wrap(
-                alignment: WrapAlignment.end,
-                spacing: 4,
-                runSpacing: 4,
-                children: [
-                  TextButton.icon(
-                    onPressed: () => _showGroupDetails(classModel),
-                    icon: const Icon(Icons.visibility, size: 14),
-                    label: const Text('Voir'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      minimumSize: Size(0, 32),
-                    ),
-                  ),
-                  if (classModel.studentIds.isNotEmpty)
-                    TextButton.icon(
-                      onPressed: () => _showRemoveStudentFromGroupDialog(classModel),
-                      icon: const Icon(Icons.person_remove, size: 14),
-                      label: const Text('Retirer'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.orange,
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        minimumSize: Size(0, 32),
-                      ),
-                    ),
-                  TextButton.icon(
-                    onPressed: () => _showAddStudentToGroupDialog(classModel),
-                    icon: const Icon(Icons.person_add, size: 14),
-                    label: const Text('Ajouter'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      minimumSize: Size(0, 32),
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => _showEditClassDialog(classModel),
-                    icon: const Icon(Icons.edit, size: 14),
-                    label: const Text('Modif'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      minimumSize: Size(0, 32),
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => _showDeleteClassDialog(classModel, classProvider),
-                    icon: const Icon(Icons.delete, size: 14),
-                    label: const Text('Suppr'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      minimumSize: Size(0, 32),
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
@@ -2969,208 +3518,330 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // ─── PDF Export ────────────────────────────
-  Future<void> _generatePdfReport() async {
-    try {
-      // Afficher le dialogue de chargement
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const AlertDialog(
-          content: Row(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 16),
-              Text('Génération du PDF en cours...'),
-            ],
-          ),
-        ),
-      );
+  // ─── Reçu de paiement (Document Engine) ────────────────
+  static const _moisFr = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+  ];
 
-      // Récupérer les données
-      final studentProvider = context.read<StudentProvider>();
-      final paymentProvider = context.read<PaymentProvider>();
-      final attendanceProvider = context.read<AttendanceProvider>();
-      final authService = context.read<AuthService>();
+  /// Propose de prévisualiser/partager le reçu PDF juste après l'enregistrement
+  /// d'un paiement payé (CDC section 21 : "prévisualisable, téléchargeable,
+  /// imprimable et partageable").
+  Future<void> _offerPaymentReceipt(Payment payment) async {
+    final studentProvider = context.read<StudentProvider>();
+    final student = studentProvider.students
+        .where((s) => s.id == payment.studentId)
+        .firstOrNull;
+    final markaz = context.read<MarkazProvider>().markaz;
+    final teacherName = context.read<AuthService>().currentUser?.name ?? 'Maître';
 
-      final students = studentProvider.students;
-      final payments = paymentProvider.payments;
-      final attendances = attendanceProvider.attendances;
+    if (student == null || markaz == null) return;
 
-      // Créer le document PDF
-      final pdf = pw.Document();
-      final dateNow = DateTime.now();
-      final dateStr = '${dateNow.day.toString().padLeft(2, '0')}/${dateNow.month.toString().padLeft(2, '0')}/${dateNow.year}';
-
-      // Ajouter la page principale
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(32),
-          build: (pw.Context context) {
-            return pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                // En-tête
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Text(
-                          'RAPPORT MARKAZI',
-                          style: pw.TextStyle(
-                            fontSize: 24,
-                            fontWeight: pw.FontWeight.bold,
-                            color: PdfColor.fromHex(AppColors.primary.value.toRadixString(16).padLeft(8, '0')),
-                          ),
-                        ),
-                        pw.SizedBox(height: 4),
-                        pw.Text(
-                          'Markaz: ${authService.currentMarkazId ?? 'N/A'}',
-                          style: const pw.TextStyle(fontSize: 14),
-                        ),
-                        pw.Text(
-                          'Date: $dateStr',
-                          style: const pw.TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                pw.SizedBox(height: 20),
-                
-                // Statistiques élèves
-                _buildPdfSection('STATISTIQUES ÉLÈVES', [
-                  'Nombre total d\'élèves: ${students.length}',
-                  'Élèves actifs: ${students.where((s) => true).length}',
-                ]),
-                
-                pw.SizedBox(height: 16),
-                
-                // Statistiques paiements
-                _buildPdfSection('STATISTIQUES PAIEMENTS', [
-                  'Total des paiements: ${payments.length}',
-                  'Montant total: ${payments.fold(0.0, (sum, p) => sum + p.amount).toStringAsFixed(2)} MAD',
-                  'Paiements en attente: ${payments.where((p) => p.status.name == 'unpaid').length}',
-                ]),
-                
-                pw.SizedBox(height: 16),
-                
-                // Statistiques présences
-                _buildPdfSection('STATISTIQUES PRÉSENCES', [
-                  'Total des présences: ${attendances.length}',
-                  'Présents aujourd\'hui: ${attendances.where((a) => 
-                    a.status.name == 'present' && 
-                    a.date.day == dateNow.day && 
-                    a.date.month == dateNow.month && 
-                    a.date.year == dateNow.year
-                  ).length}',
-                  'Absents aujourd\'hui: ${attendances.where((a) => 
-                    a.status.name == 'absent' && 
-                    a.date.day == dateNow.day && 
-                    a.date.month == dateNow.month && 
-                    a.date.year == dateNow.year
-                  ).length}',
-                ]),
-                
-                pw.SizedBox(height: 20),
-                
-                // Tableau des élèves
-                pw.Text(
-                  'LISTE DES ÉLÈVES',
-                  style: pw.TextStyle(
-                    fontSize: 16,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
-                ),
-                pw.SizedBox(height: 8),
-                
-                // Tableau
-                pw.Table.fromTextArray(
-                  context: context,
-                  data: [
-                    ['Nom', 'Téléphone', 'Statut'],
-                    ...students.map((student) => [
-                      student.name,
-                      student.parentPhone,
-                      'Actif',
-                    ]),
-                  ],
-                  border: pw.TableBorder.all(color: PdfColors.grey300),
-                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                  headerDecoration: const pw.BoxDecoration(color: PdfColors.grey100),
-                  cellAlignments: {
-                    0: pw.Alignment.centerLeft,
-                    1: pw.Alignment.center,
-                    2: pw.Alignment.center,
-                  },
-                ),
-              ],
-            );
-          },
-        ),
-      );
-
-      // Sauvegarder et imprimer
-      await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save(),
-        name: 'rapport_markazi_${dateNow.day}${dateNow.month}${dateNow.year}.pdf',
-      );
-
-      if (mounted) {
-        Navigator.pop(context); // Fermer le dialogue de chargement
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('PDF généré avec succès!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Fermer le dialogue de chargement
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur lors de la génération du PDF: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  // Helper pour construire une section PDF
-  pw.Widget _buildPdfSection(String title, List<String> items) {
-    return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
-      decoration: pw.BoxDecoration(
-        border: pw.Border.all(color: PdfColors.grey300),
-        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+    final metadata = PaymentReceiptMetadata(
+      markaz: MarkazBranding(
+        markazName: markaz.name,
+        slogan: markaz.slogan,
+        address: markaz.address,
+        city: markaz.city,
+        country: markaz.country,
+        currency: markaz.currency,
+        phone: markaz.phone,
+        primaryColorHex: markaz.primaryColorHex,
       ),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
-            title,
-            style: pw.TextStyle(
-              fontSize: 14,
-              fontWeight: pw.FontWeight.bold,
-            ),
+      receiptNumber: payment.receiptNumber ?? '—',
+      date: payment.date,
+      studentName: student.name,
+      parentPhone: student.parentPhone,
+      amountPaid: payment.amount,
+      month: '${_moisFr[payment.date.month - 1]} ${payment.date.year}',
+      paymentMethod: 'Espèces',
+      status: 'Payé',
+      recordedByName: teacherName,
+    );
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Reçu de paiement'),
+        content: const Text('Le reçu a été généré. Que voulez-vous en faire ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Plus tard'),
           ),
-          pw.SizedBox(height: 8),
-          ...items.map((item) => pw.Text(
-            item,
-            style: const pw.TextStyle(fontSize: 12),
-          )),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              final bytes = await DocumentService().generatePaymentReceipt(metadata);
+              await DocumentService().sharePdf(bytes, 'recu_${payment.receiptNumber ?? payment.id}.pdf');
+            },
+            child: const Text('Partager'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              final bytes = await DocumentService().generatePaymentReceipt(metadata);
+              await DocumentService().previewPdf(bytes);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text('Aperçu / Imprimer'),
+          ),
         ],
       ),
     );
   }
 
-  // ─── Firebase Sync Handler ───────────────────
-  Future<void> _syncFromFirebase() async {
+  // ─── Rapport PDF par élève (CDC 8.8) ────────
+  // Remplace l'ancien export ad-hoc (doc/audit.md, point F2) : celui-ci ne
+  // générait qu'un résumé brut de toute la Markaz, sans passer par le
+  // Document Engine (pas de branding, pas de gabarit CDC §21) et sans
+  // correspondre au besoin réel du CDC §8.8 : un rapport PAR ÉLÈVE.
+  void _generateStudentReport() {
+    final students = context.read<StudentProvider>().students;
+    if (students.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ajoutez d\'abord un élève')),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (_) => _StudentReportPickerDialog(
+        students: students,
+        onWeekly: (student) => _buildAndOfferWeeklyReport(student),
+        onMonthly: (student) => _buildAndOfferMonthlyReport(student),
+      ),
+    );
+  }
+
+  MarkazBranding _currentBranding() {
+    final markaz = context.read<MarkazProvider>().markaz;
+    return MarkazBranding(
+      markazName: markaz?.name ?? 'Markazi',
+      slogan: markaz?.slogan,
+      address: markaz?.address,
+      city: markaz?.city,
+      country: markaz?.country,
+      currency: markaz?.currency ?? 'GNF',
+      phone: markaz?.phone,
+      primaryColorHex: markaz?.primaryColorHex,
+    );
+  }
+
+  /// Nom de la classe de l'élève, si affecté à une classe (recherché parmi
+  /// les classes chargées — un élève n'appartient qu'à une seule Markaz/classe).
+  String? _classNameFor(Student student) {
+    final classes = context.read<ClassProvider>().classes;
+    final match = classes.where((c) => c.studentIds.contains(student.id));
+    return match.isEmpty ? null : match.first.name;
+  }
+
+  Future<void> _buildAndOfferWeeklyReport(Student student) async {
+    Navigator.pop(context); // Fermer le sélecteur
+
+    final now = DateTime.now();
+    final weekStart = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
+    final weekEnd = weekStart.add(const Duration(days: 6));
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(children: [
+          CircularProgressIndicator(),
+          SizedBox(width: 16),
+          Expanded(child: Text('Génération du rapport...')),
+        ]),
+      ),
+    );
+
+    try {
+      final attendances = context
+          .read<AttendanceProvider>()
+          .attendances
+          .where((a) =>
+              a.studentId == student.id &&
+              !a.date.isBefore(weekStart) &&
+              !a.date.isAfter(weekEnd))
+          .toList()
+        ..sort((a, b) => a.date.compareTo(b.date));
+
+      final entries = attendances
+          .map((a) => DailyEntry(
+                date: a.date,
+                status: _attendanceStatusLabel(a.status),
+                lesson: a.lesson,
+                observation: null,
+              ))
+          .toList();
+
+      // Taux calculé côté serveur (jours de cours réels du Markaz — CDC 8.6,
+      // doc/audit.md point F6) plutôt que recalculé ici, pour rester exact.
+      final attendanceRate = await _fetchAttendanceRate(student.id, weekStart, weekEnd);
+
+      final metadata = WeeklyReportMetadata(
+        markaz: _currentBranding(),
+        studentName: student.name,
+        className: _classNameFor(student),
+        weekStart: weekStart,
+        weekEnd: weekEnd,
+        entries: entries,
+        attendanceRate: attendanceRate,
+      );
+
+      final bytes = await DocumentService().generateWeeklyReport(metadata);
+      if (!mounted) return;
+      Navigator.pop(context); // Fermer le chargement
+      await _offerGeneratedReport(bytes, 'rapport_hebdo_${student.name}_${weekStart.day}${weekStart.month}.pdf');
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de la génération : $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<void> _buildAndOfferMonthlyReport(Student student) async {
+    Navigator.pop(context); // Fermer le sélecteur
+
+    final now = DateTime.now();
+    final monthStart = DateTime(now.year, now.month, 1);
+    final monthEnd = DateTime(now.year, now.month + 1, 0);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(children: [
+          CircularProgressIndicator(),
+          SizedBox(width: 16),
+          Expanded(child: Text('Génération du rapport...')),
+        ]),
+      ),
+    );
+
+    try {
+      final attendances = context
+          .read<AttendanceProvider>()
+          .attendances
+          .where((a) =>
+              a.studentId == student.id &&
+              !a.date.isBefore(monthStart) &&
+              !a.date.isAfter(monthEnd))
+          .toList();
+      final presentDays = attendances.where((a) => a.status == AttendanceStatus.present).length;
+      final absentDays = attendances.where((a) => a.status == AttendanceStatus.absent).length;
+
+      final payments = context
+          .read<PaymentProvider>()
+          .payments
+          .where((p) =>
+              p.studentId == student.id &&
+              p.date.year == now.year &&
+              p.date.month == now.month)
+          .map((p) => MonthlyPaymentEntry(
+                date: p.date,
+                amount: p.amount,
+                status: p.status == PaymentStatus.paid ? 'Payé' : 'Non payé',
+              ))
+          .toList();
+
+      // Jours de cours réels + taux calculés côté serveur (CDC 8.6, F6).
+      final stats = await _fetchAttendanceStats(student.id, monthStart, monthEnd);
+
+      final metadata = MonthlyReportMetadata(
+        markaz: _currentBranding(),
+        studentName: student.name,
+        className: _classNameFor(student),
+        month: now.month,
+        year: now.year,
+        totalDays: stats['total_days'] as int? ?? attendances.length,
+        presentDays: presentDays,
+        absentDays: absentDays,
+        attendanceRate: (stats['attendance_rate'] as num?)?.toDouble() ?? 0,
+        payments: payments,
+      );
+
+      final bytes = await DocumentService().generateMonthlyReport(metadata);
+      if (!mounted) return;
+      Navigator.pop(context);
+      await _offerGeneratedReport(bytes, 'rapport_mensuel_${student.name}_${now.month}${now.year}.pdf');
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de la génération : $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  String _attendanceStatusLabel(AttendanceStatus status) {
+    switch (status) {
+      case AttendanceStatus.present:
+        return 'Présent';
+      case AttendanceStatus.absent:
+        return 'Absent';
+      case AttendanceStatus.late:
+        return 'Retard';
+    }
+  }
+
+  /// Appelle directement GET /students/{id}/attendance-stats (l'endpoint
+  /// existe déjà côté API, voir AttendanceController::statsForStudent) —
+  /// évite de dupliquer côté client le calcul du taux basé sur les jours
+  /// de cours réels du Markaz (CDC 8.6, doc/audit.md point F6).
+  Future<Map<String, dynamic>> _fetchAttendanceStats(String studentId, DateTime from, DateTime to) async {
+    final response = await ApiClient.instance.dio.get(
+      '/students/$studentId/attendance-stats',
+      queryParameters: {
+        'date_from': from.toIso8601String().split('T').first,
+        'date_to': to.toIso8601String().split('T').first,
+      },
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<double> _fetchAttendanceRate(String studentId, DateTime from, DateTime to) async {
+    final stats = await _fetchAttendanceStats(studentId, from, to);
+    return (stats['attendance_rate'] as num?)?.toDouble() ?? 0;
+  }
+
+  Future<void> _offerGeneratedReport(Uint8List bytes, String fileName) async {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Rapport généré'),
+        content: const Text('Que voulez-vous faire de ce rapport ?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Plus tard')),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await DocumentService().sharePdf(bytes, fileName);
+            },
+            child: const Text('Partager'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await DocumentService().previewPdf(bytes);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text('Aperçu / Imprimer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── API Sync Handler ───────────────────
+  Future<void> _syncFromApi() async {
     try {
       // Afficher un indicateur de chargement
       showDialog(
@@ -3181,18 +3852,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               CircularProgressIndicator(),
               SizedBox(width: 16),
-              Text('Synchronisation avec Firebase...'),
+              // Expanded pour que le texte passe à la ligne au lieu de
+              // déborder horizontalement — la Row d'un AlertDialog n'a
+              // qu'une largeur de contenu restreinte par défaut.
+              Expanded(child: Text('Synchronisation avec le serveur...')),
             ],
           ),
         ),
       );
 
       final studentService = context.read<StudentService>();
-      await studentService.syncFromFirebase();
+      await studentService.syncFromApi();
+      if (!mounted) return;
 
       // Recharger les données
       final studentProvider = context.read<StudentProvider>();
       await studentProvider.loadStudents();
+
+      // Rejoue les actions hors ligne en attente (CDC section 20).
+      if (!mounted) return;
+      await context.read<SyncQueueProvider>().replayPending();
 
       if (mounted) {
         Navigator.pop(context); // Fermer le dialogue de chargement
@@ -3331,7 +4010,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     maxStudents: int.tryParse(maxStudentsController.text) ?? 20,
                   );
                   
-                  if (mounted) {
+                  if (context.mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -3341,7 +4020,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     );
                   }
                 } catch (e) {
-                  if (mounted) {
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Erreur: $e'),
@@ -3435,7 +4114,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     maxStudents: int.tryParse(maxStudentsController.text) ?? 20,
                   );
                   
-                  if (mounted) {
+                  if (context.mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -3445,7 +4124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     );
                   }
                 } catch (e) {
-                  if (mounted) {
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Erreur: $e'),
@@ -3482,7 +4161,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               try {
                 await classProvider.deleteClass(classModel.id);
                 
-                if (mounted) {
+                if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -3492,7 +4171,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   );
                 }
               } catch (e) {
-                if (mounted) {
+                if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -3507,68 +4186,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               backgroundColor: Colors.red,
             ),
             child: const Text('Supprimer'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showClassDetails(ClassModel classModel) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(classModel.name),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildDetailRow('Niveau', classModel.level),
-              _buildDetailRow('Description', classModel.description),
-              _buildDetailRow('Enseignant', classModel.teacherName),
-              _buildDetailRow('Capacité', '${classModel.currentStudentCount}/${classModel.maxStudents} élèves'),
-              if (classModel.schedule != null)
-                _buildDetailRow('Emploi du temps', classModel.schedule!),
-              if (classModel.room != null)
-                _buildDetailRow('Salle', classModel.room!),
-              _buildDetailRow('Statut', classModel.isActive ? 'Active' : 'Inactive'),
-              _buildDetailRow('Date de création', '${classModel.createdAt.day}/${classModel.createdAt.month}/${classModel.createdAt.year}'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: GoogleFonts.poppins(
-                color: Colors.black87,
-              ),
-            ),
           ),
         ],
       ),
@@ -3623,7 +4240,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const Text('Sélectionnez un élève à ajouter:'),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: selectedStudentId,
+              initialValue: selectedStudentId,
               decoration: const InputDecoration(
                 labelText: 'Élève',
                 hintText: 'Choisissez un élève',
@@ -3651,7 +4268,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 try {
                   await classProvider.addStudentToClass(groupModel.id, selectedStudentId!);
                   
-                  if (mounted) {
+                  if (context.mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -3661,7 +4278,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     );
                   }
                 } catch (e) {
-                  if (mounted) {
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Erreur: $e'),
@@ -3721,7 +4338,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const Text('Sélectionnez un élève à retirer:'),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: selectedStudentId,
+              initialValue: selectedStudentId,
               decoration: const InputDecoration(
                 labelText: 'Élève',
                 hintText: 'Choisissez un élève',
@@ -3749,7 +4366,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 try {
                   await classProvider.removeStudentFromClass(groupModel.id, selectedStudentId!);
                   
-                  if (mounted) {
+                  if (context.mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -3759,7 +4376,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     );
                   }
                 } catch (e) {
-                  if (mounted) {
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Erreur: $e'),
@@ -3785,9 +4402,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       // Pour l'instant, on ne fait rien pour éviter les erreurs
       // TODO: Implémenter une solution plus robuste plus tard
-      print('Correction des occupations désactivée temporairement');
+      debugPrint('Correction des occupations désactivée temporairement');
     } catch (e) {
-      print('Erreur lors de la correction des occupations: $e');
+      debugPrint('Erreur lors de la correction des occupations: $e');
     }
+  }
+}
+
+/// Sélecteur d'élève + type de rapport, pour le Document Engine (CDC §8.8).
+class _StudentReportPickerDialog extends StatefulWidget {
+  final List<Student> students;
+  final void Function(Student student) onWeekly;
+  final void Function(Student student) onMonthly;
+
+  const _StudentReportPickerDialog({
+    required this.students,
+    required this.onWeekly,
+    required this.onMonthly,
+  });
+
+  @override
+  State<_StudentReportPickerDialog> createState() => _StudentReportPickerDialogState();
+}
+
+class _StudentReportPickerDialogState extends State<_StudentReportPickerDialog> {
+  late String _studentId = widget.students.first.id;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Générer un rapport'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DropdownButtonFormField<String>(
+            initialValue: _studentId,
+            decoration: const InputDecoration(labelText: 'Élève'),
+            items: widget.students
+                .map((s) => DropdownMenuItem(value: s.id, child: Text(s.name)))
+                .toList(),
+            onChanged: (value) => setState(() => _studentId = value ?? _studentId),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Choisissez la période du rapport :',
+            style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textMedium),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+        TextButton(
+          onPressed: () => widget.onWeekly(widget.students.firstWhere((s) => s.id == _studentId)),
+          child: const Text('Hebdomadaire'),
+        ),
+        ElevatedButton(
+          onPressed: () => widget.onMonthly(widget.students.firstWhere((s) => s.id == _studentId)),
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          child: const Text('Mensuel'),
+        ),
+      ],
+    );
   }
 }

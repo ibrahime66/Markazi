@@ -100,6 +100,21 @@ class StudentProvider extends ChangeNotifier {
     }
   }
 
+  /// Rattache (ou détache si [guardianId] est null) un élève à un tuteur
+  /// (doc/audit.md, point I5).
+  Future<void> setGuardian(String studentId, String? guardianId) async {
+    try {
+      _errorMessage = null;
+      final updated = await _service.setGuardian(studentId, guardianId);
+      _students = _students.map((s) => s.id == updated.id ? updated : s).toList();
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   /// Récupère un élève par ID
   Student? getStudentById(String studentId) {
     try {

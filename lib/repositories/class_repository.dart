@@ -1,69 +1,47 @@
+import 'package:flutter/foundation.dart';
 import '../models/class_model.dart';
 import '../datasources/hive_class_datasource.dart';
-import '../datasources/firebase_class_datasource.dart';
-import '../services/firebase_helper.dart';
+import '../datasources/api_class_datasource.dart';
 
-/// Repository pour la gestion des données des classes
-/// Utilise Firebase avec cache Hive local pour mode hors ligne
+/// Repository pour la gestion des données des classes.
+/// Utilise l'API Laravel avec cache Hive local pour mode hors ligne.
 class ClassRepository {
   final HiveClassDataSource _hiveDataSource;
-  final FirebaseClassDataSource _firebaseDataSource;
+  final ApiClassDatasource _apiDataSource;
 
-  ClassRepository(this._hiveDataSource, this._firebaseDataSource);
+  ClassRepository(this._hiveDataSource, this._apiDataSource);
 
   /// Initialise le repository et ouvre la box Hive via le data source
   Future<void> init() async {
     await _hiveDataSource.init();
-
-    // Synchroniser depuis Firebase au démarrage si disponible
-    if (FirebaseHelper.isAvailable) {
-      await Future.delayed(const Duration(seconds: 1));
-      await _syncFromFirebase();
-    }
   }
 
-  /// Ajoute une nouvelle classe
-  Future<void> addClass(ClassModel classModel) async {
-    // Sauvegarder localement d'abord (cache)
-    await _hiveDataSource.addClass(classModel);
-
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        await _firebaseDataSource.addClass(classModel, classModel.markazId);
-      } catch (e) {
-        print('Erreur sync Firebase class: $e');
-      }
-    }
+  /// Ajoute une nouvelle classe. Retourne la classe telle que persistée
+  /// côté serveur (avec son identifiant réel).
+  Future<ClassModel> addClass(ClassModel classModel) async {
+    final saved = await _apiDataSource.addClass(classModel, classModel.markazId);
+    await _hiveDataSource.addClass(saved);
+    return saved;
   }
 
   /// Supprime une classe par ID
   Future<void> removeClass(String classId) async {
-    // Supprimer localement
     await _hiveDataSource.deleteClass(classId);
-
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        await _firebaseDataSource.deleteClass(classId);
-      } catch (e) {
-        print('Erreur sync Firebase class: $e');
-      }
+    try {
+      await _apiDataSource.deleteClass(classId);
+    } catch (e) {
+      debugPrint('Erreur sync API (suppression classe) : $e');
     }
   }
 
   /// Met à jour une classe
   Future<void> updateClass(ClassModel classModel) async {
-    // Mettre à jour localement
     await _hiveDataSource.updateClass(classModel);
-
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        await _firebaseDataSource.updateClass(classModel);
-      } catch (e) {
-        print('Erreur sync Firebase class: $e');
-      }
+    try {
+      final saved = await _apiDataSource.updateClass(classModel);
+      await _hiveDataSource.updateClass(saved);
+    } catch (e) {
+      debugPrint('Erreur sync API (mise à jour classe) : $e');
     }
   }
 
@@ -95,32 +73,20 @@ class ClassRepository {
   /// Ajoute un élève à une classe
   Future<void> addStudentToClass(String classId, String studentId) async {
     await _hiveDataSource.addStudentToClass(classId, studentId);
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        final updated = await _hiveDataSource.getClassById(classId);
-        if (updated != null) {
-          await _firebaseDataSource.updateClass(updated);
-        }
-      } catch (e) {
-        print('Erreur sync Firebase class: $e');
-      }
+    try {
+      await _apiDataSource.addStudentToClass(classId, studentId);
+    } catch (e) {
+      debugPrint('Erreur sync API (affectation élève) : $e');
     }
   }
 
   /// Retire un élève d'une classe
   Future<void> removeStudentFromClass(String classId, String studentId) async {
     await _hiveDataSource.removeStudentFromClass(classId, studentId);
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        final updated = await _hiveDataSource.getClassById(classId);
-        if (updated != null) {
-          await _firebaseDataSource.updateClass(updated);
-        }
-      } catch (e) {
-        print('Erreur sync Firebase class: $e');
-      }
+    try {
+      await _apiDataSource.removeStudentFromClass(classId, studentId);
+    } catch (e) {
+      debugPrint('Erreur sync API (retrait élève) : $e');
     }
   }
 
@@ -131,7 +97,6 @@ class ClassRepository {
 
   /// Statistiques sur les classes
   Map<String, dynamic> getClassStatistics(String markazId) {
-    // Delegate to hive data source for collections, then compute statistics.
     final classes = _hiveDataSource.getClassesByMarkaz(markazId);
     final activeClasses = classes.where((c) => c.isActive).toList();
 
@@ -172,30 +137,16 @@ class ClassRepository {
     await _hiveDataSource.close();
   }
 
-  /// Synchronise les données depuis Firebase vers le cache local
-  Future<void> _syncFromFirebase({String? markazId}) async {
+  /// Recharge le cache local depuis l'API pour la Markaz donnée.
+  Future<void> syncFromMarkaz(String markazId) async {
     try {
-      if (markazId != null) {
-        // Récupérer les classes de cette markaz depuis Firebase
-        final firebaseClasses = await _firebaseDataSource.getClassesByMarkaz(markazId);
-
-        // Vider le cache local et mettre à jour avec les données Firebase
-        await _hiveDataSource.clearAll();
-        for (final classModel in firebaseClasses) {
-          await _hiveDataSource.addClass(classModel);
-        }
-
-        print('Sync Firebase: ${firebaseClasses.length} classes synchronisées pour markaz $markazId');
-      } else {
-        print('Sync Firebase: markazId non spécifié, sync ignorée');
+      final classes = await _apiDataSource.getClassesByMarkaz(markazId);
+      await _hiveDataSource.clearAll();
+      for (final classModel in classes) {
+        await _hiveDataSource.addClass(classModel);
       }
     } catch (e) {
-      print('Erreur sync classes depuis Firebase: $e');
+      debugPrint('Erreur sync API (classes) : $e');
     }
-  }
-
-  /// Force la synchronisation depuis Firebase pour une markaz spécifique
-  Future<void> syncFromMarkaz(String markazId) async {
-    await _syncFromFirebase(markazId: markazId);
   }
 }

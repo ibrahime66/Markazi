@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/attendance.dart';
 import '../repositories/attendance_repository.dart';
@@ -100,8 +101,7 @@ class AttendanceService {
       lesson: lesson.trim(),
     );
 
-    await _repository.addAttendance(attendance);
-    return attendance;
+    return await _repository.addAttendance(attendance);
   }
 
   /// Calcule le taux de présence hebdomadaire d'un élève
@@ -343,15 +343,15 @@ class AttendanceService {
     return 'SURVEILLER - Amélioration nécessaire';
   }
 
-  /// Synchronise les données depuis Firebase pour la markaz actuelle
-  Future<void> syncFromFirebase() async {
+  /// Synchronise les données depuis l'API pour la markaz actuelle
+  Future<void> syncFromApi() async {
     final markazId = _authService.currentMarkazId;
     if (markazId != null) {
-      print('Début sync Firebase attendance pour markaz: $markazId');
+      debugPrint('Début sync API attendance pour markaz: $markazId');
       await _repository.syncFromMarkaz(markazId);
-      print('Sync Firebase attendance terminée');
+      debugPrint('Sync API attendance terminée');
     } else {
-      print('Impossible de sync attendance: markazId null');
+      debugPrint('Impossible de sync attendance: markazId null');
     }
   }
 }

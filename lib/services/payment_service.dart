@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
+import '../datasources/api_payment_datasource.dart' show PaymentDuplicateException;
 import '../models/payment.dart';
 import '../repositories/payment_repository.dart';
 import '../repositories/student_repository.dart';
@@ -17,12 +19,20 @@ class PaymentService {
     this._authService,
   );
 
-  /// Crée un nouveau paiement
+  /// Crée un nouveau paiement.
+  ///
+  /// La détection des doublons (même élève, même mois, déjà payé — CDC
+  /// 8.7) est du ressort du serveur, seul à connaître l'état réel de tous
+  /// les paiements du Markaz. En cas de doublon détecté, l'appel lève
+  /// [PaymentDuplicateException] ; le rappeler avec [confirmDuplicate] à
+  /// `true` force l'enregistrement malgré tout.
   Future<Payment> createPayment({
     required String studentId,
     required double amount,
     required PaymentStatus status,
     String? markazId,
+    DateTime? date,
+    bool confirmDuplicate = false,
   }) async {
     // Validations
     if (amount <= 0) {
@@ -43,11 +53,6 @@ class PaymentService {
       throw Exception('Accès refusé à cette Markaz');
     }
 
-    // Vérifier les doublons (même montant même jour)
-    if (_hasDuplicatePayment(studentId, amount, finalMarkazId)) {
-      throw Exception('Ce paiement semble déjà enregistré (doublon)');
-    }
-
     // Créer le paiement
     const uuid = Uuid();
     final payment = Payment(
@@ -56,11 +61,10 @@ class PaymentService {
       markazId: finalMarkazId,
       amount: amount,
       status: status,
-      date: DateTime.now(),
+      date: date ?? DateTime.now(),
     );
 
-    await _repository.addPayment(payment);
-    return payment;
+    return await _repository.addPayment(payment, confirmDuplicate: confirmDuplicate);
   }
 
   /// Marque un paiement comme payé
@@ -79,8 +83,9 @@ class PaymentService {
       status: PaymentStatus.paid,
     );
 
-    await _repository.updatePayment(updatedPayment);
-    return updatedPayment;
+    // Retourne la version confirmée par le serveur (avec son numéro de
+    // reçu réel) plutôt que la simple copie locale.
+    return await _repository.updatePayment(updatedPayment);
   }
 
   /// Marque un paiement comme non payé
@@ -99,8 +104,7 @@ class PaymentService {
       status: PaymentStatus.unpaid,
     );
 
-    await _repository.updatePayment(updatedPayment);
-    return updatedPayment;
+    return await _repository.updatePayment(updatedPayment);
   }
 
   /// Génère un reçu de paiement
@@ -189,34 +193,15 @@ class PaymentService {
     return _repository.getPaymentsByMarkaz(markazId);
   }
 
-  /// Vérifie les doublons
-  bool _hasDuplicatePayment(
-    String studentId,
-    double amount,
-    String markazId,
-  ) {
-    final today = DateTime.now();
-    final todayStart = DateTime(today.year, today.month, today.day);
-    final todayEnd = todayStart.add(const Duration(days: 1));
-
-    final allPayments = _repository.getAllPayments();
-    return allPayments.any((p) =>
-        p.studentId == studentId &&
-        p.markazId == markazId &&
-        p.amount == amount &&
-        p.date.isAfter(todayStart) &&
-        p.date.isBefore(todayEnd));
-  }
-
-  /// Synchronise les données depuis Firebase pour la markaz actuelle
-  Future<void> syncFromFirebase() async {
+  /// Synchronise les données depuis l'API pour la markaz actuelle
+  Future<void> syncFromApi() async {
     final markazId = _authService.currentMarkazId;
     if (markazId != null) {
-      print('Début sync Firebase payments pour markaz: $markazId');
+      debugPrint('Début sync API payments pour markaz: $markazId');
       await _repository.syncFromMarkaz(markazId);
-      print('Sync Firebase payments terminée');
+      debugPrint('Sync API payments terminée');
     } else {
-      print('Impossible de sync payments: markazId null');
+      debugPrint('Impossible de sync payments: markazId null');
     }
   }
 }

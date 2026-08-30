@@ -1,8 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- usesCleartextTraffic n'est PAS activé ici (doc/audit.md, point C3) :
+         seul android/app/src/debug/AndroidManifest.xml l'active, pour que
+         `flutter run` en debug puisse joindre l'API Laravel locale en
+         http://, tout en garantissant qu'un build release/profile refuse
+         tout trafic HTTP en clair (CDC section 19 : HTTPS obligatoire en
+         production) sans avoir à s'en souvenir manuellement. -->
     <application
-        android:label="markazi"
-        android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon">
+       android:label="markazi"
+       android:name="${applicationName}"
+       android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -1,70 +1,75 @@
+import 'package:flutter/foundation.dart';
 import '../models/attendance.dart';
+import '../models/sync_queue_item.dart';
 import '../datasources/hive_attendance_datasource.dart';
-import '../datasources/firebase_attendance_datasource.dart';
-import '../services/firebase_helper.dart';
+import '../datasources/api_attendance_datasource.dart';
+import '../services/sync_queue_service.dart';
 
-/// Repository pour la gestion des données Attendance
-/// Utilise Firebase avec cache Hive local pour mode hors ligne
+/// Repository pour la gestion des données Attendance.
+/// Utilise l'API Laravel avec cache Hive local pour mode hors ligne.
 class AttendanceRepository {
   final HiveAttendanceDataSource _hiveDataSource;
-  final FirebaseAttendanceDataSource _firebaseDataSource;
+  final ApiAttendanceDatasource _apiDataSource;
+  final SyncQueueService _syncQueue;
 
-  AttendanceRepository(this._hiveDataSource, this._firebaseDataSource);
+  AttendanceRepository(this._hiveDataSource, this._apiDataSource, this._syncQueue);
 
   /// Initialise le repository et ouvre la box Hive via le data source
   Future<void> init() async {
     await _hiveDataSource.init();
-
-    // Synchroniser depuis Firebase au démarrage si disponible
-    if (FirebaseHelper.isAvailable) {
-      await Future.delayed(const Duration(seconds: 1));
-      await _syncFromFirebase();
-    }
   }
 
-  /// Ajoute une nouvelle présence
-  Future<void> addAttendance(Attendance attendance) async {
-    // Sauvegarder localement d'abord (cache)
-    await _hiveDataSource.addAttendance(attendance);
-
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        await _firebaseDataSource.addAttendance(attendance, attendance.markazId);
-      } catch (e) {
-        print('Erreur sync Firebase attendance: $e');
-      }
-    }
+  /// Ajoute une nouvelle présence. Retourne la présence telle que persistée
+  /// côté serveur (avec son identifiant réel).
+  Future<Attendance> addAttendance(Attendance attendance) async {
+    final saved = await _apiDataSource.addAttendance(attendance, attendance.markazId);
+    await _hiveDataSource.addAttendance(saved);
+    return saved;
   }
 
   /// Supprime une présence par ID
   Future<void> removeAttendance(String attendanceId) async {
-    // Supprimer localement
     await _hiveDataSource.deleteAttendance(attendanceId);
-
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        await _firebaseDataSource.deleteAttendance(attendanceId);
-      } catch (e) {
-        print('Erreur sync Firebase attendance: $e');
-      }
+    try {
+      await _apiDataSource.deleteAttendance(attendanceId);
+    } catch (e) {
+      debugPrint('Erreur sync API (suppression présence) : $e');
+      await _syncQueue.enqueue(
+        entityType: SyncEntityType.attendance,
+        operation: SyncOperation.delete,
+        entityId: attendanceId,
+      );
     }
   }
 
-  /// Met à jour une présence
+  /// Met à jour une présence (mise en file pour rejeu automatique en cas
+  /// d'échec — CDC section 20, doc/audit.md point D2).
   Future<void> updateAttendance(Attendance attendance) async {
-    // Mettre à jour localement
     await _hiveDataSource.updateAttendance(attendance);
-
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        await _firebaseDataSource.updateAttendance(attendance);
-      } catch (e) {
-        print('Erreur sync Firebase attendance: $e');
-      }
+    try {
+      final saved = await _apiDataSource.updateAttendance(attendance);
+      await _hiveDataSource.updateAttendance(saved);
+    } catch (e) {
+      debugPrint('Erreur sync API (mise à jour présence) : $e');
+      await _syncQueue.enqueue(
+        entityType: SyncEntityType.attendance,
+        operation: SyncOperation.update,
+        entityId: attendance.id,
+      );
     }
+  }
+
+  /// Rejoue une mise à jour en attente — réservé à SyncOrchestrator.
+  Future<void> retrySyncUpdate(String attendanceId) async {
+    final attendance = _hiveDataSource.getAttendanceById(attendanceId);
+    if (attendance == null) return;
+    final saved = await _apiDataSource.updateAttendance(attendance);
+    await _hiveDataSource.updateAttendance(saved);
+  }
+
+  /// Rejoue une suppression en attente — réservé à SyncOrchestrator.
+  Future<void> retrySyncDelete(String attendanceId) async {
+    await _apiDataSource.deleteAttendance(attendanceId);
   }
 
   /// Récupère une présence par ID
@@ -122,30 +127,16 @@ class AttendanceRepository {
     await _hiveDataSource.close();
   }
 
-  /// Synchronise les données depuis Firebase vers le cache local
-  Future<void> _syncFromFirebase({String? markazId}) async {
+  /// Recharge le cache local depuis l'API pour la Markaz donnée.
+  Future<void> syncFromMarkaz(String markazId) async {
     try {
-      if (markazId != null) {
-        // Récupérer les présences de cette markaz depuis Firebase
-        final firebaseAttendances = await _firebaseDataSource.getAttendanceByMarkaz(markazId);
-
-        // Vider le cache local et mettre à jour avec les données Firebase
-        await _hiveDataSource.clearAll();
-        for (final attendance in firebaseAttendances) {
-          await _hiveDataSource.addAttendance(attendance);
-        }
-
-        print('Sync Firebase: ${firebaseAttendances.length} présences synchronisées pour markaz $markazId');
-      } else {
-        print('Sync Firebase: markazId non spécifié, sync ignorée');
+      final attendances = await _apiDataSource.getAttendanceByMarkaz(markazId);
+      await _hiveDataSource.clearAll();
+      for (final attendance in attendances) {
+        await _hiveDataSource.addAttendance(attendance);
       }
     } catch (e) {
-      print('Erreur sync attendances depuis Firebase: $e');
+      debugPrint('Erreur sync API (présences) : $e');
     }
-  }
-
-  /// Force la synchronisation depuis Firebase pour une markaz spécifique
-  Future<void> syncFromMarkaz(String markazId) async {
-    await _syncFromFirebase(markazId: markazId);
   }
 }

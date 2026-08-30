@@ -4,4 +4,12 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- doc/audit.md, point C3 : autorisé uniquement en debug, pour joindre
+         l'API Laravel locale en http:// pendant le développement (voir
+         lib/services/api_config.dart). Le manifest merger Gradle applique
+         cet attribut au seul build debug — un build release/profile part du
+         main/AndroidManifest.xml, où cet attribut est absent, donc HTTPS y
+         est obligatoire (CDC section 19). -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>

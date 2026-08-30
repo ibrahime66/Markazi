@@ -41,3 +41,6 @@ macos/Flutter/GeneratedPluginRegistrant.swift
 .DS_Store
 .vscode
 .history/
+
+# Configuration locale de session Claude Code (pas du code du projet)
+.claude/

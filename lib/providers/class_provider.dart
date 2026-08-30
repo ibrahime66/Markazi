@@ -273,14 +273,14 @@ class ClassProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Synchronise les données depuis Firebase
-  Future<void> syncFromFirebase() async {
+  /// Synchronise les données depuis l'API
+  Future<void> syncFromApi() async {
     try {
       _errorMessage = null;
       _isLoading = true;
       notifyListeners();
 
-      await _service.syncFromFirebase();
+      await _service.syncFromApi();
       await loadClasses(); // Recharger les données locales
     } catch (e) {
       _errorMessage = e.toString();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_colors.dart';
 import '../widgets/common_widgets.dart';
+import 'login_screen.dart';
 
 /// Page des fonctionnalités détaillées de Markazi
 class FeaturesScreen extends StatelessWidget {
@@ -140,13 +141,13 @@ class FeaturesScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               '6 fonctionnalités essentielles',
               style: GoogleFonts.cairo(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -167,7 +168,7 @@ class FeaturesScreen extends StatelessWidget {
             'Markazi regroupe tous les outils nécessaires à la gestion quotidienne de votre markaz dans une application simple et intuitive.',
             style: GoogleFonts.cairo(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               height: 1.6,
             ),
           ),
@@ -182,9 +183,9 @@ class FeaturesScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.06),
+          color: AppColors.primary.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primary.withOpacity(0.15)),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
         ),
         child: Column(
           children: [
@@ -213,17 +214,10 @@ class FeaturesScreen extends StatelessWidget {
             PrimaryButton(
               text: 'Créer mon compte',
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Bientôt disponible ! 🕌',
-                      style: GoogleFonts.cairo(color: Colors.white),
-                    ),
-                    backgroundColor: AppColors.primary,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    margin: const EdgeInsets.all(16),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const LoginScreen(isLogin: false),
                   ),
                 );
               },
@@ -262,7 +256,7 @@ class _FeatureDetailCardState extends State<_FeatureDetailCard> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -351,12 +345,17 @@ class _FeatureDetailCardState extends State<_FeatureDetailCard> {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          Text(
-                            h,
-                            style: GoogleFonts.cairo(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textDark,
+                          // Expanded : certains points listés sont longs
+                          // ("Taux d'absentéisme par élève") et débordaient
+                          // sur les écrans les plus étroits.
+                          Expanded(
+                            child: Text(
+                              h,
+                              style: GoogleFonts.cairo(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textDark,
+                              ),
                             ),
                           ),
                         ],

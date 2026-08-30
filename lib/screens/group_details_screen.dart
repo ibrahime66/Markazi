@@ -6,6 +6,7 @@ import '../providers/class_provider.dart';
 import '../providers/student_provider.dart';
 import '../providers/payment_provider.dart';
 import '../providers/attendance_provider.dart';
+import '../providers/markaz_provider.dart';
 import '../models/class_model.dart';
 import '../models/student.dart';
 import '../models/payment.dart';
@@ -21,6 +22,9 @@ class GroupDetailsScreen extends StatefulWidget {
 }
 
 class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
+  /// Devise configurée pour ce Markaz (doc/audit.md, point I4).
+  String get _currency => context.read<MarkazProvider>().markaz?.currency ?? 'GNF';
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +33,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
 
   void _loadData() {
     Future.microtask(() {
+      if (!mounted) return;
       final studentProvider = context.read<StudentProvider>();
       final paymentProvider = context.read<PaymentProvider>();
       final attendanceProvider = context.read<AttendanceProvider>();
@@ -120,6 +125,13 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             _buildInfoRow('Capacité', '${widget.group.studentIds.length}/${widget.group.maxStudents} élèves'),
             if (widget.group.description.isNotEmpty)
               _buildInfoRow('Description', widget.group.description),
+            if (widget.group.schedule != null)
+              _buildInfoRow('Emploi du temps', widget.group.schedule!),
+            if (widget.group.room != null)
+              _buildInfoRow('Salle', widget.group.room!),
+            _buildInfoRow('Statut', widget.group.isActive ? 'Actif' : 'Inactif'),
+            _buildInfoRow('Créé le',
+                '${widget.group.createdAt.day}/${widget.group.createdAt.month}/${widget.group.createdAt.year}'),
           ],
         ),
       ),
@@ -181,7 +193,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 _buildStatCard('Élèves', '${stats['totalStudents']}', Icons.people, AppColors.primary),
                 _buildStatCard('Taux présence', '${stats['attendanceRate']}%', Icons.calendar_today, Colors.green),
                 _buildStatCard('Taux paiement', '${stats['paymentRate']}%', Icons.payments, Colors.blue),
-                _buildStatCard('Total payé', '${stats['totalPaid']} FGN', Icons.account_balance, Colors.orange),
+                _buildStatCard('Total payé', '${stats['totalPaid']} $_currency', Icons.account_balance, Colors.orange),
               ],
             ),
           ],
@@ -195,9 +207,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       width: 140,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,7 +270,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -337,7 +349,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             final index = entry.key;
             final student = entry.value;
             return _buildStudentTableRow(student, payments, attendances, index.isEven);
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -347,10 +359,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     final studentPayments = payments.where((p) => p.studentId == student.id).toList();
     final studentAttendances = attendances.where((a) => a.studentId == student.id).toList();
     
-    final paidAmount = studentPayments.where((p) => p.status == 'paid').fold(0.0, (sum, p) => sum + p.amount);
+    final paidAmount = studentPayments.where((p) => p.status == PaymentStatus.paid).fold(0.0, (sum, p) => sum + p.amount);
     final totalAmount = studentPayments.fold(0.0, (sum, p) => sum + p.amount);
-    final attendanceRate = studentAttendances.isEmpty ? 0.0 : 
-        (studentAttendances.where((a) => a.status == 'present').length / studentAttendances.length * 100);
+    final attendanceRate = studentAttendances.isEmpty ? 0.0 :
+        (studentAttendances.where((a) => a.status == AttendanceStatus.present).length / studentAttendances.length * 100);
     final paymentRate = totalAmount == 0 ? 0.0 : (paidAmount / totalAmount * 100);
 
     return Container(
@@ -420,7 +432,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   textAlign: TextAlign.center,
                 ),
                 Text(
-                  'FGN',
+                  _currency,
                   style: GoogleFonts.poppins(
                     fontSize: 10,
                     color: Colors.grey[600],
@@ -503,25 +515,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     );
   }
 
-  Widget _buildStudentStat(String label, String value, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text(
-        '$label: $value',
-        style: GoogleFonts.poppins(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: color,
-        ),
-      ),
-    );
-  }
-
   Map<String, dynamic> _calculateGroupStats(List<Student> students, List<Payment> payments, List<Attendance> attendances) {
     if (students.isEmpty) {
       return {
@@ -540,11 +533,11 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       final studentPayments = payments.where((p) => p.studentId == student.id).toList();
       final studentAttendances = attendances.where((a) => a.studentId == student.id).toList();
       
-      final paidAmount = studentPayments.where((p) => p.status == 'paid').fold(0.0, (sum, p) => sum + p.amount);
+      final paidAmount = studentPayments.where((p) => p.status == PaymentStatus.paid).fold(0.0, (sum, p) => sum + p.amount);
       final totalAmount = studentPayments.fold(0.0, (sum, p) => sum + p.amount);
-      
-      final attendanceRate = studentAttendances.isEmpty ? 0.0 : 
-          (studentAttendances.where((a) => a.status == 'present').length / studentAttendances.length * 100);
+
+      final attendanceRate = studentAttendances.isEmpty ? 0.0 :
+          (studentAttendances.where((a) => a.status == AttendanceStatus.present).length / studentAttendances.length * 100);
       final paymentRate = totalAmount == 0 ? 0.0 : (paidAmount / totalAmount * 100);
       
       totalAttendanceRate += attendanceRate;

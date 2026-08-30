@@ -1,0 +1,773 @@
+openapi: 3.0.3
+info:
+  title: API Markazi
+  description: >
+    API REST du backend Markazi (Laravel + MySQL) — voir doc/CDC.md section 17.
+    Toutes les routes hors authentification exigent un token Sanctum valide
+    (`Authorization: Bearer <token>`) et sont automatiquement filtrées par le
+    Markaz de l'utilisateur authentifié (isolation multi-tenant, CDC §16) —
+    aucun identifiant de Markaz n'est jamais accepté depuis le client.
+
+    Document maintenu à la main (doc/audit.md, point F8) plutôt que généré
+    par un package Swagger : à mettre à jour manuellement à chaque évolution
+    des routes (`backend/routes/api.php`) ou des Form Requests.
+  version: "1.0"
+  contact:
+    name: Ibrahime
+servers:
+  - url: http://localhost:8321/api
+    description: Développement local (adapter l'IP/le port — voir lib/services/api_config.dart)
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+    description: Inscription, connexion, session (CDC §8.1)
+  - name: Markaz
+    description: Fiche du Markaz courant (CDC §8.2)
+  - name: Classes
+    description: Gestion des classes (CDC §8.4)
+  - name: Élèves
+    description: Gestion des élèves (CDC §8.3)
+  - name: Tuteurs
+    description: Parents/tuteurs (CDC §8.3)
+  - name: Présences
+    description: Marquage et statistiques de présence (CDC §8.6)
+  - name: Récitations
+    description: Suivi des séances de récitation (CDC §8.5)
+  - name: Paiements
+    description: Enregistrement des paiements et reçus (CDC §8.7)
+  - name: Journal
+    description: Historique d'activité (CDC §8.9)
+
+paths:
+  # ─────────────────────────── Auth ───────────────────────────
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Inscription du Maître (crée aussi la fiche Markaz)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, password_confirmation, markaz_name]
+              properties:
+                name: { type: string, example: "Ibrahime Barry" }
+                email: { type: string, format: email }
+                password: { type: string, format: password, minLength: 6 }
+                password_confirmation: { type: string, format: password }
+                markaz_name: { type: string, example: "Markaz Al-Nour" }
+                markaz_city: { type: string, nullable: true }
+                markaz_country: { type: string, nullable: true, default: "Guinée" }
+                markaz_phone: { type: string, nullable: true }
+                markaz_address: { type: string, nullable: true }
+      responses:
+        "201":
+          description: Compte et Markaz créés
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+                  token: { type: string }
+        "422": { $ref: '#/components/responses/ValidationError' }
+        "429": { $ref: '#/components/responses/TooManyRequests' }
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Connexion — émet un nouveau token pour cet appareil
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+                device_name: { type: string, nullable: true, example: "android-pixel6" }
+      responses:
+        "200":
+          description: Connecté
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+                  token: { type: string }
+        "422":
+          description: Email ou mot de passe incorrect
+        "429": { $ref: '#/components/responses/TooManyRequests' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Déconnexion — révoque uniquement le token de l'appareil courant
+      responses:
+        "200": { description: Déconnecté }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Profil de l'utilisateur authentifié, avec sa fiche Markaz
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+  /auth/password/forgot:
+    post:
+      tags: [Auth]
+      summary: Envoie un lien de réinitialisation de mot de passe
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties: { email: { type: string, format: email } }
+      responses:
+        "200": { description: Lien envoyé }
+        "422": { description: Envoi impossible }
+        "429": { $ref: '#/components/responses/TooManyRequests' }
+  /auth/password/reset:
+    post:
+      tags: [Auth]
+      summary: Réinitialise le mot de passe via le token reçu par email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, email, password, password_confirmation]
+              properties:
+                token: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, format: password, minLength: 6 }
+                password_confirmation: { type: string, format: password }
+      responses:
+        "200": { description: Mot de passe réinitialisé }
+        "422": { description: Jeton invalide ou expiré }
+        "429": { $ref: '#/components/responses/TooManyRequests' }
+  /auth/password/change:
+    post:
+      tags: [Auth]
+      summary: Change le mot de passe de l'utilisateur connecté
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_password, password, password_confirmation]
+              properties:
+                current_password: { type: string, format: password }
+                password: { type: string, format: password, minLength: 6 }
+                password_confirmation: { type: string, format: password }
+      responses:
+        "200": { description: Mot de passe modifié }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+        "422": { description: Mot de passe actuel incorrect }
+
+  # ─────────────────────────── Markaz ───────────────────────────
+  /markaz:
+    get:
+      tags: [Markaz]
+      summary: Fiche du Markaz de l'utilisateur authentifié
+      responses:
+        "200":
+          description: OK
+          content: { application/json: { schema: { $ref: '#/components/schemas/Markaz' } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+    put:
+      tags: [Markaz]
+      summary: Met à jour la fiche du Markaz
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                slogan: { type: string, nullable: true }
+                address: { type: string, nullable: true }
+                city: { type: string, nullable: true }
+                country: { type: string, nullable: true }
+                phone: { type: string, nullable: true }
+                email: { type: string, nullable: true }
+                website: { type: string, nullable: true }
+                primary_color: { type: string, nullable: true, example: "#1A7F55" }
+                secondary_color: { type: string, nullable: true }
+                working_days:
+                  type: array
+                  description: CDC §8.6 — jours de cours, défaut lun-ven si omis.
+                  items: { type: string, enum: [mon, tue, wed, thu, fri, sat, sun] }
+      responses:
+        "200":
+          description: Mis à jour
+          content: { application/json: { schema: { $ref: '#/components/schemas/Markaz' } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+
+  # ─────────────────────────── Classes ───────────────────────────
+  /classes:
+    get:
+      tags: [Classes]
+      summary: Liste paginée des classes du Markaz
+      parameters:
+        - { $ref: '#/components/parameters/PerPage' }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/PaginatedClasses' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+    post:
+      tags: [Classes]
+      summary: Crée une classe
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ClassInput' } } } }
+      responses:
+        "201": { description: Créée, content: { application/json: { schema: { $ref: '#/components/schemas/ClassModel' } } } }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /classes/{id}:
+    parameters: [{ $ref: '#/components/parameters/IdPath' }]
+    get:
+      tags: [Classes]
+      summary: Détail d'une classe
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ClassModel' } } } }
+        "404": { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Classes]
+      summary: Modifie une classe (payload complet — `max_students` requis). Accepte aussi PATCH (même comportement, alias fourni par Laravel apiResource).
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ClassInput' } } } }
+      responses:
+        "200": { description: Modifiée }
+        "404": { $ref: '#/components/responses/NotFound' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Classes]
+      summary: Archive une classe (soft delete)
+      responses:
+        "204": { description: Archivée }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  # ─────────────────────────── Élèves ───────────────────────────
+  /students:
+    get:
+      tags: [Élèves]
+      summary: Liste paginée des élèves, avec recherche et filtres
+      parameters:
+        - { $ref: '#/components/parameters/PerPage' }
+        - in: query
+          name: search
+          schema: { type: string }
+          description: Recherche par nom (LIKE)
+        - in: query
+          name: class_id
+          schema: { type: integer }
+        - in: query
+          name: is_active
+          schema: { type: boolean }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/PaginatedStudents' } } } }
+    post:
+      tags: [Élèves]
+      summary: Ajoute un élève
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StudentInput' } } } }
+      responses:
+        "201": { description: Créé, content: { application/json: { schema: { $ref: '#/components/schemas/Student' } } } }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /students/{id}:
+    parameters: [{ $ref: '#/components/parameters/IdPath' }]
+    get:
+      tags: [Élèves]
+      summary: Fiche détaillée d'un élève
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Student' } } } }
+        "404": { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Élèves]
+      summary: Modifie un élève. Accepte aussi PATCH (même comportement, alias fourni par Laravel apiResource).
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StudentInput' } } } }
+      responses:
+        "200": { description: Modifié }
+        "404": { $ref: '#/components/responses/NotFound' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Élèves]
+      summary: Archive un élève (soft delete — CDC §8.3)
+      responses:
+        "204": { description: Archivé }
+        "404": { $ref: '#/components/responses/NotFound' }
+  /students/{id}/attendance-stats:
+    get:
+      tags: [Présences]
+      summary: Statistiques de présence d'un élève sur une période
+      description: >
+        `total_days` est le nombre réel de jours ouvrés (selon les jours de
+        cours configurés pour le Markaz) sur la période — pas seulement le
+        nombre de présences saisies (doc/audit.md, point F6).
+      parameters:
+        - { $ref: '#/components/parameters/IdPath' }
+        - { $ref: '#/components/parameters/DateFrom' }
+        - { $ref: '#/components/parameters/DateTo' }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_days: { type: integer }
+                  present: { type: integer }
+                  absent: { type: integer }
+                  late: { type: integer }
+                  attendance_rate: { type: number, format: float }
+                  absence_rate: { type: number, format: float }
+        "404": { $ref: '#/components/responses/NotFound' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /students/{id}/recitation-progress:
+    get:
+      tags: [Récitations]
+      summary: Progression de récitation d'un élève (toutes séances confondues)
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_sessions: { type: integer }
+                  recited: { type: integer }
+                  partial: { type: integer }
+                  not_recited: { type: integer }
+                  progress_rate: { type: number, format: float }
+
+  # ─────────────────────────── Tuteurs ───────────────────────────
+  /guardians:
+    get:
+      tags: [Tuteurs]
+      summary: Liste paginée des tuteurs/parents
+      parameters: [{ $ref: '#/components/parameters/PerPage' }]
+      responses:
+        "200": { description: OK }
+    post:
+      tags: [Tuteurs]
+      summary: Ajoute un tuteur
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/GuardianInput' } } } }
+      responses:
+        "201": { description: Créé, content: { application/json: { schema: { $ref: '#/components/schemas/Guardian' } } } }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /guardians/{id}:
+    parameters: [{ $ref: '#/components/parameters/IdPath' }]
+    get:
+      tags: [Tuteurs]
+      summary: Détail d'un tuteur
+      responses:
+        "200": { description: OK }
+        "404": { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Tuteurs]
+      summary: Modifie un tuteur. Accepte aussi PATCH (même comportement, alias fourni par Laravel apiResource).
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/GuardianInput' } } } }
+      responses:
+        "200": { description: Modifié }
+        "404": { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Tuteurs]
+      summary: Supprime un tuteur
+      responses:
+        "204": { description: Supprimé }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  # ─────────────────────────── Présences ───────────────────────────
+  /attendances:
+    get:
+      tags: [Présences]
+      summary: Liste paginée des présences, filtrable par élève/classe/date
+      parameters:
+        - { $ref: '#/components/parameters/PerPage' }
+        - in: query
+          name: student_id
+          schema: { type: integer }
+        - in: query
+          name: class_id
+          schema: { type: integer }
+        - in: query
+          name: date
+          schema: { type: string, format: date }
+        - { $ref: '#/components/parameters/DateFrom' }
+        - { $ref: '#/components/parameters/DateTo' }
+      responses:
+        "200": { description: OK }
+    post:
+      tags: [Présences]
+      summary: Marque une présence (upsert sur élève+date)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/AttendanceInput' } } } }
+      responses:
+        "201": { description: Enregistrée, content: { application/json: { schema: { $ref: '#/components/schemas/Attendance' } } } }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /attendances/{id}:
+    parameters: [{ $ref: '#/components/parameters/IdPath' }]
+    put:
+      tags: [Présences]
+      summary: Corrige une présence saisie par erreur
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/AttendanceInput' } } } }
+      responses:
+        "200": { description: Corrigée }
+        "404": { $ref: '#/components/responses/NotFound' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Présences]
+      summary: Supprime une présence saisie par erreur
+      responses:
+        "204": { description: Supprimée }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  # ─────────────────────────── Récitations ───────────────────────────
+  /recitations:
+    get:
+      tags: [Récitations]
+      summary: Liste paginée des séances de récitation
+      parameters:
+        - { $ref: '#/components/parameters/PerPage' }
+        - in: query
+          name: student_id
+          schema: { type: integer }
+        - { $ref: '#/components/parameters/DateFrom' }
+        - { $ref: '#/components/parameters/DateTo' }
+      responses:
+        "200": { description: OK }
+    post:
+      tags: [Récitations]
+      summary: Enregistre une séance de récitation
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RecitationInput' } } } }
+      responses:
+        "201": { description: Enregistrée, content: { application/json: { schema: { $ref: '#/components/schemas/Recitation' } } } }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /recitations/{id}:
+    parameters: [{ $ref: '#/components/parameters/IdPath' }]
+    put:
+      tags: [Récitations]
+      summary: Corrige une séance de récitation
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RecitationInput' } } } }
+      responses:
+        "200": { description: Corrigée }
+        "404": { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Récitations]
+      summary: Supprime une séance de récitation
+      responses:
+        "204": { description: Supprimée }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  # ─────────────────────────── Paiements ───────────────────────────
+  /payments:
+    get:
+      tags: [Paiements]
+      summary: Liste paginée des paiements, filtrable
+      parameters:
+        - { $ref: '#/components/parameters/PerPage' }
+        - in: query
+          name: student_id
+          schema: { type: integer }
+        - in: query
+          name: status
+          schema: { type: string, enum: [paid, unpaid, partial] }
+        - { $ref: '#/components/parameters/DateFrom' }
+        - { $ref: '#/components/parameters/DateTo' }
+      responses:
+        "200": { description: OK }
+    post:
+      tags: [Paiements]
+      summary: Enregistre un paiement (numéro de reçu attribué si "paid")
+      description: >
+        Détection de doublon évident (même élève, même mois, déjà payé) —
+        renvoie 409 sauf si `confirm_duplicate: true` (CDC §8.7).
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/PaymentInput' } } } }
+      responses:
+        "201": { description: Créé, content: { application/json: { schema: { $ref: '#/components/schemas/Payment' } } } }
+        "409":
+          description: Doublon détecté, non confirmé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  duplicate: { type: boolean, example: true }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /payments/{id}:
+    get:
+      tags: [Paiements]
+      summary: Détail d'un paiement
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Payment' } } } }
+        "404": { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Paiements]
+      summary: Change le statut d'un paiement (ex. marquer "payé")
+      description: >
+        Modifie l'enregistrement en place (jamais de duplication). Attribue
+        un numéro de reçu si le paiement devient "paid" et n'en a pas
+        encore ; ne le réattribue jamais s'il en a déjà un.
+      parameters: [{ $ref: '#/components/parameters/IdPath' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [paid, unpaid, partial] }
+      responses:
+        "200": { description: Mis à jour, content: { application/json: { schema: { $ref: '#/components/schemas/Payment' } } } }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  # ─────────────────────────── Journal ───────────────────────────
+  /activity-logs:
+    get:
+      tags: [Journal]
+      summary: Historique d'activité horodaté (CDC §8.9)
+      parameters: [{ $ref: '#/components/parameters/PerPage' }]
+      responses:
+        "200": { description: OK }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Token Sanctum obtenu via /auth/login ou /auth/register.
+
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    PerPage:
+      name: per_page
+      in: query
+      schema: { type: integer, default: 20 }
+    DateFrom:
+      name: date_from
+      in: query
+      schema: { type: string, format: date }
+    DateTo:
+      name: date_to
+      in: query
+      schema: { type: string, format: date }
+
+  responses:
+    Unauthenticated:
+      description: Token absent ou invalide
+      content:
+        application/json:
+          schema: { type: object, properties: { message: { type: string, example: "Unauthenticated." } } }
+    NotFound:
+      description: >
+        Ressource introuvable — renvoyé aussi bien si l'ID n'existe pas que
+        s'il appartient à un autre Markaz (isolation multi-tenant, CDC §16 :
+        jamais de fuite d'information sur l'existence d'une ressource d'un
+        autre Markaz).
+      content:
+        application/json:
+          schema: { type: object, properties: { message: { type: string } } }
+    ValidationError:
+      description: Validation échouée
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              errors: { type: object, additionalProperties: { type: array, items: { type: string } } }
+    TooManyRequests:
+      description: Plus de 5 tentatives/minute sur les routes d'authentification (doc/audit.md, point C1)
+      content:
+        application/json:
+          schema: { type: object, properties: { message: { type: string } } }
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        markaz_id: { type: integer, nullable: true }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [teacher, admin, super_admin, parent] }
+        markaz: { $ref: '#/components/schemas/Markaz' }
+        created_at: { type: string, format: date-time }
+
+    Markaz:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        slogan: { type: string, nullable: true }
+        logo_path: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        country: { type: string }
+        phone: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        website: { type: string, nullable: true }
+        primary_color: { type: string, nullable: true }
+        secondary_color: { type: string, nullable: true }
+        working_days:
+          type: array
+          items: { type: string, enum: [mon, tue, wed, thu, fri, sat, sun] }
+
+    ClassInput:
+      type: object
+      required: [name, max_students]
+      properties:
+        name: { type: string }
+        level: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        teacher_id: { type: integer, nullable: true, description: "Doit appartenir au même Markaz" }
+        max_students: { type: integer, minimum: 1, maximum: 200 }
+        schedule: { type: string, nullable: true, example: "Lun, Mer, Ven - 16h-18h" }
+        room: { type: string, nullable: true }
+        is_active: { type: boolean }
+    ClassModel:
+      allOf:
+        - $ref: '#/components/schemas/ClassInput'
+        - type: object
+          properties:
+            id: { type: integer }
+            markaz_id: { type: integer }
+
+    StudentInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        class_id: { type: integer, nullable: true, description: "Doit appartenir au même Markaz" }
+        guardian_id: { type: integer, nullable: true, description: "Doit appartenir au même Markaz" }
+        gender: { type: string, enum: [m, f], nullable: true }
+        birth_date: { type: string, format: date, nullable: true }
+        parent_phone: { type: string, nullable: true }
+        enrollment_date: { type: string, format: date, nullable: true }
+        is_active: { type: boolean }
+    Student:
+      allOf:
+        - $ref: '#/components/schemas/StudentInput'
+        - type: object
+          properties:
+            id: { type: integer }
+            markaz_id: { type: integer }
+            photo_path: { type: string, nullable: true }
+    PaginatedStudents:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Student' } }
+        total: { type: integer }
+        current_page: { type: integer }
+        per_page: { type: integer }
+    PaginatedClasses:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/ClassModel' } }
+        total: { type: integer }
+        current_page: { type: integer }
+        per_page: { type: integer }
+
+    GuardianInput:
+      type: object
+      required: [name, phone]
+      properties:
+        name: { type: string }
+        phone: { type: string }
+        email: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+    Guardian:
+      allOf:
+        - $ref: '#/components/schemas/GuardianInput'
+        - type: object
+          properties:
+            id: { type: integer }
+            markaz_id: { type: integer }
+
+    AttendanceInput:
+      type: object
+      required: [student_id, date, status]
+      properties:
+        student_id: { type: integer, description: "Doit appartenir au même Markaz" }
+        class_id: { type: integer, nullable: true }
+        date: { type: string, format: date }
+        status: { type: string, enum: [present, absent, late, justified] }
+        lesson: { type: string, nullable: true, description: "Matière/sourate étudiée ce jour-là" }
+        note: { type: string, nullable: true }
+    Attendance:
+      allOf:
+        - $ref: '#/components/schemas/AttendanceInput'
+        - type: object
+          properties:
+            id: { type: integer }
+            markaz_id: { type: integer }
+            recorded_by: { type: integer, nullable: true }
+
+    RecitationInput:
+      type: object
+      required: [student_id, date, surah, status]
+      properties:
+        student_id: { type: integer, description: "Doit appartenir au même Markaz" }
+        date: { type: string, format: date }
+        surah: { type: string, example: "Al-Baqara" }
+        ayah_from: { type: integer, nullable: true }
+        ayah_to: { type: integer, nullable: true }
+        status: { type: string, enum: [recited, not_recited, partial] }
+        note: { type: string, nullable: true }
+    Recitation:
+      allOf:
+        - $ref: '#/components/schemas/RecitationInput'
+        - type: object
+          properties:
+            id: { type: integer }
+            markaz_id: { type: integer }
+
+    PaymentInput:
+      type: object
+      required: [student_id, amount, month, status, payment_mode]
+      properties:
+        student_id: { type: integer, description: "Doit appartenir au même Markaz" }
+        amount: { type: number, format: float }
+        month: { type: string, format: date, description: "Un jour quelconque du mois concerné" }
+        status: { type: string, enum: [paid, unpaid, partial] }
+        payment_mode: { type: string, enum: [cash, other] }
+        observation: { type: string, nullable: true }
+        paid_at: { type: string, format: date-time, nullable: true }
+        confirm_duplicate: { type: boolean, default: false }
+    Payment:
+      type: object
+      properties:
+        id: { type: integer }
+        markaz_id: { type: integer }
+        student_id: { type: integer }
+        amount: { type: number, format: float }
+        month: { type: string, format: date }
+        status: { type: string, enum: [paid, unpaid, partial] }
+        payment_mode: { type: string, enum: [cash, other] }
+        observation: { type: string, nullable: true }
+        receipt_number: { type: string, nullable: true, example: "MK-1-2026-000001" }
+        paid_at: { type: string, format: date-time, nullable: true }
+        recorded_by: { type: integer, nullable: true }
