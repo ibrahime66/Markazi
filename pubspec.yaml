@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   google_fonts: ^8.0.2
   smooth_page_indicator: ^2.0.1
   flutter_svg: ^2.0.7
@@ -29,7 +31,7 @@ dependencies:
   flutter_native_splash: ^2.3.6
   dio: ^5.11.0
   flutter_secure_storage: ^11.0.0
-  intl: ^0.20.3
+  intl: ^0.20.2
   share_plus: ^13.3.0
 
 dev_dependencies:
@@ -41,8 +43,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
   assets:
     - assets/logo/
+    - assets/fonts/
 
 # Configuration pour l'icône de l'application
 flutter_launcher_icons:

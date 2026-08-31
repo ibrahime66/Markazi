@@ -70,23 +70,37 @@ class ClassRepository {
     return _hiveDataSource.getClassesByLevel(markazId, level);
   }
 
-  /// Ajoute un élève à une classe
+  /// Ajoute un élève à une classe.
+  ///
+  /// Contrairement à `updateClass`, cette opération n'est PAS tolérante aux
+  /// échecs API : `class_id` est la seule source de vérité côté serveur
+  /// (voir `ApiClassDatasource`). Si le PUT serveur échoue, on annule la
+  /// mise à jour locale et on relance l'erreur, sinon l'élève apparaît
+  /// affecté dans l'app jusqu'au prochain `syncFromMarkaz`, qui reconstitue
+  /// `studentIds` depuis le serveur et le fait disparaître silencieusement.
   Future<void> addStudentToClass(String classId, String studentId) async {
     await _hiveDataSource.addStudentToClass(classId, studentId);
     try {
       await _apiDataSource.addStudentToClass(classId, studentId);
     } catch (e) {
       debugPrint('Erreur sync API (affectation élève) : $e');
+      await _hiveDataSource.removeStudentFromClass(classId, studentId);
+      rethrow;
     }
   }
 
-  /// Retire un élève d'une classe
+  /// Retire un élève d'une classe (voir note sur `addStudentToClass`).
   Future<void> removeStudentFromClass(String classId, String studentId) async {
+    final previous = _hiveDataSource.getClassById(classId);
     await _hiveDataSource.removeStudentFromClass(classId, studentId);
     try {
       await _apiDataSource.removeStudentFromClass(classId, studentId);
     } catch (e) {
       debugPrint('Erreur sync API (retrait élève) : $e');
+      if (previous != null) {
+        await _hiveDataSource.addStudentToClass(classId, studentId);
+      }
+      rethrow;
     }
   }
 

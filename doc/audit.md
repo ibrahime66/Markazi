@@ -469,6 +469,222 @@ perdre au passage.
 
 ---
 
+## K. Retours utilisateur — perte de données, jour de paiement, langues (30 août 2026)
+
+### K1. [Corrigé — bug critique de perte de données] Élèves d'un groupe qui "disparaissent"
+Signalé : après chaque redéploiement de l'app (le développeur relance
+`flutter run` pour pousser des correctifs), les groupes réapparaissent
+avec 0 élève — obligeant à réaffecter tout le monde. Cause racine : côté
+API, l'appartenance à un groupe n'est PAS stockée sur le groupe mais sur
+`students.class_id` (`ApiClassDatasource` reconstitue `studentIds` en
+croisant `/classes` et `/students` à chaque chargement — voir commentaire
+en tête de ce fichier). `ClassRepository.addStudentToClass` écrivait
+d'abord dans le cache local (Hive), *puis* tentait `PUT /students/{id}`
+avec `{class_id}` — mais si cet appel échouait, l'erreur était **avalée**
+(`catch` + `debugPrint`, sans la relancer). Résultat : l'app affichait
+"élève ajouté" avec succès alors que le serveur n'avait jamais enregistré
+l'affectation. Au prochain redéploiement, `syncFromMarkaz` vide le cache
+et le recharge depuis le serveur (seule source de vérité) → 0 élève.
+Concrètement, cet appel échouait *systématiquement* avant le correctif
+I6 (§ ci-dessus), qui exigeait `name` sur toute mise à jour de `Student` y
+compris une simple affectation à un groupe — donc **toutes** les
+affectations de groupe faites avant I6 étaient perdues sans le moindre
+avertissement. **Corrigé** :
+- `ClassRepository.addStudentToClass`/`removeStudentFromClass` relancent
+  maintenant l'erreur serveur (après avoir annulé la modification locale
+  optimiste), au lieu de la journaliser silencieusement dans la console.
+  L'utilisateur voit désormais un message d'erreur explicite si
+  l'affectation n'a réellement pas pu être enregistrée côté serveur.
+- Vérifié en conditions réelles (curl + jeton API) : `PUT /students/{id}`
+  avec seulement `class_id` répond bien `200` maintenant que I6 est
+  appliqué — les nouvelles affectations survivront donc aux prochains
+  redéploiements/redémarrages.
+
+### K2. [Corrigé] Message technique affiché lors d'un paiement en double
+Le dialogue "Paiement déjà enregistré" affichait mot pour mot le message
+brut renvoyé par l'API : *"...Renvoyez la requête avec
+confirm_duplicate=true pour confirmer."* — une instruction technique pour
+développeur, pas un texte destiné à un utilisateur final, incompatible
+avec une publication sur le Play Store. **Corrigé** côté serveur
+(`PaymentController::store`) : message reformulé en
+*"Voulez-vous quand même enregistrer ce nouveau paiement ?"*, sans aucune
+référence à un nom de paramètre d'API.
+
+### K3. [Corrigé] Limite perçue de 20 élèves par groupe
+Le champ "Nombre maximum d'élèves" n'avait en réalité aucun plafond dur à
+20 côté app (juste une valeur par défaut pré-remplie, modifiable) ; le
+serveur limitait à 200. Comme rien n'indiquait que ce nombre pouvait être
+augmenté, la valeur par défaut a été prise pour un maximum. **Corrigé** :
+plafond serveur relevé à 500, valeur par défaut passée à 30, et un texte
+d'aide explicite ("modifiable, jusqu'à 500 — vous pouvez augmenter ce
+nombre à tout moment") ajouté sur le champ, en création comme en
+modification de groupe.
+
+### K4. [Corrigé — gap découvert après coup] Nom du Markaz en arabe/chinois/espagnol/etc.
+Aucune restriction de caractères dans l'app : le champ "Nom du Markaz" est
+un `TextField` standard (validation serveur : `string, max:255`, sans
+motif de caractères) et la police de l'app (`GoogleFonts.cairo`) gère
+nativement l'arabe — un nom en arabe, espagnol ou toute langue latine
+s'affiche donc déjà correctement **dans l'app**.
+**Gap découvert en observant les logs du téléphone** (avertissement
+`dart_pdf` : *"Helvetica has no Unicode support"*) : les documents PDF
+générés (reçus, rapports) utilisaient la police PDF standard "Helvetica",
+qui n'a aucun glyphe arabe — un nom de Markaz en arabe se serait affiché
+en cases vides sur les reçus/rapports, alors qu'il s'affiche très bien
+dans l'app elle-même. **Corrigé** : les trois générateurs PDF utilisent
+maintenant une police Noto Sans (latin, meilleure couverture des accents
+que Helvetica) avec Noto Sans Arabic en police de repli automatique
+(`PdfHelpers.buildTheme()`, polices embarquées dans `assets/fonts/`,
+~730 Ko au total).
+**Limite assumée** : le chinois (Noto Sans SC) n'est pas inclus — le
+fichier de police pèse ~10 Mo contre ~190 Ko pour l'arabe, disproportionné
+pour un Markaz d'enseignement coranique. Un nom en chinois s'affiche bien
+dans l'app mais pas encore sur les PDF générés ; à ajouter séparément si
+un besoin réel se présente.
+
+### K5. [Corrigé] Écran "Mon Markaz" peu soigné
+Tous les champs (identité, coordonnées, devise, jours de cours) étaient
+empilés à plat dans un simple défilement, sans regroupement visuel.
+**Corrigé** : régénéré en sections avec cartes distinctes ("Identité",
+"Coordonnées", "Finance", "Jours de cours"), chacune avec icône et
+sous-titre explicatif, précédées d'un bandeau d'en-tête reprenant le nom
+du Markaz.
+
+### K6. [Corrigé] Jour exact du paiement absent des reçus
+Le reçu PDF affichait toujours le 1er jour du mois concerné
+(`payment.date`, qui sert uniquement à identifier "le mois d'août" par
+exemple), jamais le jour réel où l'élève a payé — le champ `paid_at`
+existait déjà côté serveur/BDD mais n'était ni exposé dans le formulaire
+Flutter, ni renseigné à la création, ni lu par le générateur de reçu.
+**Corrigé** : ajout d'un sélecteur "Jour du paiement" (par défaut
+aujourd'hui) dans le formulaire d'enregistrement, nouveau champ `paidAt`
+sur le modèle `Payment` (Hive + JSON), transmis à l'API (`paid_at`) et
+utilisé par le reçu PDF à la place du 1er du mois. Le serveur retombe sur
+"maintenant" si `paid_at` n'est pas fourni mais que le paiement est créé
+déjà marqué payé (même logique que `markAsPaid`, qui le faisait déjà).
+
+### K7. [Corrigé — mode sombre] Mode sombre/clair
+Le thème (`main.dart`) et la plupart des écrans utilisaient des couleurs
+fixes (`Colors.white` en dur pour les cartes/champs — au moins
+29 occurrences rien que sur `dashboard_screen.dart`,
+`group_details_screen.dart`, `guardian_screen.dart` et
+`common_widgets.dart`) plutôt que des couleurs dépendant du thème,
+empêchant tout mode sombre propre.
+
+**Corrigé**, avec une approche pensée pour ne pas nécessiter de réécrire
+chaque écran :
+- Nouveau `ThemeProvider` (persisté dans une box Hive `settings`
+  indépendante des données métier) exposant `ThemeMode` (Système / Clair /
+  Sombre), avec un sélecteur dans "Mon Markaz" → section "Apparence"
+  (`SegmentedButton`).
+- `AppColors.background/surface/textDark/textMedium/textLight` sont
+  passés de `const` à des *getters* qui lisent le mode courant
+  (`AppColors.applyBrightness`, appelé par `ThemeProvider` avant chaque
+  `notifyListeners()`). Comme la quasi-totalité de l'app utilise déjà ces
+  constantes nommées (plutôt que des couleurs littérales éparpillées),
+  cette seule bascule suffit à faire suivre le thème à tous les écrans qui
+  s'appuient dessus, **sans modifier chaque écran un par un**.
+- Chaque écran/​widget partagé encore concerné ajoute
+  `context.watch<ThemeProvider>()` en tête de son `build()` — c'est ce qui
+  déclenche la reconstruction (donc la relecture des couleurs) au moment
+  du bascule : `MarkaziAppBar`, `FeatureCard`, `AdvantageBadge`,
+  `SectionTitle` (`common_widgets.dart`), `DashboardScreen`,
+  `GroupDetailsScreen`, `GuardianScreen`, `MarkazSettingsScreen`,
+  `RecitationScreen`.
+- Les `Colors.white` restants utilisés comme fond de carte/conteneur (pas
+  comme texte/icône blanc sur fond de couleur fixe, laissés tels quels)
+  ont été remplacés par `AppColors.surface` dans ces mêmes fichiers.
+- `MaterialApp` fournit désormais un vrai `theme`/`darkTheme`/`themeMode`
+  (palette sombre dédiée, `ColorScheme.fromSeed(brightness: ...)`) — les
+  widgets Material natifs (`Drawer`, boîtes de dialogue, cases à cocher,
+  etc.) suivent donc automatiquement le mode choisi sans code
+  supplémentaire. Couleur des icônes de la barre système (heure/batterie)
+  également adaptée par thème (`AppBarTheme.systemOverlayStyle`), sinon
+  invisible sur fond sombre.
+- **Écrans volontairement non concernés** : `SplashScreen`,
+  `OnboardingScreen`, `LoginScreen`, `HomeScreen`, `FeaturesScreen`,
+  `AboutScreen` — écrans de marque avant/à la connexion, à fond dégradé
+  vert fixe assumé, comme dans la plupart des apps (le mode clair/sombre
+  n'a de sens qu'une fois dans l'app).
+Vérifié : `flutter analyze` 0, `flutter test` 2/2 (le test existant
+construisait `MarkaziApp` sans `ThemeProvider` en ancêtre → adapté pour en
+fournir un, sinon `ProviderNotFoundException`).
+
+**Retour utilisateur après premier test** : le réglage était uniquement
+dans "Mon Markaz" → trop enfoui pour un usage courant ("c'est à
+l'utilisateur de cliquer pour l'activer dans l'application"). **Corrigé** :
+ajout d'un bouton à bascule ("Mode sombre") directement dans le tiroir de
+navigation, accessible en un clic depuis n'importe quel écran du tableau
+de bord, sans passer par les réglages. Le réglage fin (Système/Clair/
+Sombre) reste disponible dans "Mon Markaz" pour qui le cherche.
+
+### K8. [Corrigé — infrastructure + première couverture] Changement de langue de l'app
+Traduire l'app entière (plusieurs centaines de chaînes en français en dur,
+réparties sur une douzaine d'écrans) est un chantier de fond ; cette passe
+pose l'infrastructure complète et l'applique à la partie la plus visible
+de l'app (celle utilisée en permanence, contrairement aux écrans de
+marque avant connexion).
+
+**Mis en place** :
+- Infrastructure standard Flutter (`flutter_localizations` + `intl`,
+  fichiers `.arb`, génération via `flutter gen-l10n` → `AppLocalizations`)
+  plutôt qu'un système maison, pour rester dans les clous de l'écosystème
+  (mise à jour des traductions, pluriels, etc. si besoin plus tard).
+- Trois langues : **français** (référence), **anglais**, **arabe** (RTL
+  géré nativement par Flutter dès qu'une locale arabe est active — aucun
+  code supplémentaire nécessaire ; la police `GoogleFonts.cairo` la
+  supporte déjà, voir K4).
+- `LocaleProvider` (persisté, même mécanisme que `ThemeProvider` — box
+  Hive `settings`) avec sélecteur dans "Mon Markaz" → section "Langue" :
+  Système / Français / English / العربية.
+- **Couverture de cette première tranche** : tiroir de navigation (tous
+  les libellés + le bouton "Mode sombre"), titres d'onglets du tableau de
+  bord, écran "Mon Markaz" en entier (sections, champs, boutons), titres
+  des écrans Tuteurs/Parents et Récitations.
+- **Non couvert** (reste en français en dur) : le contenu détaillé des
+  écrans eux-mêmes (formulaires, dialogues, listes, messages d'erreur) —
+  Élèves, Groupes, Paiements, Présences, Rapports, Tuteurs, Récitations,
+  et les écrans de marque avant connexion (Accueil, Onboarding, Connexion,
+  Fonctionnalités, À propos), volontairement laissés de côté comme pour
+  K7. C'est la majorité du volume de texte de l'app — à couvrir
+  progressivement, écran par écran, en réutilisant les clés déjà créées
+  dans `lib/l10n/app_{fr,en,ar}.arb` et en ajoutant les nouvelles au fur
+  et à mesure.
+Vérifié : `flutter analyze` 0, `flutter test` 2/2 (adapté pour fournir
+`LocaleProvider` en ancêtre de test, même besoin que pour `ThemeProvider`
+en K7).
+
+## L. Impossible de corriger une présence déjà enregistrée (30 août 2026)
+
+### L1. [Corrigé] Aucun moyen de modifier une présence
+Une fois une présence marquée (présent/absent/retard), il n'y avait aucun
+moyen de la corriger depuis l'app — la boîte de dialogue "Détails de la
+présence" n'était qu'une vue en lecture seule (bouton "Fermer" uniquement).
+Fait notable : la route serveur `PUT /attendances/{id}` existait déjà et
+fonctionnait (ajoutée lors d'un correctif antérieur, point B3), ainsi que
+`AttendanceRepository.updateAttendance` — seules les couches
+service/provider/UI manquaient pour relier le tout, ce qui a permis un
+correctif rapide plutôt qu'une construction depuis zéro.
+
+**Corrigé** : bouton "Modifier" ajouté à la boîte de dialogue de détails,
+ouvrant un formulaire pré-rempli (statut + leçon) qui appelle la chaîne
+complète `AttendanceProvider.updateAttendance` → `AttendanceService` →
+`AttendanceRepository` → `PUT /attendances/{id}`.
+
+**Limite assumée** : la date n'est volontairement pas modifiable depuis ce
+formulaire. La table `attendances` a une contrainte unique
+`(student_id, date)` côté serveur — changer la date vers un jour où
+l'élève a déjà un enregistrement ferait échouer la requête (erreur 500 non
+gérée). Corriger le statut/la leçon couvre le besoin réel exprimé
+("modifier une présence" = corriger une erreur de saisie) sans ce risque.
+Si le besoin de changer la date se confirme, il faudra d'abord traiter H7
+(déjà ouvert, même zone de fragilité : le comportement de la contrainte
+unique par jour n'est pas géré côté UI).
+Vérifié : bout en bout via `curl` (créer → corriger via PUT → supprimer,
+200/204 sur les trois appels), `flutter analyze` 0, `flutter test` 2/2.
+
+---
+
 ## Résumé chiffré
 
 | Catégorie | Nombre de points |
@@ -483,7 +699,9 @@ perdre au passage.
 | Audit fonctionnel complet (section H) | 7 |
 | Retours utilisateur paiements/rapports/tuteurs (section I) | 6 |
 | Expérience utilisateur carte de groupe (section J) | 1 |
-| **Total** | **42** |
+| Perte de données groupes, paiement, apparence, langues (section K) | 8 corrigés |
+| Correction d'une présence (section L) | 1 corrigé |
+| **Total** | **51** |
 
 Le plan de résolution détaillé, avec l'ordre de traitement recommandé et le
 suivi "résolu / non résolu", est dans

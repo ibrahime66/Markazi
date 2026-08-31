@@ -6,6 +6,7 @@ import '../providers/class_provider.dart';
 import '../providers/student_provider.dart';
 import '../providers/payment_provider.dart';
 import '../providers/attendance_provider.dart';
+import '../providers/theme_provider.dart';
 import '../providers/markaz_provider.dart';
 import '../models/class_model.dart';
 import '../models/student.dart';
@@ -46,6 +47,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeProvider>();
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -368,7 +370,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: isEven ? Colors.white : Colors.grey[50],
+        color: isEven ? AppColors.surface : AppColors.background,
         border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
       ),
       child: Row(

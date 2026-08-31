@@ -5,6 +5,9 @@ import '../models/recitation.dart';
 import '../models/student.dart';
 import '../providers/recitation_provider.dart';
 import '../providers/student_provider.dart';
+import '../providers/theme_provider.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_localizations.dart';
 import '../utils/app_colors.dart';
 import '../widgets/common_widgets.dart';
 
@@ -98,9 +101,12 @@ class _RecitationScreenState extends State<RecitationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeProvider>();
+    context.watch<LocaleProvider>();
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const MarkaziAppBar(title: 'Récitations'),
+      appBar: MarkaziAppBar(title: l10n.navRecitations),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () => _openForm(),

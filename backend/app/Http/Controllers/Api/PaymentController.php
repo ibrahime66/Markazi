@@ -62,9 +62,13 @@ class PaymentController extends Controller
             ->exists();
 
         if ($duplicate && ! ($data['confirm_duplicate'] ?? false)) {
+            // Message volontairement destiné à l'utilisateur final (affiché tel
+            // quel dans le dialogue de confirmation côté app) : pas de détail
+            // technique type "confirm_duplicate=true", l'app gère la ré-
+            // soumission via le paramètre `duplicate` ci-dessous.
             return response()->json([
                 'message' => 'Un paiement payé existe déjà pour cet élève ce mois-ci. '
-                    .'Renvoyez la requête avec confirm_duplicate=true pour confirmer.',
+                    .'Voulez-vous quand même enregistrer ce nouveau paiement ?',
                 'duplicate' => true,
             ], 409);
         }
@@ -72,6 +76,14 @@ class PaymentController extends Controller
         unset($data['confirm_duplicate']);
         $data['month'] = $month;
         $data['recorded_by'] = $request->user()->id;
+
+        // Le jour exact du paiement (`paid_at`, affiché sur le reçu) est
+        // fourni par l'app quand l'utilisateur le choisit explicitement ;
+        // à défaut, on retombe sur "maintenant" pour un paiement créé déjà
+        // marqué payé (même logique que updateStatus() ci-dessous).
+        if (($data['status'] ?? null) === 'paid' && empty($data['paid_at'])) {
+            $data['paid_at'] = now();
+        }
 
         $payment = Payment::create($data);
 

@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import '../models/guardian.dart';
 import '../providers/guardian_provider.dart';
 import '../providers/student_provider.dart';
+import '../providers/theme_provider.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_localizations.dart';
 import '../utils/app_colors.dart';
 import '../widgets/common_widgets.dart';
 
@@ -70,9 +73,12 @@ class _GuardianScreenState extends State<GuardianScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeProvider>();
+    context.watch<LocaleProvider>();
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const MarkaziAppBar(title: 'Tuteurs / Parents'),
+      appBar: MarkaziAppBar(title: l10n.navGuardians),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () => _openForm(),
@@ -114,7 +120,7 @@ class _GuardianScreenState extends State<GuardianScreen> {
               return Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),

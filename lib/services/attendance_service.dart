@@ -104,6 +104,40 @@ class AttendanceService {
     return await _repository.addAttendance(attendance);
   }
 
+  /// Corrige une présence déjà enregistrée (statut et/ou leçon). La date
+  /// n'est volontairement pas modifiable ici : la contrainte serveur
+  /// `unique(student_id, date)` ferait échouer la requête si elle entre en
+  /// collision avec un autre enregistrement du même élève (voir
+  /// doc/audit.md, point H7 — décision produit encore ouverte sur ce
+  /// comportement) ; corriger le statut/la leçon couvre le besoin réel
+  /// ("je me suis trompé en pointant la présence") sans ce risque.
+  Future<Attendance> updateAttendance({
+    required String attendanceId,
+    required AttendanceStatus status,
+    required String lesson,
+  }) async {
+    final existing = _repository.getAttendanceById(attendanceId);
+    if (existing == null) {
+      throw Exception('Présence non trouvée');
+    }
+
+    if (!_authService.hasAccessToMarkaz(existing.markazId)) {
+      throw Exception('Accès refusé à cette Markaz');
+    }
+
+    if (lesson.trim().isEmpty) {
+      throw Exception('Le nom de la leçon est obligatoire');
+    }
+
+    final updated = existing.copyWith(status: status, lesson: lesson.trim());
+    // `updateAttendance` ne renvoie rien : elle écrit en local puis tente le
+    // serveur en tâche de fond, avec remise en file en cas d'échec (mode
+    // hors ligne — voir le commentaire sur cette méthode). On retourne donc
+    // directement la version locale, déjà écrite au moment où l'appel revient.
+    await _repository.updateAttendance(updated);
+    return updated;
+  }
+
   /// Calcule le taux de présence hebdomadaire d'un élève
   Map<String, dynamic> getWeeklyAttendanceRate(
     String studentId, {

@@ -32,6 +32,7 @@ class PaymentService {
     required PaymentStatus status,
     String? markazId,
     DateTime? date,
+    DateTime? paidAt,
     bool confirmDuplicate = false,
   }) async {
     // Validations
@@ -62,6 +63,7 @@ class PaymentService {
       amount: amount,
       status: status,
       date: date ?? DateTime.now(),
+      paidAt: status == PaymentStatus.paid ? (paidAt ?? DateTime.now()) : null,
     );
 
     return await _repository.addPayment(payment, confirmDuplicate: confirmDuplicate);

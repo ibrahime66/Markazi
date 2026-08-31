@@ -619,3 +619,98 @@ Travail pas à pas, un point à la fois.
       informations de l'ancien résumé (emploi du temps, salle, statut,
       date de création) ont été ajoutées à la fiche complète.
       Vérifié : `flutter analyze` 0, `flutter test` 2/2.
+
+## Étape 10 — Perte de données groupes, jour de paiement, langues (30 août 2026)
+
+- [x] ✅ **K1.** Résolu — **bug critique de perte de données**. Cause
+      racine : `ClassRepository.addStudentToClass`/`removeStudentFromClass`
+      écrivaient d'abord dans le cache local puis avalaient silencieusement
+      toute erreur de l'appel API réel (`catch` + `debugPrint`, sans
+      relancer) — l'app affichait "élève ajouté" même quand le serveur
+      refusait la requête. Avant le correctif I6, ce refus était
+      systématique (422 "name obligatoire"), donc **toutes** les
+      affectations de groupe étaient perdues au prochain rechargement
+      complet depuis le serveur (`syncFromMarkaz`), qui est l'unique source
+      de vérité pour la composition d'un groupe. Corrigé : les deux
+      méthodes relancent maintenant l'erreur (après avoir annulé la
+      modification locale optimiste), pour que l'utilisateur voie un
+      message d'erreur réel au lieu d'un faux succès.
+      Vérifié : `PUT /students/{id}` avec `class_id` seul confirmé `200`
+      en conditions réelles (curl + jeton API) maintenant que I6 est en
+      place ; `flutter analyze` 0, `flutter test` 2/2, `php artisan test`
+      32/32.
+- [x] ✅ **K2.** Résolu. Message serveur reformulé pour l'utilisateur final
+      (`PaymentController::store`) — ne mentionne plus le paramètre
+      technique `confirm_duplicate=true`.
+- [x] ✅ **K3.** Résolu. Plafond serveur `max_students` relevé de 200 à
+      500 ; valeur par défaut du champ passée de 20 à 30 ; texte d'aide
+      ajouté précisant que le nombre est librement modifiable.
+- [x] ✅ **K4.** Résolu. Pas de restriction de caractères sur le nom du
+      Markaz (client/serveur) et l'app l'affiche déjà correctement en
+      arabe (`GoogleFonts.cairo`). Gap découvert après coup dans les logs
+      du téléphone : les PDF générés (reçus/rapports) utilisaient la
+      police standard "Helvetica", sans glyphes arabes — un nom en arabe
+      se serait affiché en cases vides sur les documents. Corrigé :
+      police Noto Sans + repli Noto Sans Arabic embarquée dans l'app
+      (`assets/fonts/`, ~730 Ko) et utilisée par les 3 générateurs PDF.
+      Le chinois n'est volontairement pas couvert sur les PDF (police
+      ~10 Mo, disproportionnée) — voir doc/audit.md K4 pour le détail.
+- [x] ✅ **K5.** Résolu. Écran "Mon Markaz" réorganisé en sections avec
+      cartes ("Identité", "Coordonnées", "Finance", "Jours de cours") et
+      bandeau d'en-tête, au lieu d'une liste de champs à plat.
+- [x] ✅ **K6.** Résolu. Le reçu de paiement affichait toujours le 1er
+      jour du mois (`payment.date`) au lieu du jour réel du paiement.
+      Ajout d'un sélecteur "Jour du paiement" dans le formulaire, nouveau
+      champ `Payment.paidAt` (Hive + JSON + API `paid_at`), utilisé par le
+      reçu PDF à la place du 1er du mois. Fallback serveur sur "maintenant"
+      si non fourni et paiement créé déjà payé (même logique que
+      `markAsPaid`).
+      Vérifié : `flutter analyze` 0, `flutter test` 2/2, `php artisan test`
+      32/32.
+- [x] ✅ **K7.** Résolu — mode sombre/clair. Nouveau `ThemeProvider`
+      (persisté, `ThemeMode` Système/Clair/Sombre) avec sélecteur dans
+      "Mon Markaz" → "Apparence". `AppColors.background/surface/textXxx`
+      passés de `const` à des getters sensibles au mode courant
+      (`AppColors.applyBrightness`), ce qui fait suivre le thème à tout
+      écran s'appuyant dessus sans le réécrire — chaque écran/widget
+      partagé concerné ajoute juste `context.watch<ThemeProvider>()` pour
+      se reconstruire au bascule (`MarkaziAppBar`, `FeatureCard`,
+      `AdvantageBadge`, `SectionTitle`, `DashboardScreen`,
+      `GroupDetailsScreen`, `GuardianScreen`, `MarkazSettingsScreen`,
+      `RecitationScreen`). `Colors.white` restants (fonds de carte)
+      remplacés par `AppColors.surface`. `MaterialApp` fournit un vrai
+      `theme`/`darkTheme`/`themeMode` (palette sombre dédiée), donc les
+      widgets Material natifs (Drawer, dialogues, ...) suivent
+      automatiquement. Écrans de marque avant connexion (Splash,
+      Onboarding, Login, Home, Features, About) volontairement laissés en
+      dégradé vert fixe. Voir doc/audit.md K7 pour le détail complet.
+      Vérifié : `flutter analyze` 0, `flutter test` 2/2 (adapté pour
+      fournir `ThemeProvider` en ancêtre de test).
+- [x] ✅ **K8.** Résolu — infrastructure + première couverture. Mise en
+      place standard Flutter (`flutter_localizations`/`intl`, fichiers
+      `.arb`, `flutter gen-l10n` → `AppLocalizations`) pour trois langues :
+      français (référence), anglais, arabe (RTL natif, police déjà
+      compatible — voir K4). `LocaleProvider` persisté (même mécanisme que
+      `ThemeProvider`), sélecteur dans "Mon Markaz" → "Langue". Couvre pour
+      l'instant : tiroir de navigation, titres d'onglets du tableau de
+      bord, écran "Mon Markaz" en entier, titres Tuteurs/Récitations. Le
+      contenu détaillé des autres écrans (formulaires, dialogues, listes)
+      reste en français en dur — à couvrir progressivement en réutilisant
+      les clés `lib/l10n/app_{fr,en,ar}.arb`. Voir doc/audit.md K8 pour le
+      détail complet de la couverture.
+      Vérifié : `flutter analyze` 0, `flutter test` 2/2 (adapté pour
+      fournir `LocaleProvider` en ancêtre de test).
+
+## Étape 11 — Correction d'une présence (30 août 2026)
+
+- [x] ✅ **L1.** Résolu. Aucun moyen de corriger une présence déjà
+      enregistrée (dialogue de détails en lecture seule). La route
+      serveur `PUT /attendances/{id}` et `AttendanceRepository.updateAttendance`
+      existaient déjà (correctif antérieur B3) — seules les couches
+      service/provider/UI manquaient. Ajout de
+      `AttendanceService.updateAttendance`/`AttendanceProvider.updateAttendance`
+      et d'un bouton "Modifier" (statut + leçon) dans la boîte de détails.
+      Date volontairement non modifiable ici (contrainte unique serveur
+      `student_id`+`date`, voir doc/audit.md L1/H7).
+      Vérifié : bout en bout via `curl` (create → update → delete, tous
+      200/204), `flutter analyze` 0, `flutter test` 2/2.

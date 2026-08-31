@@ -6,6 +6,9 @@ import '../utils/app_colors.dart';
 import '../providers/student_provider.dart';
 import '../providers/payment_provider.dart';
 import '../providers/attendance_provider.dart';
+import '../providers/theme_provider.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/class_provider.dart';
 import '../providers/markaz_provider.dart';
 import '../providers/sync_queue_provider.dart';
@@ -122,6 +125,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Reconstruit l'écran (donc relit AppColors.xxx) quand le mode clair/
+    // sombre change — doc/audit.md K7. Idem pour la langue — K8.
+    context.watch<ThemeProvider>();
+    context.watch<LocaleProvider>();
+    final l10n = AppLocalizations.of(context);
     final authService = context.read<AuthService>();
     final userName = authService.currentUser?.name ?? 'Utilisateur';
 
@@ -142,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             Text(
-              _tabTitles[_selectedTabIndex],
+              _tabTitles(l10n)[_selectedTabIndex],
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -179,20 +187,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // tiroir de navigation ci-dessous, avec icônes et libellés complets —
   // plus d'abréviations tronquées ni de menu masqué derrière un bouton
   // "⋮" flottant).
-  static const List<String> _tabTitles = [
-    'Vue d\'ensemble',
-    'Élèves',
-    'Groupes',
-    'Paiements',
-    'Présences',
-    'Rapports',
-  ];
+  List<String> _tabTitles(AppLocalizations l10n) => [
+        l10n.navOverview,
+        l10n.navStudents,
+        l10n.navGroups,
+        l10n.navPayments,
+        l10n.navAttendance,
+        l10n.navReports,
+      ];
 
   /// Tiroir de navigation principal : réunit les onglets internes du
   /// tableau de bord et les destinations autrefois cachées derrière le
   /// menu "⋮" (Mon Markaz, Tuteurs/Parents, Récitations), toutes avec de
   /// vraies icônes vectorielles et un libellé complet.
   Widget _buildNavigationDrawer(BuildContext context, String userName) {
+    final l10n = AppLocalizations.of(context);
     return Drawer(
       child: SafeArea(
         child: Column(
@@ -245,21 +254,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
-                  _buildDrawerTab(Icons.dashboard_rounded, 'Vue d\'ensemble', 0),
-                  _buildDrawerTab(Icons.people_rounded, 'Élèves', 1),
-                  _buildDrawerTab(Icons.groups_rounded, 'Groupes', 2),
-                  _buildDrawerTab(Icons.payments_rounded, 'Paiements', 3),
-                  _buildDrawerTab(Icons.event_available_rounded, 'Présences', 4),
-                  _buildDrawerTab(Icons.bar_chart_rounded, 'Rapports', 5),
+                  _buildDrawerTab(Icons.dashboard_rounded, l10n.navOverview, 0),
+                  _buildDrawerTab(Icons.people_rounded, l10n.navStudents, 1),
+                  _buildDrawerTab(Icons.groups_rounded, l10n.navGroups, 2),
+                  _buildDrawerTab(Icons.payments_rounded, l10n.navPayments, 3),
+                  _buildDrawerTab(Icons.event_available_rounded, l10n.navAttendance, 4),
+                  _buildDrawerTab(Icons.bar_chart_rounded, l10n.navReports, 5),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
                     child: Divider(height: 24),
                   ),
-                  _buildDrawerRoute(Icons.mosque_outlined, 'Mon Markaz', '/markaz-settings'),
-                  _buildDrawerRoute(Icons.family_restroom_rounded, 'Tuteurs / Parents', '/guardians'),
-                  _buildDrawerRoute(Icons.menu_book_rounded, 'Récitations', '/recitations'),
+                  _buildDrawerRoute(Icons.mosque_outlined, l10n.navMyMarkaz, '/markaz-settings'),
+                  _buildDrawerRoute(Icons.family_restroom_rounded, l10n.navGuardians, '/guardians'),
+                  _buildDrawerRoute(Icons.menu_book_rounded, l10n.navRecitations, '/recitations'),
                 ],
               ),
+            ),
+            // Bascule rapide du mode sombre, accessible en un clic direct
+            // depuis le tiroir — le réglage fin (Système/Clair/Sombre) reste
+            // disponible dans "Mon Markaz" pour qui le cherche, mais l'usage
+            // courant ne doit pas nécessiter d'y naviguer (retour
+            // utilisateur : "c'est à l'utilisateur de cliquer pour
+            // l'activer dans l'application").
+            const Divider(height: 1),
+            SwitchListTile(
+              secondary: Icon(
+                AppColors.isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                color: AppColors.primary,
+              ),
+              title: Text(
+                l10n.navDarkMode,
+                style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+              value: AppColors.isDark,
+              activeThumbColor: AppColors.primary,
+              onChanged: (value) {
+                context.read<ThemeProvider>().setThemeMode(
+                      value ? ThemeMode.dark : ThemeMode.light,
+                    );
+              },
             ),
             // Déconnexion : séparée en bas du tiroir, loin des actions
             // courantes de l'AppBar où elle n'avait pas sa place.
@@ -267,7 +300,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ListTile(
               leading: const Icon(Icons.logout_rounded, color: Colors.red),
               title: Text(
-                'Déconnexion',
+                l10n.navLogout,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -495,7 +528,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey[300]!),
         ),
@@ -518,7 +551,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
@@ -576,7 +609,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey[300]!),
         ),
@@ -597,7 +630,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey[200]!),
       ),
@@ -657,7 +690,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       String title, String value, IconData icon, Color color) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
@@ -762,7 +795,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildTabHeader(String title, String count, VoidCallback onAdd) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: Colors.white,
+      color: AppColors.surface,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -1161,7 +1194,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
         ),
@@ -1523,6 +1556,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String selectedStatus = 'paid';
     final now = DateTime.now();
     DateTime selectedMonth = DateTime(now.year, now.month, 1);
+    DateTime selectedPaidDay = now;
 
     showDialog(
       context: context,
@@ -1628,6 +1662,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         }
                       },
                     ),
+                    if (selectedStatus == 'paid') ...[
+                      const SizedBox(height: 16),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedPaidDay,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(now.year + 1),
+                          );
+                          if (picked != null) {
+                            setState(() => selectedPaidDay = picked);
+                          }
+                        },
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'Jour du paiement',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            prefixIcon: const Icon(Icons.event_available_outlined),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                          ),
+                          child: Text(
+                            '${selectedPaidDay.day.toString().padLeft(2, '0')}/'
+                            '${selectedPaidDay.month.toString().padLeft(2, '0')}/'
+                            '${selectedPaidDay.year}',
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -1669,6 +1734,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ? PaymentStatus.paid
                           : PaymentStatus.unpaid,
                       month: selectedMonth,
+                      paidAt: selectedStatus == 'paid' ? selectedPaidDay : null,
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -1695,6 +1761,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required double amount,
     required PaymentStatus status,
     required DateTime month,
+    DateTime? paidAt,
     bool confirmDuplicate = false,
   }) async {
     try {
@@ -1704,6 +1771,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         amount: amount,
         status: status,
         date: month,
+        paidAt: paidAt,
         confirmDuplicate: confirmDuplicate,
       );
 
@@ -1751,6 +1819,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           amount: amount,
           status: status,
           month: month,
+          paidAt: paidAt,
           confirmDuplicate: true,
         );
       }
@@ -2502,7 +2571,103 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Fermer'),
           ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _showEditAttendanceDialog(attendance as Attendance, studentName);
+            },
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            label: const Text('Modifier'),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          ),
         ],
+      ),
+    );
+  }
+
+  /// Corrige le statut/la leçon d'une présence déjà enregistrée (demande
+  /// utilisateur — jusqu'ici, seule la création était possible, aucun moyen
+  /// de rectifier une erreur de saisie).
+  void _showEditAttendanceDialog(Attendance attendance, String studentName) {
+    AttendanceStatus selectedStatus = attendance.status;
+    final lessonController = TextEditingController(text: attendance.lesson);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setState) => AlertDialog(
+          title: const Text('Modifier la présence'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  studentName,
+                  style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<AttendanceStatus>(
+                  initialValue: selectedStatus,
+                  decoration: const InputDecoration(
+                    labelText: 'Statut',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: AttendanceStatus.present, child: Text('Présent')),
+                    DropdownMenuItem(value: AttendanceStatus.absent, child: Text('Absent')),
+                    DropdownMenuItem(value: AttendanceStatus.late, child: Text('Tardif')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => selectedStatus = value);
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: lessonController,
+                  decoration: const InputDecoration(
+                    labelText: 'Leçon',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await context.read<AttendanceProvider>().updateAttendance(
+                        attendanceId: attendance.id,
+                        status: selectedStatus,
+                        lesson: lessonController.text,
+                      );
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Présence corrigée'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (dialogContext.mounted) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              child: const Text('Enregistrer'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -3156,7 +3321,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // En-tête avec bouton d'ajout
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                color: Colors.white,
+                color: AppColors.surface,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -3549,7 +3714,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         primaryColorHex: markaz.primaryColorHex,
       ),
       receiptNumber: payment.receiptNumber ?? '—',
-      date: payment.date,
+      // Le jour EXACT du paiement (`paidAt`), pas le 1er jour du mois
+      // concerné (`date`) — sinon le reçu affichait toujours "01/mois/année"
+      // quelle que soit la date réelle du paiement.
+      date: payment.paidAt ?? payment.date,
       studentName: student.name,
       parentPhone: student.parentPhone,
       amountPaid: payment.amount,
@@ -3939,7 +4107,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final levelController = TextEditingController();
     final descriptionController = TextEditingController();
     final teacherController = TextEditingController();
-    final maxStudentsController = TextEditingController(text: '20');
+    final maxStudentsController = TextEditingController(text: '30');
 
     showDialog(
       context: context,
@@ -3987,6 +4155,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   controller: maxStudentsController,
                   decoration: const InputDecoration(
                     labelText: 'Nombre maximum d\'élèves',
+                    hintText: 'Ex: 30 (modifiable, jusqu\'à 500)',
+                    helperText: 'Vous pouvez augmenter ce nombre à tout moment.',
                   ),
                   keyboardType: TextInputType.number,
                 ),
@@ -4090,6 +4260,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   controller: maxStudentsController,
                   decoration: const InputDecoration(
                     labelText: 'Nombre maximum d\'élèves',
+                    hintText: 'Ex: 30 (modifiable, jusqu\'à 500)',
+                    helperText: 'Vous pouvez augmenter ce nombre à tout moment.',
                   ),
                   keyboardType: TextInputType.number,
                 ),

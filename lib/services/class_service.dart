@@ -20,7 +20,7 @@ class ClassService {
     required String level,
     required String description,
     required String teacherName,
-    int maxStudents = 20,
+    int maxStudents = 30,
     String? schedule,
     String? room,
   }) async {

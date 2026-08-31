@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:markazi/main.dart';
+import 'package:markazi/providers/locale_provider.dart';
+import 'package:markazi/providers/theme_provider.dart';
 import 'package:markazi/services/auth_service.dart';
 
 /// [AuthService] réel, sans session restaurée : `SplashScreen` s'en sert
@@ -16,10 +18,17 @@ import 'package:markazi/services/auth_service.dart';
 /// 2. Le premier test ne laissait jamais les timers de `_startAnimations`
 ///    (plusieurs `Future.delayed`) se terminer avant la fin du test, ce que
 ///    le framework de test rejette ("Pending timers").
+///
+/// `ThemeProvider`/`LocaleProvider` ajoutés avec K7/K8 (mode clair/sombre,
+/// langue — doc/audit.md) : `MarkaziApp` les lit désormais via
+/// `Consumer2<ThemeProvider, LocaleProvider>`, donc ils doivent être
+/// fournis ici aussi, sinon `ProviderNotFoundException`.
 Widget _wrapWithProviders(Widget child) {
   return MultiProvider(
     providers: [
       Provider<AuthService>(create: (_) => AuthService()),
+      ChangeNotifierProvider<ThemeProvider>(create: (_) => ThemeProvider()),
+      ChangeNotifierProvider<LocaleProvider>(create: (_) => LocaleProvider()),
     ],
     child: child,
   );

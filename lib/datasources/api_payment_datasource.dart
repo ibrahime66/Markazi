@@ -32,6 +32,7 @@ class ApiPaymentDatasource {
         'month': payment.date.toIso8601String().split('T').first,
         'status': _statusToApi(payment.status),
         'payment_mode': 'cash',
+        if (payment.paidAt != null) 'paid_at': payment.paidAt!.toIso8601String(),
         if (confirmDuplicate) 'confirm_duplicate': true,
       });
       return _mapJsonToPayment(response.data as Map<String, dynamic>, markazId);
@@ -88,6 +89,7 @@ class ApiPaymentDatasource {
       status: json['status'] == 'paid' ? PaymentStatus.paid : PaymentStatus.unpaid,
       date: DateTime.parse(json['month'] as String),
       receiptNumber: json['receipt_number'] as String?,
+      paidAt: json['paid_at'] != null ? DateTime.parse(json['paid_at'] as String) : null,
     );
   }
 }

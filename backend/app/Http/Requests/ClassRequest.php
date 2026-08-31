@@ -25,7 +25,7 @@ class ClassRequest extends FormRequest
                 'nullable',
                 Rule::exists('users', 'id')->where('markaz_id', $this->user()->markaz_id),
             ],
-            'max_students' => ['required', 'integer', 'min:1', 'max:200'],
+            'max_students' => ['required', 'integer', 'min:1', 'max:500'],
             'schedule' => ['nullable', 'string', 'max:255'],
             'room' => ['nullable', 'string', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],

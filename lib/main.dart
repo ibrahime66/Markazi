@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'l10n/app_localizations.dart';
 import 'models/index.dart';
 import 'repositories/index.dart';
 import 'providers/index.dart';
@@ -128,6 +130,18 @@ void main() async {
     recitationRepository: recitationRepository,
   );
 
+  // Mode clair/sombre (doc/audit.md K7) — chargé avant runApp() pour éviter
+  // un flash de thème incorrect au premier affichage.
+  final themeProvider = ThemeProvider();
+  await themeProvider.load();
+  themeProvider.syncWithPlatformBrightness(
+    WidgetsBinding.instance.platformDispatcher.platformBrightness,
+  );
+
+  // Langue de l'app (doc/audit.md K8) — même logique de chargement anticipé.
+  final localeProvider = LocaleProvider();
+  await localeProvider.load();
+
   // Restaure la session (token stocké) si l'utilisateur était déjà connecté
   await authService.initializeUser();
 
@@ -177,6 +191,8 @@ void main() async {
           create: (_) => ClassProvider(classService),
         ),
         ChangeNotifierProvider.value(value: markazProvider),
+        ChangeNotifierProvider.value(value: themeProvider),
+        ChangeNotifierProvider.value(value: localeProvider),
         ChangeNotifierProvider(
           create: (_) => GuardianProvider(guardianService),
         ),
@@ -197,47 +213,87 @@ class MarkaziApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Markazi',
-      debugShowCheckedModeBanner: false,
-      theme: _buildTheme(),
-      initialRoute: '/splash',
-      routes: {
-        '/splash': (context) => const SplashScreen(),
-        '/onboarding': (context) => const OnboardingScreen(),
-        '/login': (context) => LoginScreen(isLogin: true),
-        '/forgot-password': (context) => const ForgotPasswordScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/dashboard': (context) => DashboardScreen(),
-        '/features': (context) => const FeaturesScreen(),
-        '/about': (context) => const AboutScreen(),
-        '/markaz-settings': (context) => const MarkazSettingsScreen(),
-        '/guardians': (context) => const GuardianScreen(),
-        '/recitations': (context) => const RecitationScreen(),
+    // `Consumer` (pas juste un `context.watch` interne) : c'est ce qui fait
+    // que basculer le thème (ThemeProvider.setThemeMode) ou la langue
+    // (LocaleProvider.setLocale) reconstruit MaterialApp avec les bonnes
+    // valeurs, propageant nativement le changement à tout ce qui lit
+    // `Theme.of(context)`/`Localizations.of(context)` — voir doc/audit.md
+    // K7/K8 pour l'explication complète de l'approche retenue.
+    return Consumer2<ThemeProvider, LocaleProvider>(
+      builder: (context, themeProvider, localeProvider, _) {
+        return MaterialApp(
+          title: 'Markazi',
+          debugShowCheckedModeBanner: false,
+          theme: _buildTheme(isDark: false),
+          darkTheme: _buildTheme(isDark: true),
+          themeMode: themeProvider.themeMode,
+          locale: localeProvider.locale,
+          supportedLocales: LocaleProvider.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          initialRoute: '/splash',
+          routes: {
+            '/splash': (context) => const SplashScreen(),
+            '/onboarding': (context) => const OnboardingScreen(),
+            '/login': (context) => LoginScreen(isLogin: true),
+            '/forgot-password': (context) => const ForgotPasswordScreen(),
+            '/home': (context) => const HomeScreen(),
+            '/dashboard': (context) => DashboardScreen(),
+            '/features': (context) => const FeaturesScreen(),
+            '/about': (context) => const AboutScreen(),
+            '/markaz-settings': (context) => const MarkazSettingsScreen(),
+            '/guardians': (context) => const GuardianScreen(),
+            '/recitations': (context) => const RecitationScreen(),
+          },
+        );
       },
     );
   }
 
-  ThemeData _buildTheme() {
+  /// Construit le thème clair (`isDark: false`) ou sombre (`isDark: true`).
+  /// Les deux thèmes sont construits à l'avance (MaterialApp bascule entre
+  /// les deux via `themeMode`), donc les couleurs sont ici des valeurs
+  /// explicites et non les getters ambiants `AppColors.xxx` (qui ne
+  /// reflètent que le mode *actuellement* actif — voir `AppColors` et
+  /// `ThemeProvider`).
+  ThemeData _buildTheme({required bool isDark}) {
+    final background = isDark ? const Color(0xFF10201A) : const Color(0xFFF5F7F5);
+    final surface = isDark ? const Color(0xFF17291F) : const Color(0xFFFFFFFF);
+    final textDark = isDark ? const Color(0xFFECF3EE) : const Color(0xFF1A2E1F);
+    final brightness = isDark ? Brightness.dark : Brightness.light;
+
     return ThemeData(
       useMaterial3: true,
+      brightness: brightness,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
+        brightness: brightness,
         primary: AppColors.primary,
         secondary: AppColors.secondary,
-        surface: AppColors.surface,
+        surface: surface,
       ),
-      textTheme: GoogleFonts.cairoTextTheme(),
-      scaffoldBackgroundColor: AppColors.background,
+      textTheme: GoogleFonts.cairoTextTheme(ThemeData(brightness: brightness).textTheme),
+      scaffoldBackgroundColor: background,
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white,
+        backgroundColor: surface,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textDark),
+        iconTheme: IconThemeData(color: textDark),
         titleTextStyle: GoogleFonts.cairo(
-          color: AppColors.textDark,
+          color: textDark,
           fontSize: 18,
           fontWeight: FontWeight.w700,
         ),
+        // Icônes de la barre système (heure/batterie) claires sur fond
+        // sombre, sombres sur fond clair — sinon invisibles en mode sombre
+        // (SystemChrome.setSystemUIOverlayStyle dans main() ne fixe la
+        // valeur qu'une fois au démarrage, sans tenir compte du thème).
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent)
+            : SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -263,7 +319,7 @@ class MarkaziApp extends StatelessWidget {
         ),
       ),
       cardTheme: CardThemeData(
-        color: Colors.white,
+        color: surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),

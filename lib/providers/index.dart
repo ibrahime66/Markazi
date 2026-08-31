@@ -9,3 +9,5 @@ export 'markaz_provider.dart';
 export 'guardian_provider.dart';
 export 'recitation_provider.dart';
 export 'sync_queue_provider.dart';
+export 'theme_provider.dart';
+export 'locale_provider.dart';

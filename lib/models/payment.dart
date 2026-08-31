@@ -39,6 +39,12 @@ class Payment extends Equatable {
   @HiveField(6)
   final String? receiptNumber;
 
+  /// Jour exact où l'élève a payé (distinct de [date], qui désigne le MOIS
+  /// concerné par le paiement). Optionnel : reste `null` pour un paiement
+  /// marqué "non payé". Affiché sur le reçu (CDC 8.7 / 21).
+  @HiveField(7)
+  final DateTime? paidAt;
+
   const Payment({
     required this.id,
     required this.studentId,
@@ -47,6 +53,7 @@ class Payment extends Equatable {
     required this.status,
     required this.date,
     this.receiptNumber,
+    this.paidAt,
   });
 
   /// Crée une nouvelle instance avec les modifications
@@ -58,6 +65,7 @@ class Payment extends Equatable {
     PaymentStatus? status,
     DateTime? date,
     String? receiptNumber,
+    DateTime? paidAt,
   }) {
     return Payment(
       id: id ?? this.id,
@@ -67,6 +75,7 @@ class Payment extends Equatable {
       status: status ?? this.status,
       date: date ?? this.date,
       receiptNumber: receiptNumber ?? this.receiptNumber,
+      paidAt: paidAt ?? this.paidAt,
     );
   }
 
@@ -80,6 +89,7 @@ class Payment extends Equatable {
       'status': status.name,
       'date': date.toIso8601String(),
       'receiptNumber': receiptNumber,
+      'paidAt': paidAt?.toIso8601String(),
     };
   }
 
@@ -96,14 +106,17 @@ class Payment extends Equatable {
           ? DateTime.parse(json['date'] as String)
           : DateTime.now(),
       receiptNumber: json['receiptNumber'] as String?,
+      paidAt: json['paidAt'] != null
+          ? DateTime.parse(json['paidAt'] as String)
+          : null,
     );
   }
 
   @override
   List<Object?> get props =>
-      [id, studentId, markazId, amount, status, date, receiptNumber];
+      [id, studentId, markazId, amount, status, date, receiptNumber, paidAt];
 
   @override
   String toString() =>
-      'Payment(id: $id, studentId: $studentId, markazId: $markazId, amount: $amount, status: ${status.name}, date: $date, receiptNumber: $receiptNumber)';
+      'Payment(id: $id, studentId: $studentId, markazId: $markazId, amount: $amount, status: ${status.name}, date: $date, receiptNumber: $receiptNumber, paidAt: $paidAt)';
 }

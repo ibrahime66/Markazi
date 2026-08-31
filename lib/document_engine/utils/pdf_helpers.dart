@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -7,6 +8,37 @@ import '../models/markaz_branding.dart';
 /// Blocs de mise en page réutilisés par tous les générateurs de documents.
 class PdfHelpers {
   PdfHelpers._();
+
+  static pw.ThemeData? _cachedTheme;
+
+  /// Thème PDF avec police Unicode (Noto Sans + repli Noto Sans Arabic).
+  ///
+  /// Par défaut, `pdf` utilise la police de base "Helvetica" (PDF standard),
+  /// qui ne couvre que le latin de base et affiche des cases vides pour
+  /// l'arabe ou tout autre script non-latin (doc/audit.md, point K4/K7) —
+  /// un souci direct pour un nom de Markaz saisi en arabe, par exemple.
+  /// Noto Sans Arabic est chargé en police de repli (`fontFallback`), pas en
+  /// police de base, donc chaque caractère utilise la bonne police
+  /// automatiquement selon le script détecté.
+  ///
+  /// Le chinois (Noto Sans SC) n'est volontairement pas inclus : le fichier
+  /// pèse ~10 Mo contre ~190 Ko pour l'arabe, disproportionné pour ce que
+  /// l'app cible réellement (Markaz d'enseignement coranique). Un nom de
+  /// Markaz en chinois s'affichera correctement dans l'app mais pas sur les
+  /// PDF générés tant que cette police n'est pas ajoutée séparément.
+  static Future<pw.ThemeData> buildTheme() async {
+    if (_cachedTheme != null) return _cachedTheme!;
+
+    final base = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/NotoSans-Regular.ttf'),
+    );
+    final arabic = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/NotoSansArabic-Regular.ttf'),
+    );
+
+    _cachedTheme = pw.ThemeData.withFont(base: base, fontFallback: [arabic]);
+    return _cachedTheme!;
+  }
 
   /// En-tête standard : nom du Markaz, coordonnées, titre du document.
   static pw.Widget header(

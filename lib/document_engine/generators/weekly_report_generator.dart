@@ -13,7 +13,7 @@ class WeeklyReportGenerator {
     final theme = DocumentTheme(
       primaryColor: metadata.markaz.primaryColor ?? const DocumentTheme().primaryColor,
     );
-    final doc = pw.Document();
+    final doc = pw.Document(theme: await PdfHelpers.buildTheme());
     final dateFormat = DateFormat('dd/MM/yyyy');
 
     doc.addPage(

@@ -38,6 +38,7 @@ class PaymentProvider extends ChangeNotifier {
     required PaymentStatus status,
     String? markazId,
     DateTime? date,
+    DateTime? paidAt,
     bool confirmDuplicate = false,
   }) async {
     try {
@@ -48,6 +49,7 @@ class PaymentProvider extends ChangeNotifier {
         status: status,
         markazId: markazId,
         date: date,
+        paidAt: paidAt,
         confirmDuplicate: confirmDuplicate,
       );
       _payments = [..._payments, newPayment];
