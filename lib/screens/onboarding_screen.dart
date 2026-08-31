@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import '../utils/app_colors.dart';
-import '../utils/app_strings.dart';
 
 /// Écran d'onboarding avec 4 pages swipables
 class OnboardingScreen extends StatefulWidget {
@@ -97,7 +95,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Text(
                 'Passer',
                 style: GoogleFonts.cairo(
-                  color: Colors.white.withOpacity(0.85),
+                  color: Colors.white.withValues(alpha: 0.85),
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -121,7 +119,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 gradient: LinearGradient(
                   colors: [
                     Colors.transparent,
-                    Colors.black.withOpacity(0.15),
+                    Colors.black.withValues(alpha: 0.15),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -154,7 +152,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
+                            color: Colors.black.withValues(alpha: 0.15),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -226,7 +224,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       data.description,
                       style: GoogleFonts.cairo(
                         fontSize: 15,
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                         height: 1.7,
                         fontWeight: FontWeight.w400,
                       ),
@@ -253,7 +251,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           height: 220,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
           ),
         ),
         Container(
@@ -261,7 +259,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           height: 170,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.12),
+            color: Colors.white.withValues(alpha: 0.12),
           ),
         ),
         // Icône principale
@@ -273,7 +271,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 30,
                 offset: const Offset(0, 12),
               ),
@@ -307,9 +305,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       height: 36,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
       ),
-      child: Icon(icon, color: color.withOpacity(0.7), size: 18),
+      child: Icon(icon, color: color.withValues(alpha: 0.7), size: 18),
     );
   }
 }

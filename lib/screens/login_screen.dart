@@ -22,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
-  final _markazIdController = TextEditingController();
+  final _markazNameController = TextEditingController();
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
-    _markazIdController.dispose();
+    _markazNameController.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -75,17 +75,13 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final authService = context.read<AuthService>();
 
-      // Utiliser le même markazId unique basé sur l'email
-      final markazId = 'markaz-${_emailController.text.replaceAll('@', '-').replaceAll('.', '-')}';
-
       await authService.login(
         email: _emailController.text,
         password: _passwordController.text,
-        markazId: markazId,
       );
 
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/dashboard');
+        Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
       }
     } catch (e) {
       String errorMsg = 'Erreur inconnue lors de la connexion';
@@ -104,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       setState(() => _errorMessage = errorMsg);
-      print('Login error: $e');
+      debugPrint('Login error: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -115,7 +111,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleRegister() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
-        _passwordController.text.isEmpty) {
+        _passwordController.text.isEmpty ||
+        _markazNameController.text.isEmpty) {
       setState(() => _errorMessage = 'Tous les champs doivent être remplis');
       return;
     }
@@ -133,18 +130,15 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final authService = context.read<AuthService>();
 
-      // Créer un markazId unique pour cet utilisateur
-      final markazId = 'markaz-${_emailController.text.replaceAll('@', '-').replaceAll('.', '-')}';
-
       await authService.register(
         name: _nameController.text,
         email: _emailController.text,
         password: _passwordController.text,
-        markazId: markazId,
+        markazName: _markazNameController.text,
       );
 
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/dashboard');
+        Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
       }
     } catch (e) {
       String errorMsg = 'Erreur inconnue lors de la création du compte';
@@ -163,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       setState(() => _errorMessage = errorMsg);
-      print('Register error: $e');
+      debugPrint('Register error: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -305,7 +299,27 @@ class _LoginScreenState extends State<LoginScreen> {
               enabled: !_isLoading,
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 8),
+
+            // Lien mot de passe oublié
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _isLoading
+                    ? null
+                    : () => Navigator.pushNamed(context, '/forgot-password'),
+                child: Text(
+                  'Mot de passe oublié ?',
+                  style: GoogleFonts.cairo(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
 
             // Bouton connexion
             SizedBox(
@@ -436,6 +450,17 @@ class _LoginScreenState extends State<LoginScreen> {
               label: 'Nom complet',
               hint: 'Ex: Ahmed Ben Ali',
               icon: Icons.person_outline,
+              enabled: !_isLoading,
+            ),
+
+            const SizedBox(height: 16),
+
+            // Nom du Markaz (CDC 8.1/8.2 : la fiche Markaz est créée à l'inscription)
+            _buildTextField(
+              controller: _markazNameController,
+              label: 'Nom du Markaz',
+              hint: 'Ex: Markaz Al-Nour',
+              icon: Icons.mosque_outlined,
               enabled: !_isLoading,
             ),
 

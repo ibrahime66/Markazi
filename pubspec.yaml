@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   google_fonts: ^8.0.2
   smooth_page_indicator: ^2.0.1
   flutter_svg: ^2.0.7
@@ -19,12 +21,7 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   path_provider: ^2.1.1
-  
-  # Firebase
-  firebase_core: ^4.6.0
-  firebase_auth: ^6.3.0
-  cloud_firestore: ^6.2.0
-  
+
   # PDF Generation
   pdf: ^3.10.7
   printing: ^5.12.0
@@ -32,6 +29,10 @@ dependencies:
   # Packages pour le logo et splash screen
   flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.3.6
+  dio: ^5.11.0
+  flutter_secure_storage: ^11.0.0
+  intl: ^0.20.2
+  share_plus: ^13.3.0
 
 dev_dependencies:
   flutter_test:
@@ -42,9 +43,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
   assets:
-    - assets/images/
     - assets/logo/
+    - assets/fonts/
 
 # Configuration pour l'icône de l'application
 flutter_launcher_icons:

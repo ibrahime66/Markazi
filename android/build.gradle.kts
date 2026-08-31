@@ -1,7 +1,3 @@
-plugins {
-    id("com.google.gms.google-services") version "4.3.15" apply false
-}
-
 allprojects {
     repositories {
         google()
@@ -22,6 +18,13 @@ subprojects {
 
 subprojects {
     project.evaluationDependsOn(":app")
+    project.configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.jetbrains.kotlin") {
+                useVersion("2.2.20")
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

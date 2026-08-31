@@ -90,8 +90,10 @@ class _SplashScreenState extends State<SplashScreen>
       final authService = context.read<AuthService>();
 
       if (authService.isAuthenticated) {
-        // Utilisateur connecté → aller au dashboard
-        Navigator.pushReplacementNamed(context, '/dashboard');
+        // Utilisateur connecté → aller au dashboard. On vide toute la pile
+        // (pas juste un pushReplacement) pour qu'un retour arrière depuis le
+        // dashboard ne puisse jamais retomber sur l'onboarding/accueil/login.
+        Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
       } else {
         // Utilisateur non connecté → aller à onboarding/login
         Navigator.pushReplacementNamed(context, '/onboarding');
@@ -125,17 +127,17 @@ class _SplashScreenState extends State<SplashScreen>
               Positioned(
                 top: -60,
                 right: -60,
-                child: _buildDecoCircle(200, Colors.white.withOpacity(0.05)),
+                child: _buildDecoCircle(200, Colors.white.withValues(alpha: 0.05)),
               ),
               Positioned(
                 bottom: -100,
                 left: -80,
-                child: _buildDecoCircle(280, Colors.white.withOpacity(0.05)),
+                child: _buildDecoCircle(280, Colors.white.withValues(alpha: 0.05)),
               ),
               Positioned(
                 top: 120,
                 left: -40,
-                child: _buildDecoCircle(120, Colors.white.withOpacity(0.04)),
+                child: _buildDecoCircle(120, Colors.white.withValues(alpha: 0.04)),
               ),
 
               // Contenu centré
@@ -188,7 +190,7 @@ class _SplashScreenState extends State<SplashScreen>
                           textAlign: TextAlign.center,
                           style: GoogleFonts.cairo(
                             fontSize: 16,
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                             height: 1.6,
                             fontWeight: FontWeight.w400,
                           ),
@@ -213,14 +215,14 @@ class _SplashScreenState extends State<SplashScreen>
                         height: 24,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                         ),
                       ),
                       const SizedBox(height: 12),
                       Text(
                         'Chargement...',
                         style: GoogleFonts.cairo(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 12,
                         ),
                       ),
@@ -244,7 +246,7 @@ class _SplashScreenState extends State<SplashScreen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 30,
             offset: const Offset(0, 12),
           ),

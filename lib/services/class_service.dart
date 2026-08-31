@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../models/class_model.dart';
 import '../repositories/class_repository.dart';
 import 'auth_service.dart';
@@ -10,9 +11,8 @@ class ClassService {
   final ClassRepository _repository;
   final AuthService _authService;
   final StudentService? _studentService;
-  final String _markazId;
 
-  ClassService(this._repository, this._authService, [this._studentService]) : _markazId = '';
+  ClassService(this._repository, this._authService, [this._studentService]);
 
   /// Crée une nouvelle classe avec validation
   Future<ClassModel> createClass({
@@ -20,7 +20,7 @@ class ClassService {
     required String level,
     required String description,
     required String teacherName,
-    int maxStudents = 20,
+    int maxStudents = 30,
     String? schedule,
     String? room,
   }) async {
@@ -68,8 +68,7 @@ class ClassService {
       room: room?.trim(),
     );
 
-    await _repository.addClass(newClass);
-    return newClass;
+    return await _repository.addClass(newClass);
   }
 
   /// Met à jour une classe
@@ -99,9 +98,9 @@ class ClassService {
       final markazId = _authService.currentMarkazId;
       if (markazId != null) {
         final existingClasses = _repository.getClassesByMarkaz(markazId);
-        if (existingClasses.any((c) => 
-            c.id != classId && 
-            c.name.toLowerCase() == name!.toLowerCase())) {
+        if (existingClasses.any((c) =>
+            c.id != classId &&
+            c.name.toLowerCase() == name.toLowerCase())) {
           throw Exception('Un groupe avec ce nom existe déjà');
         }
       }
@@ -161,7 +160,7 @@ class ClassService {
         // Si realStudentCount == 0, on peut supprimer même si studentIds n'est pas vide
       } catch (e) {
         // En cas d'erreur, autoriser la suppression pour éviter les blocages
-        print('Erreur lors de la vérification des élèves: $e');
+        debugPrint('Erreur lors de la vérification des élèves: $e');
         // On continue avec la suppression
       }
     }
@@ -280,15 +279,15 @@ class ClassService {
     return _repository.getClassStatistics(markazId);
   }
 
-  /// Synchronise les données depuis Firebase pour la markaz actuelle
-  Future<void> syncFromFirebase() async {
+  /// Synchronise les données depuis l'API pour la markaz actuelle
+  Future<void> syncFromApi() async {
     final markazId = _authService.currentMarkazId;
     if (markazId != null) {
-      print('Début sync Firebase classes pour markaz: $markazId');
+      debugPrint('Début sync API classes pour markaz: $markazId');
       await _repository.syncFromMarkaz(markazId);
-      print('Sync Firebase classes terminée');
+      debugPrint('Sync API classes terminée');
     } else {
-      print('Impossible de sync classes: markazId null');
+      debugPrint('Impossible de sync classes: markazId null');
     }
   }
 

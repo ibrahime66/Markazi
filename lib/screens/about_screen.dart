@@ -79,7 +79,7 @@ class AboutScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 24,
                   offset: const Offset(0, 8),
                 ),
@@ -116,7 +116,7 @@ class AboutScreen extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.cairo(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               height: 1.5,
             ),
           ),
@@ -129,9 +129,9 @@ class AboutScreen extends StatelessWidget {
             runSpacing: 10,
             alignment: WrapAlignment.center,
             children: [
-              _badge('🕌 Islamique'),
-              _badge('📱 Mobile First'),
-              _badge('🌍 Afrique'),
+              _badge(Icons.mosque_rounded, 'Islamique'),
+              _badge(Icons.phone_iphone_rounded, 'Mobile First'),
+              _badge(Icons.public_rounded, 'Afrique'),
             ],
           ),
         ],
@@ -139,21 +139,28 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _badge(String text) {
+  Widget _badge(IconData icon, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
-      child: Text(
-        text,
-        style: GoogleFonts.cairo(
-          color: Colors.white,
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 15),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: GoogleFonts.cairo(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -314,7 +321,7 @@ class AboutScreen extends StatelessWidget {
           children: [
             Expanded(
               child: _approachCard(
-                '🎯',
+                Icons.center_focus_strong_rounded,
                 'Centré utilisateur',
                 'Conçu avec et pour les maîtres de markaz',
               ),
@@ -322,7 +329,7 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _approachCard(
-                '📶',
+                Icons.wifi_off_rounded,
                 'Hors ligne',
                 'Fonctionne sans connexion internet permanente',
               ),
@@ -334,7 +341,7 @@ class AboutScreen extends StatelessWidget {
           children: [
             Expanded(
               child: _approachCard(
-                '🔒',
+                Icons.lock_rounded,
                 'Sécurisé',
                 'Vos données protégées et confidentielles',
               ),
@@ -342,7 +349,7 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _approachCard(
-                '🌐',
+                Icons.language_rounded,
                 'Multilingue',
                 'Français, Arabe et langues locales',
               ),
@@ -353,7 +360,7 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _approachCard(String emoji, String title, String desc) {
+  Widget _approachCard(IconData icon, String title, String desc) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -361,7 +368,7 @@ class AboutScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -370,7 +377,15 @@ class AboutScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 28)),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.cardGreen,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: AppColors.iconGreen, size: 20),
+          ),
           const SizedBox(height: 10),
           Text(
             title,
@@ -406,7 +421,7 @@ class AboutScreen extends StatelessWidget {
             gradient: AppColors.softGradient,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: AppColors.primary.withOpacity(0.1), width: 1),
+                color: AppColors.primary.withValues(alpha: 0.1), width: 1),
           ),
           child: Column(
             children: [
@@ -492,7 +507,7 @@ class AboutScreen extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.cairo(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               height: 1.5,
             ),
           ),

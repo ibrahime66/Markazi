@@ -21,12 +21,19 @@ class Student extends Equatable {
   @HiveField(4)
   final DateTime createdAt;
 
+  /// Tuteur/parent rattaché à cet élève (doc/audit.md, point I5). Null si
+  /// aucun tuteur enregistré n'est encore lié. Un même tuteur peut être
+  /// rattaché à plusieurs élèves (fratrie) ; l'inverse n'est pas vrai.
+  @HiveField(5)
+  final String? guardianId;
+
   const Student({
     required this.id,
     required this.name,
     required this.parentPhone,
     required this.markazId,
     required this.createdAt,
+    this.guardianId,
   });
 
   /// Crée une nouvelle instance avec les modifications
@@ -36,6 +43,8 @@ class Student extends Equatable {
     String? parentPhone,
     String? markazId,
     DateTime? createdAt,
+    String? guardianId,
+    bool clearGuardianId = false,
   }) {
     return Student(
       id: id ?? this.id,
@@ -43,6 +52,7 @@ class Student extends Equatable {
       parentPhone: parentPhone ?? this.parentPhone,
       markazId: markazId ?? this.markazId,
       createdAt: createdAt ?? this.createdAt,
+      guardianId: clearGuardianId ? null : (guardianId ?? this.guardianId),
     );
   }
 
@@ -54,6 +64,7 @@ class Student extends Equatable {
       'parentPhone': parentPhone,
       'markazId': markazId,
       'createdAt': createdAt.toIso8601String(),
+      'guardianId': guardianId,
     };
   }
 
@@ -67,13 +78,15 @@ class Student extends Equatable {
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),
+      guardianId: json['guardianId'] as String?,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, parentPhone, markazId, createdAt];
+  List<Object?> get props =>
+      [id, name, parentPhone, markazId, createdAt, guardianId];
 
   @override
   String toString() =>
-      'Student(id: $id, name: $name, parentPhone: $parentPhone, markazId: $markazId, createdAt: $createdAt)';
+      'Student(id: $id, name: $name, parentPhone: $parentPhone, markazId: $markazId, createdAt: $createdAt, guardianId: $guardianId)';
 }

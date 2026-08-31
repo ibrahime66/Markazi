@@ -3,3 +3,8 @@ export 'student_service.dart';
 export 'payment_service.dart';
 export 'attendance_service.dart';
 export 'class_service.dart';
+export 'markaz_service.dart';
+export 'guardian_service.dart';
+export 'recitation_service.dart';
+export 'sync_queue_service.dart';
+export 'sync_orchestrator.dart';

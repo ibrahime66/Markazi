@@ -1,23 +1,46 @@
 import 'package:flutter/material.dart';
 
-/// Palette de couleurs de l'application Markazi
+/// Palette de couleurs de l'application Markazi.
+///
+/// `background`/`surface`/`textXxx` sont des *getters* (pas des `const`)
+/// car ils dépendent du mode clair/sombre choisi par l'utilisateur
+/// (`ThemeProvider` — doc/audit.md K7). `applyBrightness` est appelé par
+/// `ThemeProvider` avant chaque `notifyListeners()`, donc tout widget qui
+/// dépend de `ThemeProvider` (via `context.watch`/`Consumer`) et se
+/// reconstruit affichera automatiquement les bonnes couleurs, sans qu'il
+/// soit nécessaire de remplacer chaque usage de `AppColors.xxx` dans
+/// l'app par un accès via `Theme.of(context)`.
 class AppColors {
   AppColors._();
 
-  // Couleurs principales
+  static bool _isDark = false;
+
+  static void applyBrightness(bool isDark) {
+    _isDark = isDark;
+  }
+
+  static bool get isDark => _isDark;
+
+  // Couleurs principales — identiques dans les deux modes (couleur de
+  // marque), le vert reste suffisamment contrasté sur fond sombre.
   static const Color primary = Color(0xFF1A7F55);      // Vert islamique profond
   static const Color primaryLight = Color(0xFF2EAA73);  // Vert clair
   static const Color primaryDark = Color(0xFF115C3C);   // Vert foncé
   static const Color secondary = Color(0xFFD4A853);     // Or doux (accent)
 
   // Fonds
-  static const Color background = Color(0xFFF5F7F5);   // Gris très légèrement vert
-  static const Color surface = Color(0xFFFFFFFF);
+  static Color get background =>
+      _isDark ? const Color(0xFF10201A) : const Color(0xFFF5F7F5);
+  static Color get surface =>
+      _isDark ? const Color(0xFF17291F) : const Color(0xFFFFFFFF);
 
   // Textes
-  static const Color textDark = Color(0xFF1A2E1F);
-  static const Color textMedium = Color(0xFF4A6355);
-  static const Color textLight = Color(0xFF8AA898);
+  static Color get textDark =>
+      _isDark ? const Color(0xFFECF3EE) : const Color(0xFF1A2E1F);
+  static Color get textMedium =>
+      _isDark ? const Color(0xFFAFC7B7) : const Color(0xFF4A6355);
+  static Color get textLight =>
+      _isDark ? const Color(0xFF7C9688) : const Color(0xFF8AA898);
 
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
@@ -32,7 +55,9 @@ class AppColors {
     end: Alignment.bottomCenter,
   );
 
-  // Couleurs des cartes de fonctionnalités
+  // Couleurs des cartes de fonctionnalités (accents pastel — conservés tels
+  // quels dans les deux modes, ils servent de petites pastilles derrière une
+  // icône, pas de grands aplats de fond).
   static const Color cardBlue = Color(0xFFE8F0FE);
   static const Color cardGreen = Color(0xFFE6F4EA);
   static const Color cardOrange = Color(0xFFFFF3E0);

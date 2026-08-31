@@ -95,6 +95,31 @@ class AttendanceProvider extends ChangeNotifier {
     }
   }
 
+  /// Corrige une présence déjà enregistrée (statut et/ou leçon).
+  Future<Attendance> updateAttendance({
+    required String attendanceId,
+    required AttendanceStatus status,
+    required String lesson,
+  }) async {
+    try {
+      _errorMessage = null;
+      final updated = await _service.updateAttendance(
+        attendanceId: attendanceId,
+        status: status,
+        lesson: lesson,
+      );
+      _attendances = [
+        for (final a in _attendances) a.id == updated.id ? updated : a,
+      ];
+      notifyListeners();
+      return updated;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   /// Obtient le taux de présence hebdomadaire d'un élève
   Map<String, dynamic> getWeeklyAttendanceRate(String studentId) {
     try {

@@ -112,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen>
                 height: 180,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                 ),
               ),
             ),
@@ -124,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen>
                 height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.06),
+                  color: Colors.white.withValues(alpha: 0.06),
                 ),
               ),
             ),
@@ -160,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
+                          color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -178,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen>
                             Text(
                               'Solution pour maîtres de markaz',
                               style: GoogleFonts.cairo(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -206,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen>
                         'Élèves, paiements, présences, récitation — tout centralisé dans une seule application simple et efficace.',
                         style: GoogleFonts.cairo(
                           fontSize: 15,
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                           height: 1.6,
                           fontWeight: FontWeight.w400,
                         ),
@@ -287,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen>
       child: Text(
         label,
         style: GoogleFonts.cairo(
-          color: Colors.white.withOpacity(0.85),
+          color: Colors.white.withValues(alpha: 0.85),
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
@@ -299,9 +299,9 @@ class _HomeScreenState extends State<HomeScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.15)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -330,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen>
         Text(
           label,
           style: GoogleFonts.cairo(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontSize: 12,
           ),
         ),
@@ -342,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen>
     return Container(
       width: 1,
       height: 36,
-      color: Colors.white.withOpacity(0.2),
+      color: Colors.white.withValues(alpha: 0.2),
     );
   }
 
@@ -415,7 +415,7 @@ class _HomeScreenState extends State<HomeScreen>
         border: Border.all(color: item.cardColor, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -499,7 +499,7 @@ class _HomeScreenState extends State<HomeScreen>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.3),
+              color: AppColors.primary.withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -522,7 +522,7 @@ class _HomeScreenState extends State<HomeScreen>
               textAlign: TextAlign.center,
               style: GoogleFonts.cairo(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 height: 1.5,
               ),
             ),
@@ -531,7 +531,7 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _showComingSoon,
+                    onPressed: () => _goToLogin(isLogin: false),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: AppColors.primary,
@@ -638,20 +638,6 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  void _showComingSoon() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Bientôt disponible ! 🕌',
-          style: GoogleFonts.cairo(color: Colors.white),
-        ),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
-  }
 }
 
 class _FeatureItem {

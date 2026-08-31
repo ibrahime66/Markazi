@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../utils/app_colors.dart';
 
 /// Widget logo Markazi avec icône géométrique islamique
@@ -28,7 +30,7 @@ class MarkaziLogo extends StatelessWidget {
             borderRadius: BorderRadius.circular(size * 0.25),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.3),
+                color: AppColors.primary.withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -81,15 +83,16 @@ class FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeProvider>();
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: cardColor, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -146,14 +149,15 @@ class AdvantageBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeProvider>();
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -291,6 +295,9 @@ class MarkaziAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force la reconstruction de l'AppBar (donc la relecture des couleurs
+    // `AppColors.xxx`) quand le mode clair/sombre change — voir ThemeProvider.
+    context.watch<ThemeProvider>();
     return AppBar(
       title: Text(
         title,
@@ -299,10 +306,10 @@ class MarkaziAppBar extends StatelessWidget implements PreferredSizeWidget {
           color: AppColors.textDark,
         ),
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       elevation: 0,
       scrolledUnderElevation: 1,
-      iconTheme: const IconThemeData(color: AppColors.textDark),
+      iconTheme: IconThemeData(color: AppColors.textDark),
       actions: actions,
     );
   }
@@ -324,6 +331,7 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeProvider>();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

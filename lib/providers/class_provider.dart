@@ -63,7 +63,7 @@ class ClassProvider extends ChangeNotifier {
     required String level,
     required String description,
     required String teacherName,
-    int maxStudents = 20,
+    int maxStudents = 30,
     String? schedule,
     String? room,
   }) async {
@@ -273,14 +273,14 @@ class ClassProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Synchronise les données depuis Firebase
-  Future<void> syncFromFirebase() async {
+  /// Synchronise les données depuis l'API
+  Future<void> syncFromApi() async {
     try {
       _errorMessage = null;
       _isLoading = true;
       notifyListeners();
 
-      await _service.syncFromFirebase();
+      await _service.syncFromApi();
       await loadClasses(); // Recharger les données locales
     } catch (e) {
       _errorMessage = e.toString();

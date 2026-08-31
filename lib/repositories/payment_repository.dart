@@ -1,70 +1,89 @@
+import 'package:flutter/foundation.dart';
 import '../models/payment.dart';
+import '../models/sync_queue_item.dart';
 import '../datasources/hive_payment_datasource.dart';
-import '../datasources/firebase_payment_datasource.dart';
-import '../services/firebase_helper.dart';
+import '../datasources/api_payment_datasource.dart';
+import '../services/sync_queue_service.dart';
 
-/// Repository pour la gestion des données Payment
-/// Utilise Firebase avec cache Hive local pour mode hors ligne
+/// Repository pour la gestion des données Payment.
+/// Utilise l'API Laravel avec cache Hive local pour mode hors ligne.
 class PaymentRepository {
   final HivePaymentDataSource _hiveDataSource;
-  final FirebasePaymentDataSource _firebaseDataSource;
+  final ApiPaymentDatasource _apiDataSource;
+  final SyncQueueService _syncQueue;
 
-  PaymentRepository(this._hiveDataSource, this._firebaseDataSource);
+  PaymentRepository(this._hiveDataSource, this._apiDataSource, this._syncQueue);
 
   /// Initialise le repository et ouvre la box Hive via le data source
   Future<void> init() async {
     await _hiveDataSource.init();
-
-    // Synchroniser depuis Firebase au démarrage si disponible
-    if (FirebaseHelper.isAvailable) {
-      await Future.delayed(const Duration(seconds: 1));
-      await _syncFromFirebase();
-    }
   }
 
-  /// Ajoute un nouveau paiement
-  Future<void> addPayment(Payment payment) async {
-    // Sauvegarder localement d'abord (cache)
-    await _hiveDataSource.addPayment(payment);
-
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        await _firebaseDataSource.addPayment(payment, payment.markazId);
-      } catch (e) {
-        print('Erreur sync Firebase payment: $e');
-      }
-    }
+  /// Ajoute un nouveau paiement. Retourne le paiement tel que persisté côté
+  /// serveur (avec son identifiant réel et son numéro de reçu le cas échéant).
+  /// Lève [PaymentDuplicateException] si le serveur détecte qu'un paiement
+  /// payé existe déjà pour cet élève ce mois-ci et que [confirmDuplicate]
+  /// n'a pas été passé à `true`.
+  Future<Payment> addPayment(Payment payment, {bool confirmDuplicate = false}) async {
+    final saved = await _apiDataSource.addPayment(
+      payment,
+      payment.markazId,
+      confirmDuplicate: confirmDuplicate,
+    );
+    await _hiveDataSource.addPayment(saved);
+    return saved;
   }
 
   /// Supprime un paiement par ID
   Future<void> removePayment(String paymentId) async {
-    // Supprimer localement
     await _hiveDataSource.deletePayment(paymentId);
-
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        await _firebaseDataSource.deletePayment(paymentId);
-      } catch (e) {
-        print('Erreur sync Firebase payment: $e');
-      }
+    try {
+      await _apiDataSource.deletePayment(paymentId);
+    } catch (e) {
+      debugPrint('Erreur sync API (suppression paiement) : $e');
+      await _syncQueue.enqueue(
+        entityType: SyncEntityType.payment,
+        operation: SyncOperation.delete,
+        entityId: paymentId,
+      );
     }
   }
 
-  /// Met à jour un paiement
-  Future<void> updatePayment(Payment payment) async {
-    // Mettre à jour localement
+  /// Met à jour un paiement. Retourne la version faisant foi : celle
+  /// renvoyée par le serveur (avec son éventuel numéro de reçu) si la
+  /// synchronisation réussit, sinon la version locale en attente de
+  /// synchronisation (mise en file pour rejeu automatique — CDC section 20,
+  /// doc/audit.md point D2).
+  Future<Payment> updatePayment(Payment payment) async {
     await _hiveDataSource.updatePayment(payment);
-
-    // Synchroniser avec Firebase si disponible
-    if (FirebaseHelper.isAvailable) {
-      try {
-        await _firebaseDataSource.updatePayment(payment);
-      } catch (e) {
-        print('Erreur sync Firebase payment: $e');
-      }
+    try {
+      final saved = await _apiDataSource.updatePayment(payment);
+      await _hiveDataSource.updatePayment(saved);
+      return saved;
+    } catch (e) {
+      debugPrint('Erreur sync API (mise à jour paiement) : $e');
+      await _syncQueue.enqueue(
+        entityType: SyncEntityType.payment,
+        operation: SyncOperation.update,
+        entityId: payment.id,
+      );
+      return payment;
     }
+  }
+
+  /// Rejoue une mise à jour en attente — réservé à SyncOrchestrator.
+  /// Ne rattrape PAS l'erreur : l'appelant doit savoir si le rejeu a échoué
+  /// pour décider de garder l'action en file ou non.
+  Future<void> retrySyncUpdate(String paymentId) async {
+    final payment = _hiveDataSource.getPaymentById(paymentId);
+    if (payment == null) return;
+    final saved = await _apiDataSource.updatePayment(payment);
+    await _hiveDataSource.updatePayment(saved);
+  }
+
+  /// Rejoue une suppression en attente — réservé à SyncOrchestrator.
+  Future<void> retrySyncDelete(String paymentId) async {
+    await _apiDataSource.deletePayment(paymentId);
   }
 
   /// Récupère un paiement par ID
@@ -117,30 +136,16 @@ class PaymentRepository {
     await _hiveDataSource.close();
   }
 
-  /// Synchronise les données depuis Firebase vers le cache local
-  Future<void> _syncFromFirebase({String? markazId}) async {
+  /// Recharge le cache local depuis l'API pour la Markaz donnée.
+  Future<void> syncFromMarkaz(String markazId) async {
     try {
-      if (markazId != null) {
-        // Récupérer les paiements de cette markaz depuis Firebase
-        final firebasePayments = await _firebaseDataSource.getPaymentsByMarkaz(markazId);
-
-        // Vider le cache local et mettre à jour avec les données Firebase
-        await _hiveDataSource.clearAll();
-        for (final payment in firebasePayments) {
-          await _hiveDataSource.addPayment(payment);
-        }
-
-        print('Sync Firebase: ${firebasePayments.length} paiements synchronisés pour markaz $markazId');
-      } else {
-        print('Sync Firebase: markazId non spécifié, sync ignorée');
+      final payments = await _apiDataSource.getPaymentsByMarkaz(markazId);
+      await _hiveDataSource.clearAll();
+      for (final payment in payments) {
+        await _hiveDataSource.addPayment(payment);
       }
     } catch (e) {
-      print('Erreur sync payments depuis Firebase: $e');
+      debugPrint('Erreur sync API (paiements) : $e');
     }
-  }
-
-  /// Force la synchronisation depuis Firebase pour une markaz spécifique
-  Future<void> syncFromMarkaz(String markazId) async {
-    await _syncFromFirebase(markazId: markazId);
   }
 }
