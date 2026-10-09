@@ -1784,4 +1784,34 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupReportMonthly => 'هذا الشهر';
+
+  @override
+  String get fieldPaymentMode => 'طريقة الدفع';
+
+  @override
+  String get paymentModeCash => 'نقدًا';
+
+  @override
+  String get paymentModeOther => 'أخرى (الدفع عبر الهاتف، تحويل…)';
+
+  @override
+  String get fieldObservationOptional => 'ملاحظة (اختياري)';
+
+  @override
+  String get fieldObservation => 'ملاحظة';
+
+  @override
+  String get groupScheduleHint => 'مثال: الإثنين، الأربعاء، الجمعة — 4-6 مساءً';
+
+  @override
+  String get studentSearchHint => 'بحث (الاسم أو الهاتف)';
+
+  @override
+  String get studentFilterAllGroups => 'كل المجموعات';
+
+  @override
+  String get studentFilterNoGroup => 'بدون مجموعة';
+
+  @override
+  String get studentSearchNoResult => 'لا يوجد طالب يطابق البحث.';
 }

@@ -34,6 +34,8 @@ class PaymentService {
     String? markazId,
     DateTime? date,
     DateTime? paidAt,
+    String paymentMode = 'cash',
+    String? observation,
     bool confirmDuplicate = false,
   }) async {
     // Validations
@@ -65,6 +67,10 @@ class PaymentService {
       status: status,
       date: date ?? DateTime.now(),
       paidAt: status == PaymentStatus.paid ? (paidAt ?? DateTime.now()) : null,
+      paymentMode: paymentMode,
+      observation: (observation == null || observation.trim().isEmpty)
+          ? null
+          : observation.trim(),
     );
 
     return await _repository.addPayment(payment, confirmDuplicate: confirmDuplicate);

@@ -543,5 +543,15 @@
   "groupReport": "تقرير المجموعة",
   "groupReportChoose": "تقرير المجموعة بأكملها: اختر الفترة.",
   "groupReportWeekly": "هذا الأسبوع",
-  "groupReportMonthly": "هذا الشهر"
+  "groupReportMonthly": "هذا الشهر",
+  "fieldPaymentMode": "طريقة الدفع",
+  "paymentModeCash": "نقدًا",
+  "paymentModeOther": "أخرى (الدفع عبر الهاتف، تحويل…)",
+  "fieldObservationOptional": "ملاحظة (اختياري)",
+  "fieldObservation": "ملاحظة",
+  "groupScheduleHint": "مثال: الإثنين، الأربعاء، الجمعة — 4-6 مساءً",
+  "studentSearchHint": "بحث (الاسم أو الهاتف)",
+  "studentFilterAllGroups": "كل المجموعات",
+  "studentFilterNoGroup": "بدون مجموعة",
+  "studentSearchNoResult": "لا يوجد طالب يطابق البحث."
 }

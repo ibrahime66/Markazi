@@ -39,6 +39,8 @@ class PaymentProvider extends ChangeNotifier {
     String? markazId,
     DateTime? date,
     DateTime? paidAt,
+    String paymentMode = 'cash',
+    String? observation,
     bool confirmDuplicate = false,
   }) async {
     try {
@@ -50,6 +52,8 @@ class PaymentProvider extends ChangeNotifier {
         markazId: markazId,
         date: date,
         paidAt: paidAt,
+        paymentMode: paymentMode,
+        observation: observation,
         confirmDuplicate: confirmDuplicate,
       );
       _payments = [..._payments, newPayment];

@@ -237,9 +237,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             _buildInfoRow(_l10n.fieldCapacity, _l10n.groupCapacityValue(widget.group.studentIds.length, widget.group.maxStudents)),
             if (widget.group.description.isNotEmpty)
               _buildInfoRow(_l10n.fieldDescription, widget.group.description),
-            if (widget.group.schedule != null)
+            if (widget.group.schedule?.isNotEmpty ?? false)
               _buildInfoRow(_l10n.fieldSchedule, widget.group.schedule!),
-            if (widget.group.room != null)
+            if (widget.group.room?.isNotEmpty ?? false)
               _buildInfoRow(_l10n.fieldRoom, widget.group.room!),
             _buildInfoRow(_l10n.fieldStatus, widget.group.isActive ? _l10n.commonActive : _l10n.commonInactive),
             _buildInfoRow(_l10n.fieldCreatedOn,

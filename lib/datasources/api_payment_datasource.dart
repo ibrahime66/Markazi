@@ -34,7 +34,9 @@ class ApiPaymentDatasource {
             'amount': payment.amount,
             'month': payment.date.toIso8601String().split('T').first,
             'status': _statusToApi(payment.status),
-            'payment_mode': 'cash',
+            'payment_mode': payment.mode,
+        if (payment.observation != null && payment.observation!.trim().isNotEmpty)
+          'observation': payment.observation!.trim(),
             if (payment.paidAt != null)
               'paid_at': payment.paidAt!.toIso8601String(),
             if (confirmDuplicate) 'confirm_duplicate': true,
@@ -109,6 +111,8 @@ class ApiPaymentDatasource {
       paidAt: json['paid_at'] != null
           ? DateTime.parse(json['paid_at'] as String)
           : null,
+      paymentMode: json['payment_mode'] as String?,
+      observation: json['observation'] as String?,
     );
   }
 }

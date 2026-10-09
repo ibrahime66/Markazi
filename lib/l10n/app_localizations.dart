@@ -3365,6 +3365,66 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce mois-ci'**
   String get groupReportMonthly;
+
+  /// No description provided for @fieldPaymentMode.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode de paiement'**
+  String get fieldPaymentMode;
+
+  /// No description provided for @paymentModeCash.
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces'**
+  String get paymentModeCash;
+
+  /// No description provided for @paymentModeOther.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre (mobile money, virement…)'**
+  String get paymentModeOther;
+
+  /// No description provided for @fieldObservationOptional.
+  ///
+  /// In fr, this message translates to:
+  /// **'Observation (optionnel)'**
+  String get fieldObservationOptional;
+
+  /// No description provided for @fieldObservation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Observation'**
+  String get fieldObservation;
+
+  /// No description provided for @groupScheduleHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : Lun, Mer, Ven — 16h-18h'**
+  String get groupScheduleHint;
+
+  /// No description provided for @studentSearchHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher (nom ou téléphone)'**
+  String get studentSearchHint;
+
+  /// No description provided for @studentFilterAllGroups.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les groupes'**
+  String get studentFilterAllGroups;
+
+  /// No description provided for @studentFilterNoGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans groupe'**
+  String get studentFilterNoGroup;
+
+  /// No description provided for @studentSearchNoResult.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun élève ne correspond à la recherche.'**
+  String get studentSearchNoResult;
 }
 
 class _AppLocalizationsDelegate
