@@ -2008,6 +2008,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         );
                         Navigator.pop(context);
                       }
+                    } on AttendanceAlreadyRecordedException catch (e) {
+                      // H7 : une seule présence par élève et par jour côté
+                      // serveur — on propose de corriger l'existante.
+                      final lesson = lessonController.text.isNotEmpty
+                          ? lessonController.text.trim()
+                          : 'Absence de cours';
+                      if (!context.mounted) return;
+                      final replaced = await _confirmReplaceAttendance(
+                        context,
+                        e.existing,
+                        _attendanceStatusFromKey(selectedStatus!),
+                        lesson,
+                      );
+                      if (replaced && context.mounted) {
+                        Navigator.pop(context);
+                      }
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -2155,6 +2171,81 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
       ),
     );
+  }
+
+  AttendanceStatus _attendanceStatusFromKey(String key) {
+    switch (key) {
+      case 'absent':
+        return AttendanceStatus.absent;
+      case 'late':
+        return AttendanceStatus.late;
+      default:
+        return AttendanceStatus.present;
+    }
+  }
+
+  /// H7 : l'élève a déjà une présence aujourd'hui. Le serveur n'en garde
+  /// qu'une par jour ; plutôt que de l'écraser sans prévenir, on montre
+  /// l'existante et on propose de la remplacer (PUT sur le même
+  /// enregistrement). Retourne true si le remplacement a eu lieu.
+  Future<bool> _confirmReplaceAttendance(
+    BuildContext context,
+    Attendance existing,
+    AttendanceStatus newStatus,
+    String newLesson,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Présence déjà enregistrée'),
+        content: Text(
+          "Cet élève a déjà une présence aujourd'hui :\n"
+          '• Statut : ${_attendanceStatusLabel(existing.status)}\n'
+          '• Leçon : ${existing.lesson}\n\n'
+          'Une seule présence est conservée par élève et par jour. '
+          'Voulez-vous la remplacer par « ${_attendanceStatusLabel(newStatus)} '
+          '— $newLesson » ?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Remplacer'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return false;
+
+    try {
+      await context.read<AttendanceProvider>().updateAttendance(
+            attendanceId: existing.id,
+            status: newStatus,
+            lesson: newLesson,
+          );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Présence remplacée'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+      return true;
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return false;
+    }
   }
 
   // ─── Payment Report ───────────────────────

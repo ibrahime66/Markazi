@@ -83,11 +83,13 @@ class AttendanceService {
       throw Exception('Le nom de la leçon est obligatoire');
     }
 
-    // Vérifier s'il y a déjà un enregistrement pour aujourd'hui
-    if (_hasAlreadyRecorded(studentId, markazId, lesson)) {
-      throw Exception(
-        'Cet élève a déjà une présence enregistrée pour cette leçon.',
-      );
+    // H7 : le serveur n'accepte qu'une présence par élève et par jour, toutes
+    // leçons confondues (contrainte unique student_id+date, updateOrCreate).
+    // On applique la même règle ici et on rend la main à l'écran, qui
+    // propose de remplacer l'existante au lieu de l'écraser en silence.
+    final existing = findTodayAttendance(studentId, markazId);
+    if (existing != null) {
+      throw AttendanceAlreadyRecordedException(existing);
     }
 
     // Créer l'enregistrement
@@ -108,8 +110,8 @@ class AttendanceService {
   /// n'est volontairement pas modifiable ici : la contrainte serveur
   /// `unique(student_id, date)` ferait échouer la requête si elle entre en
   /// collision avec un autre enregistrement du même élève (voir
-  /// doc/audit.md, point H7 — décision produit encore ouverte sur ce
-  /// comportement) ; corriger le statut/la leçon couvre le besoin réel
+  /// doc/audit.md, point H7 : une seule présence par élève et par jour) ;
+  /// corriger le statut/la leçon couvre le besoin réel
   /// ("je me suis trompé en pointant la présence") sans ce risque.
   Future<Attendance> updateAttendance({
     required String attendanceId,
@@ -335,23 +337,22 @@ class AttendanceService {
     return _repository.getTodayAttendanceByMarkaz(markazId);
   }
 
-  /// Vérifie s'il y a déjà un enregistrement
-  bool _hasAlreadyRecorded(
-    String studentId,
-    String markazId,
-    String lesson,
-  ) {
+  /// Présence déjà enregistrée aujourd'hui pour cet élève, quelle que soit
+  /// la leçon — même règle que la contrainte serveur (student_id, date).
+  /// Comparaison par jour calendaire : une présence relue depuis l'API est
+  /// datée de minuit pile, ce qu'un test `isAfter(minuit)` manquerait.
+  Attendance? findTodayAttendance(String studentId, String markazId) {
     final today = DateTime.now();
-    final todayStart = DateTime(today.year, today.month, today.day);
-    final todayEnd = todayStart.add(const Duration(days: 1));
-
-    final allAttendances = _repository.getAllAttendances();
-    return allAttendances.any((a) =>
-        a.studentId == studentId &&
-        a.markazId == markazId &&
-        a.lesson == lesson &&
-        a.date.isAfter(todayStart) &&
-        a.date.isBefore(todayEnd));
+    for (final a in _repository.getAllAttendances()) {
+      if (a.studentId == studentId &&
+          a.markazId == markazId &&
+          a.date.year == today.year &&
+          a.date.month == today.month &&
+          a.date.day == today.day) {
+        return a;
+      }
+    }
+    return null;
   }
 
   /// Obtient le statut de présence basé sur le pourcentage
@@ -388,4 +389,18 @@ class AttendanceService {
       debugPrint('Impossible de sync attendance: markazId null');
     }
   }
+}
+
+/// Levée quand l'élève a déjà une présence enregistrée le jour même
+/// (doc/audit.md, point H7). Porte l'enregistrement existant pour que l'écran
+/// puisse proposer de le remplacer.
+class AttendanceAlreadyRecordedException implements Exception {
+  final Attendance existing;
+
+  AttendanceAlreadyRecordedException(this.existing);
+
+  @override
+  String toString() =>
+      "Cet élève a déjà une présence enregistrée aujourd'hui "
+      '(leçon : ${existing.lesson}).';
 }
