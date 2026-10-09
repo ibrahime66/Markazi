@@ -1,5 +1,6 @@
 import 'package:hive/hive.dart';
 import '../models/class_model.dart';
+import '../utils/app_exception.dart';
 
 /// Hive data source for ClassModel entities.
 class HiveClassDataSource {
@@ -64,7 +65,7 @@ class HiveClassDataSource {
       await _box.put(classId, updated);
       return updated;
     }
-    throw Exception('Classe non trouvée');
+    throw AppException((l) => l.errClassNotFound);
   }
 
   /// Retire un élève d'une classe (retourne la classe mise à jour).
@@ -75,7 +76,7 @@ class HiveClassDataSource {
       await _box.put(classId, updated);
       return updated;
     }
-    throw Exception('Classe non trouvée');
+    throw AppException((l) => l.errClassNotFound);
   }
 
   /// Récupère les classes disponibles (non pleines) pour une markaz.

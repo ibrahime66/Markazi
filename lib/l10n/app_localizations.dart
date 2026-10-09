@@ -1942,6 +1942,1279 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Créer mon compte'**
   String get featCtaButton;
+
+  /// No description provided for @dashUserFallback.
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateur'**
+  String get dashUserFallback;
+
+  /// No description provided for @dashWelcome.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bienvenue, {userName}'**
+  String dashWelcome(Object userName);
+
+  /// No description provided for @dashGeneralStats.
+  ///
+  /// In fr, this message translates to:
+  /// **'Statistiques générales'**
+  String get dashGeneralStats;
+
+  /// No description provided for @dashQuickActions.
+  ///
+  /// In fr, this message translates to:
+  /// **'Actions rapides'**
+  String get dashQuickActions;
+
+  /// No description provided for @dashMyGroups.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes groupes'**
+  String get dashMyGroups;
+
+  /// No description provided for @dashRecentPayments.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiements récents'**
+  String get dashRecentPayments;
+
+  /// No description provided for @dashSeeAll.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout voir'**
+  String get dashSeeAll;
+
+  /// No description provided for @dashNoGroupYet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun groupe créé pour l\'instant'**
+  String get dashNoGroupYet;
+
+  /// No description provided for @dashActiveGroups.
+  ///
+  /// In fr, this message translates to:
+  /// **'{activeCount} groupe(s) actif(s)'**
+  String dashActiveGroups(Object activeCount);
+
+  /// No description provided for @dashSeatsOccupied.
+  ///
+  /// In fr, this message translates to:
+  /// **'{occupied} / {capacity} places occupées'**
+  String dashSeatsOccupied(Object occupied, Object capacity);
+
+  /// No description provided for @dashNoPaymentYet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun paiement enregistré pour l\'instant'**
+  String get dashNoPaymentYet;
+
+  /// No description provided for @dashStudentsCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{studentsCount} élève(s)'**
+  String dashStudentsCount(Object studentsCount);
+
+  /// No description provided for @dashNoStudent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun élève enregistré'**
+  String get dashNoStudent;
+
+  /// No description provided for @dashPhoneShort.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tél: {parentPhone}'**
+  String dashPhoneShort(Object parentPhone);
+
+  /// No description provided for @dashEditStudent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'élève'**
+  String get dashEditStudent;
+
+  /// No description provided for @dashDeleteStudent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer l\'élève'**
+  String get dashDeleteStudent;
+
+  /// No description provided for @dashPaymentsCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{validPaymentsCount} paiement(s)'**
+  String dashPaymentsCount(Object validPaymentsCount);
+
+  /// No description provided for @dashNoPayment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun paiement enregistré'**
+  String get dashNoPayment;
+
+  /// No description provided for @dashNoValidPayment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun paiement valide (élèves supprimés)'**
+  String get dashNoValidPayment;
+
+  /// No description provided for @dashPaymentsOfRemoved.
+  ///
+  /// In fr, this message translates to:
+  /// **'{paymentsCount} paiement(s) lié(s) à des élèves supprimés'**
+  String dashPaymentsOfRemoved(Object paymentsCount);
+
+  /// No description provided for @dashAttendancesCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{validAttendancesCount} présence(s)'**
+  String dashAttendancesCount(Object validAttendancesCount);
+
+  /// No description provided for @dashNoAttendance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune présence enregistrée'**
+  String get dashNoAttendance;
+
+  /// No description provided for @dashNoValidAttendance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune présence valide (élèves supprimés)'**
+  String get dashNoValidAttendance;
+
+  /// No description provided for @dashAttendancesOfRemoved.
+  ///
+  /// In fr, this message translates to:
+  /// **'{attendancesCount} présence(s) liée(s) à des élèves supprimés'**
+  String dashAttendancesOfRemoved(Object attendancesCount);
+
+  /// No description provided for @attendancePresent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Présent'**
+  String get attendancePresent;
+
+  /// No description provided for @attendanceAbsent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Absent'**
+  String get attendanceAbsent;
+
+  /// No description provided for @attendanceJustified.
+  ///
+  /// In fr, this message translates to:
+  /// **'Absence justifiée'**
+  String get attendanceJustified;
+
+  /// No description provided for @attendanceLate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tardif'**
+  String get attendanceLate;
+
+  /// No description provided for @dashGenerateReports.
+  ///
+  /// In fr, this message translates to:
+  /// **'Générer des rapports'**
+  String get dashGenerateReports;
+
+  /// No description provided for @dashWeeklyReport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rapport hebdomadaire'**
+  String get dashWeeklyReport;
+
+  /// No description provided for @dashMonthlyReport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rapport mensuel'**
+  String get dashMonthlyReport;
+
+  /// No description provided for @dashPaymentReport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rapport des paiements'**
+  String get dashPaymentReport;
+
+  /// No description provided for @dashPerformanceReport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rapport de performance'**
+  String get dashPerformanceReport;
+
+  /// No description provided for @dashAttendanceByStudentShort.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taux présence par élève'**
+  String get dashAttendanceByStudentShort;
+
+  /// No description provided for @dashExport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Export'**
+  String get dashExport;
+
+  /// No description provided for @dashExportPdf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exporter en PDF'**
+  String get dashExportPdf;
+
+  /// No description provided for @dashAddNewStudent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un nouvel élève'**
+  String get dashAddNewStudent;
+
+  /// No description provided for @fieldParentPhone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone du parent'**
+  String get fieldParentPhone;
+
+  /// No description provided for @dashPhoneHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex: 622180933'**
+  String get dashPhoneHint;
+
+  /// No description provided for @commonFillAllFields.
+  ///
+  /// In fr, this message translates to:
+  /// **'Veuillez remplir tous les champs'**
+  String get commonFillAllFields;
+
+  /// No description provided for @commonInvalidPhone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de téléphone invalide'**
+  String get commonInvalidPhone;
+
+  /// No description provided for @dashStudentAdded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élève ajouté avec succès!'**
+  String get dashStudentAdded;
+
+  /// No description provided for @commonErrorColon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur: {error}'**
+  String commonErrorColon(Object error);
+
+  /// No description provided for @dashStudentUpdated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élève modifié avec succès!'**
+  String get dashStudentUpdated;
+
+  /// No description provided for @dashArchiveStudentTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Archiver cet élève ?'**
+  String get dashArchiveStudentTitle;
+
+  /// No description provided for @dashArchiveStudentQuestion.
+  ///
+  /// In fr, this message translates to:
+  /// **'Êtes-vous sûr de vouloir retirer cet élève de la liste ?'**
+  String get dashArchiveStudentQuestion;
+
+  /// No description provided for @dashNameLine.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom: {student}'**
+  String dashNameLine(Object student);
+
+  /// No description provided for @dashArchiveStudentBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'élève sera archivé : il n\'apparaîtra plus dans les listes, mais son historique (paiements, présences, récitations) est conservé et reste compté dans les totaux financiers.'**
+  String get dashArchiveStudentBody;
+
+  /// No description provided for @dashStudentArchived.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élève archivé avec succès'**
+  String get dashStudentArchived;
+
+  /// No description provided for @actionArchive.
+  ///
+  /// In fr, this message translates to:
+  /// **'Archiver'**
+  String get actionArchive;
+
+  /// No description provided for @dashAddPayment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un paiement'**
+  String get dashAddPayment;
+
+  /// No description provided for @dashNoStudentAddFirst.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun élève enregistré. Veuillez d\'abord ajouter des élèves.'**
+  String get dashNoStudentAddFirst;
+
+  /// No description provided for @dashRecordPayment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer un paiement'**
+  String get dashRecordPayment;
+
+  /// No description provided for @dashSelectStudent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionner un élève'**
+  String get dashSelectStudent;
+
+  /// No description provided for @dashAmountWithCurrency.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant ({currency})'**
+  String dashAmountWithCurrency(Object currency);
+
+  /// No description provided for @fieldMonth.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mois'**
+  String get fieldMonth;
+
+  /// No description provided for @paymentPaid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé'**
+  String get paymentPaid;
+
+  /// No description provided for @paymentUnpaid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non payé'**
+  String get paymentUnpaid;
+
+  /// No description provided for @dashPaymentDay.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jour du paiement'**
+  String get dashPaymentDay;
+
+  /// No description provided for @dashInvalidAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant invalide'**
+  String get dashInvalidAmount;
+
+  /// No description provided for @dashPaymentRecorded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement pour {month} enregistré!'**
+  String dashPaymentRecorded(Object month);
+
+  /// No description provided for @dashPaymentAlreadyRecorded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement déjà enregistré'**
+  String get dashPaymentAlreadyRecorded;
+
+  /// No description provided for @dashConfirmAnyway.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer quand même'**
+  String get dashConfirmAnyway;
+
+  /// No description provided for @dashMarkAttendance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Marquer présence'**
+  String get dashMarkAttendance;
+
+  /// No description provided for @dashLessonField.
+  ///
+  /// In fr, this message translates to:
+  /// **'Leçon/Cours'**
+  String get dashLessonField;
+
+  /// No description provided for @dashLessonHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex: Coran, Hadith'**
+  String get dashLessonHint;
+
+  /// No description provided for @dashSelectStudentAndStatus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Veuillez sélectionner un élève et un statut'**
+  String get dashSelectStudentAndStatus;
+
+  /// No description provided for @dashNoLessonDefault.
+  ///
+  /// In fr, this message translates to:
+  /// **'Absence de cours'**
+  String get dashNoLessonDefault;
+
+  /// No description provided for @dashAttendanceRecorded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Présence enregistrée avec succès!'**
+  String get dashAttendanceRecorded;
+
+  /// No description provided for @dashWeekRange.
+  ///
+  /// In fr, this message translates to:
+  /// **'Semaine du {day}/{month} au {day2}/{month2}'**
+  String dashWeekRange(Object day, Object month, Object day2, Object month2);
+
+  /// No description provided for @dashPresentPlural.
+  ///
+  /// In fr, this message translates to:
+  /// **'Présents'**
+  String get dashPresentPlural;
+
+  /// No description provided for @dashAbsentPlural.
+  ///
+  /// In fr, this message translates to:
+  /// **'Absents'**
+  String get dashAbsentPlural;
+
+  /// No description provided for @dashLatePlural.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tardifs'**
+  String get dashLatePlural;
+
+  /// No description provided for @dashTotalSessionsWeek.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total sessions: {weeklyAttendancesCount}'**
+  String dashTotalSessionsWeek(Object weeklyAttendancesCount);
+
+  /// No description provided for @dashMonthLine.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mois: {month}/{year}'**
+  String dashMonthLine(Object month, Object year);
+
+  /// No description provided for @dashTotalSessionsMonth.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total sessions: {monthlyAttendancesCount}'**
+  String dashTotalSessionsMonth(Object monthlyAttendancesCount);
+
+  /// No description provided for @dashAttendanceRateLine.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taux de présence: {length}%'**
+  String dashAttendanceRateLine(Object length);
+
+  /// No description provided for @dashAttendanceAlreadyRecorded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Présence déjà enregistrée'**
+  String get dashAttendanceAlreadyRecorded;
+
+  /// No description provided for @dashReplaceAttendanceBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet élève a déjà une présence aujourd\'hui :\n• Statut : {status}\n• Leçon : {lesson}\n\nUne seule présence est conservée par élève et par jour. Voulez-vous la remplacer par « {newStatus} — {newLesson} » ?'**
+  String dashReplaceAttendanceBody(
+      Object status, Object lesson, Object newStatus, Object newLesson);
+
+  /// No description provided for @actionReplace.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remplacer'**
+  String get actionReplace;
+
+  /// No description provided for @dashAttendanceReplaced.
+  ///
+  /// In fr, this message translates to:
+  /// **'Présence remplacée'**
+  String get dashAttendanceReplaced;
+
+  /// No description provided for @dashTotalPending.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total en attente'**
+  String get dashTotalPending;
+
+  /// No description provided for @dashGrandTotal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total général'**
+  String get dashGrandTotal;
+
+  /// No description provided for @dashPaymentsNumber.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nombre de paiements: {paymentsCount}'**
+  String dashPaymentsNumber(Object paymentsCount);
+
+  /// No description provided for @dashActiveStudents.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élèves actifs: {studentsCount}'**
+  String dashActiveStudents(Object studentsCount);
+
+  /// No description provided for @dashManagementMetrics.
+  ///
+  /// In fr, this message translates to:
+  /// **'Métriques de gestion:'**
+  String get dashManagementMetrics;
+
+  /// No description provided for @statAttendanceRateFull.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taux de présence'**
+  String get statAttendanceRateFull;
+
+  /// No description provided for @statPaymentRateFull.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taux de paiement'**
+  String get statPaymentRateFull;
+
+  /// No description provided for @dashSummary.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résumé:'**
+  String get dashSummary;
+
+  /// No description provided for @dashSummaryStudents.
+  ///
+  /// In fr, this message translates to:
+  /// **'• Total élèves: {totalStudents}'**
+  String dashSummaryStudents(Object totalStudents);
+
+  /// No description provided for @dashSummarySessions.
+  ///
+  /// In fr, this message translates to:
+  /// **'• Sessions enregistrées: {totalAttendance}'**
+  String dashSummarySessions(Object totalAttendance);
+
+  /// No description provided for @dashSummaryPayments.
+  ///
+  /// In fr, this message translates to:
+  /// **'• Paiements enregistrés: {paymentsCount}'**
+  String dashSummaryPayments(Object paymentsCount);
+
+  /// No description provided for @dashSummaryPaid.
+  ///
+  /// In fr, this message translates to:
+  /// **'• Paiements complétés: {paidCount}'**
+  String dashSummaryPaid(Object paidCount);
+
+  /// No description provided for @commonNotAvailable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non disponible'**
+  String get commonNotAvailable;
+
+  /// No description provided for @dashPaymentDetails.
+  ///
+  /// In fr, this message translates to:
+  /// **'Détails du paiement'**
+  String get dashPaymentDetails;
+
+  /// No description provided for @fieldStudent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élève'**
+  String get fieldStudent;
+
+  /// No description provided for @paymentPending.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente'**
+  String get paymentPending;
+
+  /// No description provided for @dashPaymentDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date du paiement'**
+  String get dashPaymentDate;
+
+  /// No description provided for @dashPaymentId.
+  ///
+  /// In fr, this message translates to:
+  /// **'ID Paiement'**
+  String get dashPaymentId;
+
+  /// No description provided for @dashPaymentMarkedPaid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement marqué comme payé'**
+  String get dashPaymentMarkedPaid;
+
+  /// No description provided for @dashMarkAsPaid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Marquer comme payé'**
+  String get dashMarkAsPaid;
+
+  /// No description provided for @dashReceipt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reçu'**
+  String get dashReceipt;
+
+  /// No description provided for @commonNotSpecified.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non spécifié'**
+  String get commonNotSpecified;
+
+  /// No description provided for @dashAttendanceDetails.
+  ///
+  /// In fr, this message translates to:
+  /// **'Détails de la présence'**
+  String get dashAttendanceDetails;
+
+  /// No description provided for @fieldLesson.
+  ///
+  /// In fr, this message translates to:
+  /// **'Leçon'**
+  String get fieldLesson;
+
+  /// No description provided for @fieldDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date'**
+  String get fieldDate;
+
+  /// No description provided for @dashAttendanceId.
+  ///
+  /// In fr, this message translates to:
+  /// **'ID Présence'**
+  String get dashAttendanceId;
+
+  /// No description provided for @dashEditAttendance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier la présence'**
+  String get dashEditAttendance;
+
+  /// No description provided for @dashAttendanceCorrected.
+  ///
+  /// In fr, this message translates to:
+  /// **'Présence corrigée'**
+  String get dashAttendanceCorrected;
+
+  /// No description provided for @dashStudentProfile.
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil de l\'élève'**
+  String get dashStudentProfile;
+
+  /// No description provided for @fieldContact.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contact'**
+  String get fieldContact;
+
+  /// No description provided for @dashPaidPayments.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiements payés'**
+  String get dashPaidPayments;
+
+  /// No description provided for @dashStudentId.
+  ///
+  /// In fr, this message translates to:
+  /// **'ID Élève'**
+  String get dashStudentId;
+
+  /// No description provided for @dashAttendanceByStudent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taux de présence par élève'**
+  String get dashAttendanceByStudent;
+
+  /// No description provided for @dashThisWeekSessions.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette semaine ({weekAttendancesCount} sessions)'**
+  String dashThisWeekSessions(Object weekAttendancesCount);
+
+  /// No description provided for @dashThisMonthSessions.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce mois ({monthAttendancesCount} sessions)'**
+  String dashThisMonthSessions(Object monthAttendancesCount);
+
+  /// No description provided for @dashGroupsCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{classesCount} groupes'**
+  String dashGroupsCount(Object classesCount);
+
+  /// No description provided for @dashNoGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun groupe'**
+  String get dashNoGroup;
+
+  /// No description provided for @dashCreateFirstGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commencez par créer votre premier groupe'**
+  String get dashCreateFirstGroup;
+
+  /// No description provided for @dashCreateGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un groupe'**
+  String get dashCreateGroup;
+
+  /// No description provided for @groupFull.
+  ///
+  /// In fr, this message translates to:
+  /// **'Complet'**
+  String get groupFull;
+
+  /// No description provided for @groupAlmostFull.
+  ///
+  /// In fr, this message translates to:
+  /// **'Presque complet'**
+  String get groupAlmostFull;
+
+  /// No description provided for @groupAvailable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible'**
+  String get groupAvailable;
+
+  /// No description provided for @dashAddStudentToGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un élève'**
+  String get dashAddStudentToGroup;
+
+  /// No description provided for @dashRemoveStudentFromGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer un élève'**
+  String get dashRemoveStudentFromGroup;
+
+  /// No description provided for @dashEditGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le groupe'**
+  String get dashEditGroup;
+
+  /// No description provided for @dashDeleteGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer le groupe'**
+  String get dashDeleteGroup;
+
+  /// No description provided for @dashOccupancy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Occupation'**
+  String get dashOccupancy;
+
+  /// No description provided for @dashReceiptTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reçu de paiement'**
+  String get dashReceiptTitle;
+
+  /// No description provided for @dashReceiptGenerated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le reçu a été généré. Que voulez-vous en faire ?'**
+  String get dashReceiptGenerated;
+
+  /// No description provided for @actionLater.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get actionLater;
+
+  /// No description provided for @actionPreviewPrint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aperçu / Imprimer'**
+  String get actionPreviewPrint;
+
+  /// No description provided for @dashGeneratingReport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Génération du rapport...'**
+  String get dashGeneratingReport;
+
+  /// No description provided for @dashGenerationError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur lors de la génération : {error}'**
+  String dashGenerationError(Object error);
+
+  /// No description provided for @dashReportGenerated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rapport généré'**
+  String get dashReportGenerated;
+
+  /// No description provided for @dashReportWhatToDo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Que voulez-vous faire de ce rapport ?'**
+  String get dashReportWhatToDo;
+
+  /// No description provided for @dashLogoutConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Êtes-vous sûr de vouloir vous déconnecter?'**
+  String get dashLogoutConfirm;
+
+  /// No description provided for @actionLogout.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déconnecter'**
+  String get actionLogout;
+
+  /// No description provided for @dashLogoutError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur déconnexion: {error}'**
+  String dashLogoutError(Object error);
+
+  /// No description provided for @dashAddGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un groupe'**
+  String get dashAddGroup;
+
+  /// No description provided for @fieldGroupName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom du groupe'**
+  String get fieldGroupName;
+
+  /// No description provided for @dashGroupNameHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex: Groupe Nouroul Bayan'**
+  String get dashGroupNameHint;
+
+  /// No description provided for @fieldGroupLevel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Niveau du groupe'**
+  String get fieldGroupLevel;
+
+  /// No description provided for @dashGroupLevelHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex: Djouzou Amma, Nouroul Bayan, etc.'**
+  String get dashGroupLevelHint;
+
+  /// No description provided for @fieldGroupDescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Description du groupe'**
+  String get fieldGroupDescription;
+
+  /// No description provided for @fieldTeacherName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de l\'enseignant'**
+  String get fieldTeacherName;
+
+  /// No description provided for @dashTeacherHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex: Cheikh Ibrahim'**
+  String get dashTeacherHint;
+
+  /// No description provided for @fieldMaxStudents.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nombre maximum d\'élèves'**
+  String get fieldMaxStudents;
+
+  /// No description provided for @dashMaxStudentsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex: 30 (modifiable, jusqu\'à 500)'**
+  String get dashMaxStudentsHint;
+
+  /// No description provided for @dashMaxStudentsHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pouvez augmenter ce nombre à tout moment.'**
+  String get dashMaxStudentsHelp;
+
+  /// No description provided for @dashGroupAdded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Classe ajoutée avec succès!'**
+  String get dashGroupAdded;
+
+  /// No description provided for @dashEditNamed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier: {classModel}'**
+  String dashEditNamed(Object classModel);
+
+  /// No description provided for @dashGroupUpdated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Classe modifiée avec succès!'**
+  String get dashGroupUpdated;
+
+  /// No description provided for @dashDeleteNamed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer: {classModel}'**
+  String dashDeleteNamed(Object classModel);
+
+  /// No description provided for @dashDeleteGroupConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Êtes-vous sûr de vouloir supprimer ce groupe ? Le groupe sera archivé et tous ses élèves en seront retirés.'**
+  String get dashDeleteGroupConfirm;
+
+  /// No description provided for @dashGroupDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Classe supprimée avec succès!'**
+  String get dashGroupDeleted;
+
+  /// No description provided for @dashAllStudentsInGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les élèves sont déjà dans ce groupe.'**
+  String get dashAllStudentsInGroup;
+
+  /// No description provided for @dashAddStudentTo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un élève à {groupModel}'**
+  String dashAddStudentTo(Object groupModel);
+
+  /// No description provided for @dashSelectStudentToAdd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionnez un élève à ajouter:'**
+  String get dashSelectStudentToAdd;
+
+  /// No description provided for @dashChooseStudent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un élève'**
+  String get dashChooseStudent;
+
+  /// No description provided for @dashStudentAddedToGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élève ajouté au groupe avec succès!'**
+  String get dashStudentAddedToGroup;
+
+  /// No description provided for @dashGroupEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce groupe ne contient aucun élève.'**
+  String get dashGroupEmpty;
+
+  /// No description provided for @dashRemoveStudentFrom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer un élève de {groupModel}'**
+  String dashRemoveStudentFrom(Object groupModel);
+
+  /// No description provided for @dashSelectStudentToRemove.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionnez un élève à retirer:'**
+  String get dashSelectStudentToRemove;
+
+  /// No description provided for @dashStudentRemovedFromGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élève retiré du groupe avec succès!'**
+  String get dashStudentRemovedFromGroup;
+
+  /// No description provided for @actionRemove.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer'**
+  String get actionRemove;
+
+  /// No description provided for @dashGenerateReport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Générer un rapport'**
+  String get dashGenerateReport;
+
+  /// No description provided for @dashChooseReportPeriod.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez la période du rapport :'**
+  String get dashChooseReportPeriod;
+
+  /// No description provided for @dashWeekly.
+  ///
+  /// In fr, this message translates to:
+  /// **'Hebdomadaire'**
+  String get dashWeekly;
+
+  /// No description provided for @dashMonthly.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mensuel'**
+  String get dashMonthly;
+
+  /// No description provided for @forgotResetting.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réinitialisation...'**
+  String get forgotResetting;
+
+  /// No description provided for @forgotSending.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi...'**
+  String get forgotSending;
+
+  /// No description provided for @commonActive.
+  ///
+  /// In fr, this message translates to:
+  /// **'Actif'**
+  String get commonActive;
+
+  /// No description provided for @errClassNotFound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Classe non trouvée'**
+  String get errClassNotFound;
+
+  /// No description provided for @errStudentNotFound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élève non trouvé'**
+  String get errStudentNotFound;
+
+  /// No description provided for @errMarkazAccessDenied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès refusé à cette Markaz'**
+  String get errMarkazAccessDenied;
+
+  /// No description provided for @errLessonRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le nom de la leçon est obligatoire'**
+  String get errLessonRequired;
+
+  /// No description provided for @errAttendanceNotFound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Présence non trouvée'**
+  String get errAttendanceNotFound;
+
+  /// No description provided for @errStudentAccessDenied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès refusé à cet élève'**
+  String get errStudentAccessDenied;
+
+  /// No description provided for @errNotAuthenticated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateur non authentifié'**
+  String get errNotAuthenticated;
+
+  /// No description provided for @errEmailPasswordRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Email et mot de passe requis'**
+  String get errEmailPasswordRequired;
+
+  /// No description provided for @errRequiredFieldsMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les champs obligatoires doivent être remplis'**
+  String get errRequiredFieldsMissing;
+
+  /// No description provided for @errPasswordTooShort.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mot de passe trop court (6+ caractères)'**
+  String get errPasswordTooShort;
+
+  /// No description provided for @errEmailRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Email requis'**
+  String get errEmailRequired;
+
+  /// No description provided for @errAllFieldsRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les champs sont obligatoires'**
+  String get errAllFieldsRequired;
+
+  /// No description provided for @errGroupNameRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le nom de la classe est obligatoire'**
+  String get errGroupNameRequired;
+
+  /// No description provided for @errGroupLevelRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le niveau de la classe est obligatoire'**
+  String get errGroupLevelRequired;
+
+  /// No description provided for @errTeacherNameRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le nom de l\'enseignant est obligatoire'**
+  String get errTeacherNameRequired;
+
+  /// No description provided for @errMaxStudentsRange.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le nombre maximum d\'élèves doit être entre 1 et 500'**
+  String get errMaxStudentsRange;
+
+  /// No description provided for @errGroupNameExists.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un groupe avec ce nom existe déjà'**
+  String get errGroupNameExists;
+
+  /// No description provided for @errGroupNotFound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Groupe non trouvé'**
+  String get errGroupNotFound;
+
+  /// No description provided for @errGroupAccessDenied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès refusé à ce groupe'**
+  String get errGroupAccessDenied;
+
+  /// No description provided for @errCapacityBelowCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de réduire le nombre de places en dessous du nombre actuel d\'élèves ({currentStudentCount})'**
+  String errCapacityBelowCount(Object currentStudentCount);
+
+  /// No description provided for @errGroupNotEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de supprimer un groupe contenant des élèves'**
+  String get errGroupNotEmpty;
+
+  /// No description provided for @errGroupFull.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le groupe est déjà plein ({maxStudents} élèves)'**
+  String errGroupFull(Object maxStudents);
+
+  /// No description provided for @errStudentAlreadyInGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'élève est déjà dans ce groupe'**
+  String get errStudentAlreadyInGroup;
+
+  /// No description provided for @errStudentNotInGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'élève n\'est pas dans ce groupe'**
+  String get errStudentNotInGroup;
+
+  /// No description provided for @errGuardianNameRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le nom du tuteur est obligatoire'**
+  String get errGuardianNameRequired;
+
+  /// No description provided for @errGuardianPhoneRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le téléphone du tuteur est obligatoire'**
+  String get errGuardianPhoneRequired;
+
+  /// No description provided for @errGuardianNotFound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tuteur non trouvé'**
+  String get errGuardianNotFound;
+
+  /// No description provided for @errGuardianAccessDenied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès refusé à ce tuteur'**
+  String get errGuardianAccessDenied;
+
+  /// No description provided for @errAmountPositive.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant doit être supérieur à 0'**
+  String get errAmountPositive;
+
+  /// No description provided for @errPaymentNotFound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement non trouvé'**
+  String get errPaymentNotFound;
+
+  /// No description provided for @errRecitationNotFound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Récitation non trouvée'**
+  String get errRecitationNotFound;
+
+  /// No description provided for @errRecitationAccessDenied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès refusé à cette récitation'**
+  String get errRecitationAccessDenied;
+
+  /// No description provided for @errStudentNameRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le nom de l\'élève est obligatoire'**
+  String get errStudentNameRequired;
+
+  /// No description provided for @errNameMinLength.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le nom doit contenir au moins 3 caractères'**
+  String get errNameMinLength;
+
+  /// No description provided for @errMarkazRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Markaz ID obligatoire et pas d\'utilisateur connecté'**
+  String get errMarkazRequired;
+
+  /// No description provided for @errNameInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom invalide (3+ caractères)'**
+  String get errNameInvalid;
+
+  /// No description provided for @errServerTimeout.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur ne répond pas. Vérifiez votre connexion.'**
+  String get errServerTimeout;
+
+  /// No description provided for @errServerUnreachable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de joindre le serveur. Vérifiez votre connexion internet.'**
+  String get errServerUnreachable;
+
+  /// No description provided for @errServerCommunication.
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur de communication avec le serveur.'**
+  String get errServerCommunication;
 }
 
 class _AppLocalizationsDelegate

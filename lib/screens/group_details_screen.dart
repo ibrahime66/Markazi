@@ -135,7 +135,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
               _buildInfoRow(_l10n.fieldSchedule, widget.group.schedule!),
             if (widget.group.room != null)
               _buildInfoRow(_l10n.fieldRoom, widget.group.room!),
-            _buildInfoRow(_l10n.fieldStatus, widget.group.isActive ? 'Actif' : _l10n.commonInactive),
+            _buildInfoRow(_l10n.fieldStatus, widget.group.isActive ? _l10n.commonActive : _l10n.commonInactive),
             _buildInfoRow(_l10n.fieldCreatedOn,
                 '${widget.group.createdAt.day}/${widget.group.createdAt.month}/${widget.group.createdAt.year}'),
           ],
@@ -416,12 +416,12 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           // Paiement en pourcentage
           Expanded(
             flex: 2,
-            child: _buildPercentageCell(paymentRate, _l10n.syncEntityPayment),
+            child: _buildPercentageCell(paymentRate, isPayment: true),
           ),
           // Présence en pourcentage
           Expanded(
             flex: 2,
-            child: _buildPercentageCell(attendanceRate, _l10n.syncEntityAttendance),
+            child: _buildPercentageCell(attendanceRate, isPayment: false),
           ),
           // Montant payé
           Expanded(
@@ -453,11 +453,11 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     );
   }
 
-  Widget _buildPercentageCell(double percentage, String type) {
+  Widget _buildPercentageCell(double percentage, {required bool isPayment}) {
     Color color;
     IconData icon;
     
-    if (type == _l10n.syncEntityPayment) {
+    if (isPayment) {
       if (percentage >= 80) {
         color = Colors.green;
         icon = Icons.check_circle;

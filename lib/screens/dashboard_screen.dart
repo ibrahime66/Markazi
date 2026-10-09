@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/student_provider.dart';
@@ -41,6 +42,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  /// Textes traduits (doc/audit.md K8).
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   int _selectedTabIndex = 0;
 
   /// Devise configurée pour ce Markaz, utilisée partout où un montant est
@@ -134,7 +138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     context.watch<LocaleProvider>();
     final l10n = AppLocalizations.of(context);
     final authService = context.read<AuthService>();
-    final userName = authService.currentUser?.name ?? 'Utilisateur';
+    final userName = authService.currentUser?.name ?? _l10n.dashUserFallback;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -145,7 +149,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Bienvenue, $userName',
+              _l10n.dashWelcome(userName),
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -401,7 +405,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Statistiques générales',
+            _l10n.dashGeneralStats,
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -430,25 +434,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 childAspectRatio: 1.15,
                 children: [
                   _buildStatCard(
-                    'Élèves',
+                    _l10n.navStudents,
                     studentProvider.students.length.toString(),
                     Icons.people,
                     AppColors.primary,
                   ),
                   _buildStatCard(
-                    'Paiements',
+                    _l10n.navPayments,
                     validPayments.length.toString(),
                     Icons.payments,
                     Colors.blue,
                   ),
                   _buildStatCard(
-                    'Présences',
+                    _l10n.navAttendance,
                     validAttendances.length.toString(),
                     Icons.calendar_today,
                     Colors.orange,
                   ),
                   _buildStatCard(
-                    'Récitations',
+                    _l10n.navRecitations,
                     '${validAttendances.length}',
                     Icons.menu_book,
                     Colors.purple,
@@ -459,7 +463,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 32),
           Text(
-            'Actions rapides',
+            _l10n.dashQuickActions,
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -469,16 +473,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _buildActionButton('Ajouter', Icons.person_add)),
+              Expanded(child: _buildActionButton(_l10n.actionAdd, Icons.person_add, _showAddStudentDialog)),
               const SizedBox(width: 12),
-              Expanded(child: _buildActionButton('Paiement', Icons.add_card)),
+              Expanded(child: _buildActionButton(_l10n.syncEntityPayment, Icons.add_card, _showAddPaymentDialog)),
               const SizedBox(width: 12),
-              Expanded(child: _buildActionButton('Présence', Icons.check_circle)),
+              Expanded(child: _buildActionButton(_l10n.syncEntityAttendance, Icons.check_circle, _showMarkAttendanceDialog)),
             ],
           ),
           const SizedBox(height: 32),
           Text(
-            'Mes groupes',
+            _l10n.dashMyGroups,
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -495,7 +499,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Paiements récents',
+                _l10n.dashRecentPayments,
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -504,7 +508,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               TextButton(
                 onPressed: () => setState(() => _selectedTabIndex = 3),
                 child: Text(
-                  'Tout voir',
+                  _l10n.dashSeeAll,
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -552,7 +556,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Aucun groupe créé pour l\'instant',
+                AppLocalizations.of(context).dashNoGroupYet,
                 style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[600]),
               ),
             ),
@@ -586,7 +590,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$activeCount groupe${activeCount > 1 ? 's' : ''} actif${activeCount > 1 ? 's' : ''}',
+                  AppLocalizations.of(context).dashActiveGroups(activeCount),
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -595,7 +599,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$occupied / $capacity places occupées',
+                  AppLocalizations.of(context).dashSeatsOccupied(occupied, capacity),
                   style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
@@ -633,7 +637,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Aucun paiement enregistré pour l\'instant',
+                AppLocalizations.of(context).dashNoPaymentYet,
                 style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[600]),
               ),
             ),
@@ -677,7 +681,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              student?.name ?? 'Élève supprimé',
+              student?.name ?? AppLocalizations.of(context).commonStudentDeleted,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.poppins(
@@ -752,19 +756,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // boutons restent parfaitement alignés entre eux quelle que soit la
   // largeur de l'écran, plutôt que de dépendre du calcul intrinsèque
   // d'un Wrap.
-  Widget _buildActionButton(String label, IconData icon) {
-    VoidCallback onTap;
-    switch (label) {
-      case 'Ajouter':
-        onTap = _showAddStudentDialog;
-        break;
-      case 'Paiement':
-        onTap = _showAddPaymentDialog;
-        break;
-      default:
-        onTap = _showMarkAttendanceDialog;
-    }
-
+  //
+  // L'action est passée explicitement : elle était auparavant déduite du
+  // libellé ('Ajouter', 'Paiement'), ce qui cassait les boutons une fois
+  // l'interface traduite (doc/audit.md K8).
+  Widget _buildActionButton(String label, IconData icon, VoidCallback onTap) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -834,7 +830,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ElevatedButton.icon(
             onPressed: onAdd,
             icon: const Icon(Icons.add, size: 18),
-            label: const Text('Ajouter'),
+            label: Text(AppLocalizations.of(context).actionAdd),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -853,8 +849,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return Column(
           children: [
             _buildTabHeader(
-              'Élèves',
-              '${studentProvider.students.length} élève(s)',
+              AppLocalizations.of(context).navStudents,
+              AppLocalizations.of(context).dashStudentsCount(studentProvider.students.length),
               _showAddStudentDialog,
             ),
             Expanded(
@@ -866,7 +862,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Icon(Icons.people_outline, size: 64, color: Colors.grey[300]),
                           const SizedBox(height: 16),
                           Text(
-                            'Aucun élève enregistré',
+                            AppLocalizations.of(context).dashNoStudent,
                             style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
                           ),
                         ],
@@ -893,19 +889,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             title: Text(student.name),
                             subtitle:
-                                Text('Tél: ${_formatGuineanPhone(student.parentPhone)}'),
+                                Text(AppLocalizations.of(context).dashPhoneShort(_formatGuineanPhone(student.parentPhone))),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
                                   icon: Icon(Icons.edit, color: Colors.blue, size: 20),
                                   onPressed: () => _showEditStudentDialog(student),
-                                  tooltip: 'Modifier l\'élève',
+                                  tooltip: AppLocalizations.of(context).dashEditStudent,
                                 ),
                                 IconButton(
                                   icon: Icon(Icons.delete, color: Colors.red, size: 20),
                                   onPressed: () => _showDeleteStudentDialog(student),
-                                  tooltip: 'Supprimer l\'élève',
+                                  tooltip: AppLocalizations.of(context).dashDeleteStudent,
                                 ),
                               ],
                             ),
@@ -933,8 +929,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return Column(
           children: [
             _buildTabHeader(
-              'Paiements',
-              '${validPayments.length} paiement(s)',
+              AppLocalizations.of(context).navPayments,
+              AppLocalizations.of(context).dashPaymentsCount(validPayments.length),
               _showAddPaymentDialog,
             ),
             Expanded(child: _buildPaymentsList(paymentProvider, studentProvider, validPayments)),
@@ -955,15 +951,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 16),
             Text(
               paymentProvider.payments.isEmpty
-                  ? 'Aucun paiement enregistré'
-                  : 'Aucun paiement valide (élèves supprimés)',
+                  ? AppLocalizations.of(context).dashNoPayment
+                  : AppLocalizations.of(context).dashNoValidPayment,
               style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
             ),
             if (paymentProvider.payments.isNotEmpty && validPayments.isEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
-                  '${paymentProvider.payments.length} paiement(s) lié(s) à des élèves supprimés',
+                  AppLocalizations.of(context).dashPaymentsOfRemoved(paymentProvider.payments.length),
                   style: GoogleFonts.poppins(fontSize: 12, color: Colors.orange),
                 ),
               ),
@@ -1032,8 +1028,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return Column(
           children: [
             _buildTabHeader(
-              'Présences',
-              '${validAttendances.length} présence(s)',
+              AppLocalizations.of(context).navAttendance,
+              AppLocalizations.of(context).dashAttendancesCount(validAttendances.length),
               _showMarkAttendanceDialog,
             ),
             Expanded(
@@ -1057,15 +1053,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 16),
                 Text(
                   attendanceProvider.attendances.isEmpty 
-                      ? 'Aucune présence enregistrée'
-                      : 'Aucune présence valide (élèves supprimés)',
+                      ? AppLocalizations.of(context).dashNoAttendance
+                      : AppLocalizations.of(context).dashNoValidAttendance,
                   style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
                 ),
                 if (attendanceProvider.attendances.isNotEmpty && validAttendances.isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      '${attendanceProvider.attendances.length} présence(s) liée(s) à des élèves supprimés',
+                      AppLocalizations.of(context).dashAttendancesOfRemoved(attendanceProvider.attendances.length),
                       style: GoogleFonts.poppins(fontSize: 12, color: Colors.orange),
                     ),
                   ),
@@ -1093,19 +1089,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               case AttendanceStatus.present:
                 statusColor = Colors.green;
                 statusIcon = Icons.check_circle;
-                statusText = 'Présent';
+                statusText = AppLocalizations.of(context).attendancePresent;
               case AttendanceStatus.absent:
                 statusColor = Colors.red;
                 statusIcon = Icons.cancel;
-                statusText = 'Absent';
+                statusText = AppLocalizations.of(context).attendanceAbsent;
               case AttendanceStatus.justified:
                 statusColor = Colors.blue;
                 statusIcon = Icons.event_busy;
-                statusText = 'Absence justifiée';
+                statusText = AppLocalizations.of(context).attendanceJustified;
               case AttendanceStatus.late:
                 statusColor = Colors.orange;
                 statusIcon = Icons.schedule;
-                statusText = 'Tardif';
+                statusText = AppLocalizations.of(context).attendanceLate;
             }
 
             return Card(
@@ -1157,30 +1153,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Générer des rapports',
+            AppLocalizations.of(context).dashGenerateReports,
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 16),
-          _buildReportButton('Rapport hebdomadaire', Icons.date_range,
+          _buildReportButton(AppLocalizations.of(context).dashWeeklyReport, Icons.date_range,
               () => _showWeeklyReport()),
           const SizedBox(height: 12),
-          _buildReportButton('Rapport mensuel', Icons.calendar_month,
+          _buildReportButton(AppLocalizations.of(context).dashMonthlyReport, Icons.calendar_month,
               () => _showMonthlyReport()),
           const SizedBox(height: 12),
           _buildReportButton(
-              'Rapport des paiements', Icons.money, () => _showPaymentReport()),
+              AppLocalizations.of(context).dashPaymentReport, Icons.money, () => _showPaymentReport()),
           const SizedBox(height: 12),
-          _buildReportButton('Rapport de performance', Icons.trending_up,
+          _buildReportButton(AppLocalizations.of(context).dashPerformanceReport, Icons.trending_up,
               () => _showPerformanceReport()),
           const SizedBox(height: 12),
-          _buildReportButton('Taux présence par élève', Icons.person_outline,
+          _buildReportButton(AppLocalizations.of(context).dashAttendanceByStudentShort, Icons.person_outline,
               () => _showAttendanceRateReport()),
           const SizedBox(height: 32),
           Text(
-            'Export',
+            AppLocalizations.of(context).dashExport,
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -1192,7 +1188,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: ElevatedButton.icon(
               onPressed: _generateStudentReport,
               icon: const Icon(Icons.download),
-              label: const Text('Exporter en PDF'),
+              label: Text(AppLocalizations.of(context).dashExportPdf),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1249,7 +1245,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Ajouter un nouvel élève'),
+          title: Text(AppLocalizations.of(context).dashAddNewStudent),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1257,7 +1253,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
-                    labelText: 'Nom de l\'élève',
+                    labelText: AppLocalizations.of(context).fieldStudentName,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -1268,8 +1264,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 TextField(
                   controller: phoneController,
                   decoration: InputDecoration(
-                    labelText: 'Téléphone du parent',
-                    hintText: 'Ex: 622180933',
+                    labelText: AppLocalizations.of(context).fieldParentPhone,
+                    hintText: AppLocalizations.of(context).dashPhoneHint,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -1283,15 +1279,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler'),
+              child: Text(AppLocalizations.of(context).actionCancel),
             ),
             ElevatedButton(
               onPressed: () async {
                 if (nameController.text.isEmpty ||
                     phoneController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Veuillez remplir tous les champs'),
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context).commonFillAllFields),
                     ),
                   );
                   return;
@@ -1300,9 +1296,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 // Valider le numéro de téléphone
                 if (!_isValidGuineanPhone(phoneController.text)) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Text(
-                          'Numéro de téléphone invalide'),
+                          AppLocalizations.of(context).commonInvalidPhone),
                       backgroundColor: Colors.orange,
                     ),
                   );
@@ -1318,8 +1314,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Élève ajouté avec succès!'),
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context).dashStudentAdded),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -1329,7 +1325,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Erreur: ${e.toString()}'),
+                        content: Text(AppLocalizations.of(context).commonErrorColon(e.toString())),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -1339,7 +1335,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
               ),
-              child: const Text('Ajouter'),
+              child: Text(AppLocalizations.of(context).actionAdd),
             ),
           ],
         ),
@@ -1356,7 +1352,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Modifier l\'élève'),
+          title: Text(AppLocalizations.of(context).dashEditStudent),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1364,7 +1360,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
-                    labelText: 'Nom de l\'élève',
+                    labelText: AppLocalizations.of(context).fieldStudentName,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -1375,8 +1371,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 TextField(
                   controller: phoneController,
                   decoration: InputDecoration(
-                    labelText: 'Téléphone du parent',
-                    hintText: 'Ex: 622180933',
+                    labelText: AppLocalizations.of(context).fieldParentPhone,
+                    hintText: AppLocalizations.of(context).dashPhoneHint,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -1390,15 +1386,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler'),
+              child: Text(AppLocalizations.of(context).actionCancel),
             ),
             ElevatedButton(
               onPressed: () async {
                 if (nameController.text.isEmpty ||
                     phoneController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Veuillez remplir tous les champs'),
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context).commonFillAllFields),
                     ),
                   );
                   return;
@@ -1407,9 +1403,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 // Valider le numéro de téléphone
                 if (!_isValidGuineanPhone(phoneController.text)) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Text(
-                          'Numéro de téléphone invalide'),
+                          AppLocalizations.of(context).commonInvalidPhone),
                       backgroundColor: Colors.orange,
                     ),
                   );
@@ -1426,8 +1422,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Élève modifié avec succès!'),
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context).dashStudentUpdated),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -1437,7 +1433,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Erreur: ${e.toString()}'),
+                        content: Text(AppLocalizations.of(context).commonErrorColon(e.toString())),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -1447,7 +1443,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
               ),
-              child: const Text('Modifier'),
+              child: Text(AppLocalizations.of(context).actionEdit),
             ),
           ],
         ),
@@ -1460,12 +1456,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Archiver cet élève ?'),
+        title: Text(AppLocalizations.of(context).dashArchiveStudentTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Êtes-vous sûr de vouloir retirer cet élève de la liste ?'),
+            Text(AppLocalizations.of(context).dashArchiveStudentQuestion),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
@@ -1478,16 +1474,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Nom: ${student.name}',
+                    AppLocalizations.of(context).dashNameLine(student.name),
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  Text('Tél: ${_formatGuineanPhone(student.parentPhone)}'),
+                  Text(AppLocalizations.of(context).dashPhoneShort(_formatGuineanPhone(student.parentPhone))),
                 ],
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              "L'élève sera archivé : il n'apparaîtra plus dans les listes, mais son historique (paiements, présences, récitations) est conservé et reste compté dans les totaux financiers.",
+              AppLocalizations.of(context).dashArchiveStudentBody,
               style: TextStyle(color: Colors.red[700], fontSize: 12),
             ),
           ],
@@ -1495,7 +1491,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
+            child: Text(AppLocalizations.of(context).actionCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1505,8 +1501,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Élève archivé avec succès'),
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context).dashStudentArchived),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -1516,7 +1512,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Erreur: ${e.toString()}'),
+                      content: Text(AppLocalizations.of(context).commonErrorColon(e.toString())),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -1526,7 +1522,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
             ),
-            child: const Text('Archiver'),
+            child: Text(AppLocalizations.of(context).actionArchive),
           ),
         ],
       ),
@@ -1535,24 +1531,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // ─── Add Payment Dialog ────────────────────
   // ─── Payment Dialog ───────────────────────
-  static const List<String> _monthNames = [
-    'Janvier',
-    'Février',
-    'Mars',
-    'Avril',
-    'Mai',
-    'Juin',
-    'Juillet',
-    'Août',
-    'Septembre',
-    'Octobre',
-    'Novembre',
-    'Décembre'
-  ];
-
-  /// Libellé affiché pour un mois (ex. "Août 2026").
-  String _formatMonthLabel(DateTime month) =>
-      '${_monthNames[month.month - 1]} ${month.year}';
+  /// Libellé affiché pour un mois (ex. "Août 2026"), dans la langue de
+  /// l'interface (doc/audit.md K8).
+  String _formatMonthLabel(DateTime month) {
+    final label =
+        DateFormat.yMMMM(Localizations.localeOf(context).toString()).format(month);
+    return label.isEmpty ? label : label[0].toUpperCase() + label.substring(1);
+  }
 
   /// Les 12 derniers mois (dont le mois en cours), premier jour de chaque
   /// mois. Renvoie de vraies dates — et non de simples libellés — pour que
@@ -1581,20 +1566,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
           builder: (context, studentProvider, _) {
             if (studentProvider.students.isEmpty) {
               return AlertDialog(
-                title: const Text('Ajouter un paiement'),
-                content: const Text(
-                    'Aucun élève enregistré. Veuillez d\'abord ajouter des élèves.'),
+                title: Text(AppLocalizations.of(context).dashAddPayment),
+                content: Text(
+                    AppLocalizations.of(context).dashNoStudentAddFirst),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Fermer'),
+                    child: Text(AppLocalizations.of(context).actionClose),
                   ),
                 ],
               );
             }
 
             return AlertDialog(
-              title: const Text('Enregistrer un paiement'),
+              title: Text(AppLocalizations.of(context).dashRecordPayment),
               contentPadding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
               content: SingleChildScrollView(
                 child: Column(
@@ -1602,7 +1587,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     DropdownButtonFormField<String>(
                       initialValue: selectedStudentId,
-                      hint: const Text('Sélectionner un élève'),
+                      hint: Text(AppLocalizations.of(context).dashSelectStudent),
                       isExpanded: true,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(
@@ -1625,7 +1610,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     TextField(
                       controller: amountController,
                       decoration: InputDecoration(
-                        labelText: 'Montant ($_currency)',
+                        labelText: AppLocalizations.of(context).dashAmountWithCurrency(_currency),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -1638,7 +1623,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       initialValue: selectedMonth,
                       isExpanded: true,
                       decoration: InputDecoration(
-                        labelText: 'Mois',
+                        labelText: AppLocalizations.of(context).fieldMonth,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -1661,16 +1646,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     DropdownButtonFormField<String>(
                       initialValue: selectedStatus,
                       decoration: InputDecoration(
-                        labelText: 'Statut',
+                        labelText: AppLocalizations.of(context).fieldStatus,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                         prefixIcon: const Icon(Icons.check_circle),
                       ),
-                      items: const [
-                        DropdownMenuItem(value: 'paid', child: Text('Payé')),
+                      items: [
+                        DropdownMenuItem(value: 'paid', child: Text(AppLocalizations.of(context).paymentPaid)),
                         DropdownMenuItem(
-                            value: 'unpaid', child: Text('Non payé')),
+                            value: 'unpaid', child: Text(AppLocalizations.of(context).paymentUnpaid)),
                       ],
                       onChanged: (value) {
                         if (value != null) {
@@ -1694,7 +1679,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         },
                         child: InputDecorator(
                           decoration: InputDecoration(
-                            labelText: 'Jour du paiement',
+                            labelText: AppLocalizations.of(context).dashPaymentDay,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -1715,15 +1700,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Annuler'),
+                  child: Text(AppLocalizations.of(context).actionCancel),
                 ),
                 ElevatedButton(
                   onPressed: () async {
                     if (selectedStudentId == null ||
                         amountController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Veuillez remplir tous les champs'),
+                        SnackBar(
+                          content: Text(AppLocalizations.of(context).commonFillAllFields),
                         ),
                       );
                       return;
@@ -1735,8 +1720,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         amountController.text.replaceAll(',', '.'));
                     if (amount == null || amount <= 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Montant invalide'),
+                        SnackBar(
+                          content: Text(AppLocalizations.of(context).dashInvalidAmount),
                         ),
                       );
                       return;
@@ -1756,7 +1741,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                   ),
-                  child: const Text('Enregistrer'),
+                  child: Text(AppLocalizations.of(context).actionSave),
                 ),
               ],
             );
@@ -1794,7 +1779,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Paiement pour ${_formatMonthLabel(month)} enregistré!'),
+          content: Text(AppLocalizations.of(context).dashPaymentRecorded(_formatMonthLabel(month))),
           backgroundColor: Colors.green,
         ),
       );
@@ -1812,17 +1797,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text('Paiement déjà enregistré'),
+          title: Text(AppLocalizations.of(context).dashPaymentAlreadyRecorded),
           content: Text(e.message),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Annuler'),
+              child: Text(AppLocalizations.of(context).actionCancel),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-              child: const Text('Confirmer quand même'),
+              child: Text(AppLocalizations.of(context).dashConfirmAnyway),
             ),
           ],
         ),
@@ -1843,7 +1828,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur: ${e.toString()}'),
+          content: Text(AppLocalizations.of(context).commonErrorColon(e.toString())),
           backgroundColor: Colors.red,
         ),
       );
@@ -1863,20 +1848,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
           builder: (context, studentProvider, _) {
             if (studentProvider.students.isEmpty) {
               return AlertDialog(
-                title: const Text('Marquer présence'),
-                content: const Text(
-                    'Aucun élève enregistré. Veuillez d\'abord ajouter des élèves.'),
+                title: Text(AppLocalizations.of(context).dashMarkAttendance),
+                content: Text(
+                    AppLocalizations.of(context).dashNoStudentAddFirst),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Fermer'),
+                    child: Text(AppLocalizations.of(context).actionClose),
                   ),
                 ],
               );
             }
 
             return AlertDialog(
-              title: const Text('Marquer présence'),
+              title: Text(AppLocalizations.of(context).dashMarkAttendance),
               contentPadding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
               content: SingleChildScrollView(
                 child: Column(
@@ -1884,7 +1869,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     DropdownButtonFormField<String>(
                       initialValue: selectedStudentId,
-                      hint: const Text('Sélectionner un élève'),
+                      hint: Text(AppLocalizations.of(context).dashSelectStudent),
                       isExpanded: true,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(
@@ -1907,8 +1892,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     TextField(
                       controller: lessonController,
                       decoration: InputDecoration(
-                        labelText: 'Leçon/Cours',
-                        hintText: 'Ex: Coran, Hadith',
+                        labelText: AppLocalizations.of(context).dashLessonField,
+                        hintText: AppLocalizations.of(context).dashLessonHint,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -1920,13 +1905,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     DropdownButtonFormField<String>(
                       initialValue: selectedStatus,
                       decoration: InputDecoration(
-                        labelText: 'Statut',
+                        labelText: AppLocalizations.of(context).fieldStatus,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                         prefixIcon: const Icon(Icons.check_circle),
                       ),
-                      items: const [
+                      items: [
                         DropdownMenuItem(
                           value: 'present',
                           child: Row(
@@ -1934,7 +1919,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Icon(Icons.check_circle,
                                   color: Colors.green, size: 20),
                               SizedBox(width: 8),
-                              Text('Présent'),
+                              Text(AppLocalizations.of(context).attendancePresent),
                             ],
                           ),
                         ),
@@ -1944,7 +1929,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             children: [
                               Icon(Icons.close, color: Colors.red, size: 20),
                               SizedBox(width: 8),
-                              Text('Absent'),
+                              Text(AppLocalizations.of(context).attendanceAbsent),
                             ],
                           ),
                         ),
@@ -1955,7 +1940,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Icon(Icons.schedule,
                                   color: Colors.orange, size: 20),
                               SizedBox(width: 8),
-                              Text('Tardif'),
+                              Text(AppLocalizations.of(context).attendanceLate),
                             ],
                           ),
                         ),
@@ -1966,7 +1951,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Icon(Icons.event_busy,
                                   color: Colors.blue, size: 20),
                               SizedBox(width: 8),
-                              Text('Absence justifiée'),
+                              Text(AppLocalizations.of(context).attendanceJustified),
                             ],
                           ),
                         ),
@@ -1983,15 +1968,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Annuler'),
+                  child: Text(AppLocalizations.of(context).actionCancel),
                 ),
                 ElevatedButton(
                   onPressed: () async {
                     if (selectedStudentId == null || selectedStatus == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
+                        SnackBar(
                           content: Text(
-                              'Veuillez sélectionner un élève et un statut'),
+                              AppLocalizations.of(context).dashSelectStudentAndStatus),
                         ),
                       );
                       return;
@@ -2004,7 +1989,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       final markazId = authService.currentMarkazId ?? '';
                       final lesson = lessonController.text.isNotEmpty
                           ? lessonController.text.trim()
-                          : 'Absence de cours';
+                          : AppLocalizations.of(context).dashNoLessonDefault;
 
                       if (selectedStatus == 'present') {
                         await attendanceProvider.markPresent(
@@ -2034,8 +2019,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Présence enregistrée avec succès!'),
+                          SnackBar(
+                            content: Text(AppLocalizations.of(context).dashAttendanceRecorded),
                             backgroundColor: Colors.green,
                           ),
                         );
@@ -2044,10 +2029,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     } on AttendanceAlreadyRecordedException catch (e) {
                       // H7 : une seule présence par élève et par jour côté
                       // serveur — on propose de corriger l'existante.
+                      if (!context.mounted) return;
                       final lesson = lessonController.text.isNotEmpty
                           ? lessonController.text.trim()
-                          : 'Absence de cours';
-                      if (!context.mounted) return;
+                          : AppLocalizations.of(context).dashNoLessonDefault;
                       final replaced = await _confirmReplaceAttendance(
                         context,
                         e.existing,
@@ -2061,7 +2046,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Erreur: ${e.toString()}'),
+                            content: Text(AppLocalizations.of(context).commonErrorColon(e.toString())),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -2071,7 +2056,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                   ),
-                  child: const Text('Enregistrer'),
+                  child: Text(AppLocalizations.of(context).actionSave),
                 ),
               ],
             );
@@ -2108,23 +2093,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
               .length;
 
           return AlertDialog(
-            title: const Text('Rapport hebdomadaire'),
+            title: Text(AppLocalizations.of(context).dashWeeklyReport),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                      'Semaine du ${startOfWeek.day}/${startOfWeek.month} au ${endOfWeek.day}/${endOfWeek.month}',
+                      AppLocalizations.of(context).dashWeekRange(startOfWeek.day, startOfWeek.month, endOfWeek.day, endOfWeek.month),
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 24),
-                  _buildReportStat('Présents', '$present', Colors.green),
+                  _buildReportStat(AppLocalizations.of(context).dashPresentPlural, '$present', Colors.green),
                   const SizedBox(height: 12),
-                  _buildReportStat('Absents', '$absent', Colors.red),
+                  _buildReportStat(AppLocalizations.of(context).dashAbsentPlural, '$absent', Colors.red),
                   const SizedBox(height: 12),
-                  _buildReportStat('Tardifs', '$late', Colors.orange),
+                  _buildReportStat(AppLocalizations.of(context).dashLatePlural, '$late', Colors.orange),
                   const SizedBox(height: 24),
-                  Text('Total sessions: ${weeklyAttendances.length}',
+                  Text(AppLocalizations.of(context).dashTotalSessionsWeek(weeklyAttendances.length),
                       style: GoogleFonts.poppins(fontSize: 14)),
                 ],
               ),
@@ -2132,7 +2117,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Fermer'),
+                child: Text(AppLocalizations.of(context).actionClose),
               ),
             ],
           );
@@ -2168,26 +2153,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
               .length;
 
           return AlertDialog(
-            title: const Text('Rapport mensuel'),
+            title: Text(AppLocalizations.of(context).dashMonthlyReport),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Mois: ${startOfMonth.month}/${startOfMonth.year}',
+                  Text(AppLocalizations.of(context).dashMonthLine(startOfMonth.month, startOfMonth.year),
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 24),
-                  _buildReportStat('Présents', '$present', Colors.green),
+                  _buildReportStat(AppLocalizations.of(context).dashPresentPlural, '$present', Colors.green),
                   const SizedBox(height: 12),
-                  _buildReportStat('Absents', '$absent', Colors.red),
+                  _buildReportStat(AppLocalizations.of(context).dashAbsentPlural, '$absent', Colors.red),
                   const SizedBox(height: 12),
-                  _buildReportStat('Tardifs', '$late', Colors.orange),
+                  _buildReportStat(AppLocalizations.of(context).dashLatePlural, '$late', Colors.orange),
                   const SizedBox(height: 24),
-                  Text('Total sessions: ${monthlyAttendances.length}',
+                  Text(AppLocalizations.of(context).dashTotalSessionsMonth(monthlyAttendances.length),
                       style: GoogleFonts.poppins(fontSize: 14)),
                   const SizedBox(height: 16),
                   Text(
-                    'Taux de présence: ${monthlyAttendances.isNotEmpty ? ((present / monthlyAttendances.length) * 100).toStringAsFixed(1) : 0}%',
+                    AppLocalizations.of(context).dashAttendanceRateLine(monthlyAttendances.isNotEmpty ? ((present / monthlyAttendances.length) * 100).toStringAsFixed(1) : 0),
                     style: GoogleFonts.poppins(
                         fontSize: 14, fontWeight: FontWeight.w600),
                   ),
@@ -2197,7 +2182,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Fermer'),
+                child: Text(AppLocalizations.of(context).actionClose),
               ),
             ],
           );
@@ -2232,23 +2217,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Présence déjà enregistrée'),
+        title: Text(AppLocalizations.of(context).dashAttendanceAlreadyRecorded),
         content: Text(
-          "Cet élève a déjà une présence aujourd'hui :\n"
-          '• Statut : ${_attendanceStatusLabel(existing.status)}\n'
-          '• Leçon : ${existing.lesson}\n\n'
-          'Une seule présence est conservée par élève et par jour. '
-          'Voulez-vous la remplacer par « ${_attendanceStatusLabel(newStatus)} '
-          '— $newLesson » ?',
+          AppLocalizations.of(context).dashReplaceAttendanceBody(_attendanceStatusLabel(existing.status), existing.lesson, _attendanceStatusLabel(newStatus), newLesson),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
+            child: Text(AppLocalizations.of(context).actionCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Remplacer'),
+            child: Text(AppLocalizations.of(context).actionReplace),
           ),
         ],
       ),
@@ -2263,8 +2243,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Présence remplacée'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).dashAttendanceReplaced),
             backgroundColor: Colors.green,
           ),
         );
@@ -2274,7 +2254,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context).commonErrorColon(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -2301,28 +2281,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
 
           return AlertDialog(
-            title: const Text('Rapport des paiements'),
+            title: Text(AppLocalizations.of(context).dashPaymentReport),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildReportStat('Total payé',
+                  _buildReportStat(AppLocalizations.of(context).statTotalPaid,
                       '${totalPaid.toStringAsFixed(2)} $_currency', Colors.green),
                   const SizedBox(height: 12),
-                  _buildReportStat('Total en attente',
+                  _buildReportStat(AppLocalizations.of(context).dashTotalPending,
                       '${totalUnpaid.toStringAsFixed(2)} $_currency', Colors.orange),
                   const SizedBox(height: 12),
                   _buildReportStat(
-                      'Total général',
+                      AppLocalizations.of(context).dashGrandTotal,
                       '${(totalPaid + totalUnpaid).toStringAsFixed(2)} $_currency',
                       AppColors.primary),
                   const SizedBox(height: 24),
                   Text(
-                      'Nombre de paiements: ${paymentProvider.payments.length}',
+                      AppLocalizations.of(context).dashPaymentsNumber(paymentProvider.payments.length),
                       style: GoogleFonts.poppins(fontSize: 14)),
                   const SizedBox(height: 12),
-                  Text('Élèves actifs: ${studentProvider.students.length}',
+                  Text(AppLocalizations.of(context).dashActiveStudents(studentProvider.students.length),
                       style: GoogleFonts.poppins(fontSize: 14)),
                 ],
               ),
@@ -2330,7 +2310,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Fermer'),
+                child: Text(AppLocalizations.of(context).actionClose),
               ),
             ],
           );
@@ -2363,20 +2343,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
               totalStudents > 0 ? ((paidCount / totalStudents) * 100) : 0.0;
 
           return AlertDialog(
-            title: const Text('Rapport de performance'),
+            title: Text(AppLocalizations.of(context).dashPerformanceReport),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Métriques de gestion:',
+                  Text(AppLocalizations.of(context).dashManagementMetrics,
                       style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
                   _buildPerformanceBar(
-                      'Taux de présence', attendanceRate, Colors.green),
+                      AppLocalizations.of(context).statAttendanceRateFull, attendanceRate, Colors.green),
                   const SizedBox(height: 16),
                   _buildPerformanceBar(
-                      'Taux de paiement', paymentRate, Colors.blue),
+                      AppLocalizations.of(context).statPaymentRateFull, paymentRate, Colors.blue),
                   const SizedBox(height: 24),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -2387,15 +2367,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Résumé:',
+                        Text(AppLocalizations.of(context).dashSummary,
                             style: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
-                        Text('• Total élèves: $totalStudents'),
-                        Text('• Sessions enregistrées: $totalAttendance'),
+                        Text(AppLocalizations.of(context).dashSummaryStudents(totalStudents)),
+                        Text(AppLocalizations.of(context).dashSummarySessions(totalAttendance)),
                         Text(
-                            '• Paiements registrés: ${paymentProvider.payments.length}'),
-                        Text('• Paiements complétés: $paidCount'),
+                            AppLocalizations.of(context).dashSummaryPayments(paymentProvider.payments.length)),
+                        Text(AppLocalizations.of(context).dashSummaryPaid(paidCount)),
                       ],
                     ),
                   ),
@@ -2405,7 +2385,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Fermer'),
+                child: Text(AppLocalizations.of(context).actionClose),
               ),
             ],
           );
@@ -2418,12 +2398,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       dynamic payment, String studentName, dynamic student) {
     final isPaid = payment.status == PaymentStatus.paid;
     final formattedDate = payment.date.toString().split(' ')[0];
-    final studentPhone = student?.parentPhone ?? 'Non disponible';
+    final studentPhone = student?.parentPhone ?? AppLocalizations.of(context).commonNotAvailable;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Détails du paiement'),
+        title: Text(AppLocalizations.of(context).dashPaymentDetails),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -2441,7 +2421,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Élève',
+                      AppLocalizations.of(context).fieldStudent,
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         color: Colors.grey,
@@ -2462,7 +2442,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               // Montant
               _buildPaymentDetailRow(
-                'Montant',
+                AppLocalizations.of(context).fieldAmount,
                 '${payment.amount} $_currency',
                 Colors.green,
               ),
@@ -2470,15 +2450,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               // Statut
               _buildPaymentDetailRow(
-                'Statut',
-                isPaid ? 'Payé' : 'En attente',
+                AppLocalizations.of(context).fieldStatus,
+                isPaid
+                    ? AppLocalizations.of(context).paymentPaid
+                    : AppLocalizations.of(context).paymentPending,
                 isPaid ? Colors.green : Colors.orange,
               ),
               const SizedBox(height: 12),
 
               // Date
               _buildPaymentDetailRow(
-                'Date du paiement',
+                AppLocalizations.of(context).dashPaymentDate,
                 formattedDate,
                 Colors.purple,
               ),
@@ -2486,7 +2468,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               // Téléphone de l'élève/parent
               _buildPaymentDetailRow(
-                'Téléphone du parent',
+                AppLocalizations.of(context).fieldParentPhone,
                 studentPhone,
                 Colors.grey[700]!,
               ),
@@ -2503,7 +2485,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'ID Paiement',
+                      AppLocalizations.of(context).dashPaymentId,
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         color: Colors.grey,
@@ -2536,8 +2518,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   final updated = await paymentProvider.markAsPaid(payment.id);
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Paiement marqué comme payé'),
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context).dashPaymentMarkedPaid),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -2547,7 +2529,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Erreur: ${e.toString()}'),
+                      content: Text(AppLocalizations.of(context).commonErrorColon(e.toString())),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -2556,7 +2538,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
               ),
-              child: const Text('Marquer comme payé'),
+              child: Text(AppLocalizations.of(context).dashMarkAsPaid),
             ),
           // Auparavant, le reçu n'était proposé qu'une seule fois, juste
           // après l'enregistrement du paiement — si on fermait cette
@@ -2569,14 +2551,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _offerPaymentReceipt(payment);
               },
               icon: const Icon(Icons.receipt_long, size: 18),
-              label: const Text('Reçu'),
+              label: Text(AppLocalizations.of(context).dashReceipt),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
               ),
             ),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
+            child: Text(AppLocalizations.of(context).actionClose),
           ),
         ],
       ),
@@ -2585,14 +2567,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _showAttendanceDetails(dynamic attendance, String studentName,
       dynamic student, String statusText, Color statusColor) {
-    final studentPhone = student?.parentPhone ?? 'Non disponible';
+    final studentPhone = student?.parentPhone ?? AppLocalizations.of(context).commonNotAvailable;
     final formattedDate = attendance.date.toString().split(' ')[0];
-    final lesson = attendance.lesson ?? 'Non spécifié';
+    final lesson = attendance.lesson ?? AppLocalizations.of(context).commonNotSpecified;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Détails de la présence'),
+        title: Text(AppLocalizations.of(context).dashAttendanceDetails),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -2610,7 +2592,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Élève',
+                      AppLocalizations.of(context).fieldStudent,
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         color: Colors.grey,
@@ -2631,7 +2613,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               // Leçon/Cours
               _buildAttendanceDetailRow(
-                'Leçon',
+                AppLocalizations.of(context).fieldLesson,
                 lesson,
                 Colors.purple,
               ),
@@ -2639,7 +2621,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               // Statut
               _buildAttendanceDetailRow(
-                'Statut',
+                AppLocalizations.of(context).fieldStatus,
                 statusText,
                 statusColor,
               ),
@@ -2647,7 +2629,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               // Date
               _buildAttendanceDetailRow(
-                'Date',
+                AppLocalizations.of(context).fieldDate,
                 formattedDate,
                 Colors.green,
               ),
@@ -2655,7 +2637,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               // Téléphone du parent
               _buildAttendanceDetailRow(
-                'Téléphone du parent',
+                AppLocalizations.of(context).fieldParentPhone,
                 _formatGuineanPhone(studentPhone),
                 Colors.grey[700]!,
               ),
@@ -2672,7 +2654,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'ID Présence',
+                      AppLocalizations.of(context).dashAttendanceId,
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         color: Colors.grey,
@@ -2695,7 +2677,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
+            child: Text(AppLocalizations.of(context).actionClose),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -2703,7 +2685,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _showEditAttendanceDialog(attendance as Attendance, studentName);
             },
             icon: const Icon(Icons.edit_outlined, size: 18),
-            label: const Text('Modifier'),
+            label: Text(AppLocalizations.of(context).actionEdit),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
           ),
         ],
@@ -2722,7 +2704,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setState) => AlertDialog(
-          title: const Text('Modifier la présence'),
+          title: Text(AppLocalizations.of(context).dashEditAttendance),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -2735,15 +2717,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<AttendanceStatus>(
                   initialValue: selectedStatus,
-                  decoration: const InputDecoration(
-                    labelText: 'Statut',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldStatus,
                     border: OutlineInputBorder(),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: AttendanceStatus.present, child: Text('Présent')),
-                    DropdownMenuItem(value: AttendanceStatus.absent, child: Text('Absent')),
-                    DropdownMenuItem(value: AttendanceStatus.late, child: Text('Tardif')),
-                    DropdownMenuItem(value: AttendanceStatus.justified, child: Text('Absence justifiée')),
+                  items: [
+                    DropdownMenuItem(value: AttendanceStatus.present, child: Text(AppLocalizations.of(context).attendancePresent)),
+                    DropdownMenuItem(value: AttendanceStatus.absent, child: Text(AppLocalizations.of(context).attendanceAbsent)),
+                    DropdownMenuItem(value: AttendanceStatus.late, child: Text(AppLocalizations.of(context).attendanceLate)),
+                    DropdownMenuItem(value: AttendanceStatus.justified, child: Text(AppLocalizations.of(context).attendanceJustified)),
                   ],
                   onChanged: (value) {
                     if (value != null) setState(() => selectedStatus = value);
@@ -2752,8 +2734,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: lessonController,
-                  decoration: const InputDecoration(
-                    labelText: 'Leçon',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldLesson,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -2763,7 +2745,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Annuler'),
+              child: Text(AppLocalizations.of(context).actionCancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -2776,8 +2758,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (dialogContext.mounted) Navigator.pop(dialogContext);
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Présence corrigée'),
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context).dashAttendanceCorrected),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -2785,13 +2767,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 } catch (e) {
                   if (dialogContext.mounted) {
                     ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
+                      SnackBar(content: Text(AppLocalizations.of(dialogContext).commonErrorColon(e)), backgroundColor: Colors.red),
                     );
                   }
                 }
               },
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-              child: const Text('Enregistrer'),
+              child: Text(AppLocalizations.of(context).actionSave),
             ),
           ],
         ),
@@ -2877,7 +2859,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               : 0.0;
 
           return AlertDialog(
-            title: const Text('Profil de l\'élève'),
+            title: Text(AppLocalizations.of(context).dashStudentProfile),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -2896,7 +2878,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Nom de l\'élève',
+                          AppLocalizations.of(context).fieldStudentName,
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             color: Colors.grey,
@@ -2917,7 +2899,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   // Contact
                   Text(
-                    'Contact',
+                    AppLocalizations.of(context).fieldContact,
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -2926,7 +2908,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 8),
                   _buildStudentDetailRow(
-                    'Téléphone',
+                    AppLocalizations.of(context).fieldPhone,
                     _formatGuineanPhone(student.parentPhone),
                     Colors.blue,
                   ),
@@ -2934,7 +2916,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   // Statistiques des paiements
                   Text(
-                    'Paiements',
+                    AppLocalizations.of(context).navPayments,
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -2943,19 +2925,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 8),
                   _buildStudentDetailRow(
-                    'Total payé',
+                    AppLocalizations.of(context).statTotalPaid,
                     '$paidAmount $_currency',
                     Colors.green,
                   ),
                   const SizedBox(height: 8),
                   _buildStudentDetailRow(
-                    'Total en attente',
+                    AppLocalizations.of(context).dashTotalPending,
                     '${totalPayments - paidAmount} $_currency',
                     Colors.orange,
                   ),
                   const SizedBox(height: 8),
                   _buildStudentDetailRow(
-                    'Paiements payés',
+                    AppLocalizations.of(context).dashPaidPayments,
                     '$paidPayments/${studentPayments.length}',
                     Colors.purple,
                   ),
@@ -2963,7 +2945,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   // Statistiques de présence
                   Text(
-                    'Présence',
+                    AppLocalizations.of(context).syncEntityAttendance,
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -2972,7 +2954,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 8),
                   _buildStudentDetailRow(
-                    'Taux de présence',
+                    AppLocalizations.of(context).statAttendanceRateFull,
                     '${attendanceRate.toStringAsFixed(1)}%',
                     attendanceRate >= 80
                         ? Colors.green
@@ -2986,7 +2968,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Expanded(
                         child: _buildAttendanceStatBadge(
-                          'Présent',
+                          AppLocalizations.of(context).attendancePresent,
                           '$presentCount',
                           Colors.green,
                         ),
@@ -2994,7 +2976,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: _buildAttendanceStatBadge(
-                          'Absent',
+                          AppLocalizations.of(context).attendanceAbsent,
                           '$absentCount',
                           Colors.red,
                         ),
@@ -3002,7 +2984,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: _buildAttendanceStatBadge(
-                          'Tardif',
+                          AppLocalizations.of(context).attendanceLate,
                           '$lateCount',
                           Colors.orange,
                         ),
@@ -3022,7 +3004,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'ID Élève',
+                          AppLocalizations.of(context).dashStudentId,
                           style: GoogleFonts.poppins(
                             fontSize: 11,
                             color: Colors.grey,
@@ -3045,7 +3027,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Fermer'),
+                child: Text(AppLocalizations.of(context).actionClose),
               ),
               const SizedBox(width: 8),
               ElevatedButton.icon(
@@ -3054,7 +3036,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _showEditStudentDialog(student);
                 },
                 icon: const Icon(Icons.edit, size: 18),
-                label: const Text('Modifier'),
+                label: Text(AppLocalizations.of(context).actionEdit),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                 ),
@@ -3066,7 +3048,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _showDeleteStudentDialog(student);
                 },
                 icon: const Icon(Icons.delete, size: 18),
-                label: const Text('Supprimer'),
+                label: Text(AppLocalizations.of(context).actionDelete),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                 ),
@@ -3155,16 +3137,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final students = studentProvider.students;
 
           return AlertDialog(
-            title: const Text('Taux de présence par élève'),
+            title: Text(AppLocalizations.of(context).dashAttendanceByStudent),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (students.isEmpty)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.all(16.0),
-                      child: Text('Aucun élève enregistré'),
+                      child: Text(AppLocalizations.of(context).dashNoStudent),
                     )
                   else
                     ...students.map((student) {
@@ -3261,7 +3243,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               const SizedBox(height: 12),
                               // Cette semaine
                               Text(
-                                'Cette semaine (${weekAttendances.length} sessions)',
+                                AppLocalizations.of(context).dashThisWeekSessions(weekAttendances.length),
                                 style: GoogleFonts.poppins(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
@@ -3273,17 +3255,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   _buildAttendanceStatBadge(
-                                    'Présent',
+                                    AppLocalizations.of(context).attendancePresent,
                                     '${weekPresentRate.toStringAsFixed(1)}%',
                                     Colors.green,
                                   ),
                                   _buildAttendanceStatBadge(
-                                    'Absent',
+                                    AppLocalizations.of(context).attendanceAbsent,
                                     '${weekAbsentRate.toStringAsFixed(1)}%',
                                     Colors.red,
                                   ),
                                   _buildAttendanceStatBadge(
-                                    'Tardif',
+                                    AppLocalizations.of(context).attendanceLate,
                                     '${weekLateRate.toStringAsFixed(1)}%',
                                     Colors.orange,
                                   ),
@@ -3292,7 +3274,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               const SizedBox(height: 12),
                               // Ce mois
                               Text(
-                                'Ce mois (${monthAttendances.length} sessions)',
+                                AppLocalizations.of(context).dashThisMonthSessions(monthAttendances.length),
                                 style: GoogleFonts.poppins(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
@@ -3304,17 +3286,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   _buildAttendanceStatBadge(
-                                    'Présent',
+                                    AppLocalizations.of(context).attendancePresent,
                                     '${monthPresentRate.toStringAsFixed(1)}%',
                                     Colors.green,
                                   ),
                                   _buildAttendanceStatBadge(
-                                    'Absent',
+                                    AppLocalizations.of(context).attendanceAbsent,
                                     '${monthAbsentRate.toStringAsFixed(1)}%',
                                     Colors.red,
                                   ),
                                   _buildAttendanceStatBadge(
-                                    'Tardif',
+                                    AppLocalizations.of(context).attendanceLate,
                                     '${monthLateRate.toStringAsFixed(1)}%',
                                     Colors.orange,
                                   ),
@@ -3331,7 +3313,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Fermer'),
+                child: Text(AppLocalizations.of(context).actionClose),
               ),
             ],
           );
@@ -3456,7 +3438,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Groupes',
+                          AppLocalizations.of(context).navGroups,
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -3465,7 +3447,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${classProvider.classes.length} groupes',
+                          AppLocalizations.of(context).dashGroupsCount(classProvider.classes.length),
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -3476,7 +3458,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ElevatedButton.icon(
                       onPressed: _showAddClassDialog,
                       icon: const Icon(Icons.add, size: 18),
-                      label: const Text('Ajouter'),
+                      label: Text(AppLocalizations.of(context).actionAdd),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -3527,7 +3509,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Aucun groupe',
+            AppLocalizations.of(context).dashNoGroup,
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -3536,7 +3518,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Commencez par créer votre premier groupe',
+            AppLocalizations.of(context).dashCreateFirstGroup,
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: Colors.grey[500],
@@ -3546,7 +3528,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ElevatedButton.icon(
             onPressed: _showAddClassDialog,
             icon: const Icon(Icons.add),
-            label: const Text('Créer un groupe'),
+            label: Text(AppLocalizations.of(context).dashCreateGroup),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -3571,13 +3553,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     
     if (classModel.isFull) {
       statusColor = Colors.red;
-      statusText = 'Complet';
+      statusText = AppLocalizations.of(context).groupFull;
     } else if (occupancyRate > 75) {
       statusColor = Colors.orange;
-      statusText = 'Presque complet';
+      statusText = AppLocalizations.of(context).groupAlmostFull;
     } else {
       statusColor = Colors.green;
-      statusText = 'Disponible';
+      statusText = AppLocalizations.of(context).groupAvailable;
     }
 
     return Card(
@@ -3664,36 +3646,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       }
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'add_student',
                         child: ListTile(
                           leading: Icon(Icons.person_add, size: 20),
-                          title: Text('Ajouter un élève'),
+                          title: Text(AppLocalizations.of(context).dashAddStudentToGroup),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
                       if (classModel.studentIds.isNotEmpty)
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'remove_student',
                           child: ListTile(
                             leading: Icon(Icons.person_remove, size: 20, color: Colors.orange),
-                            title: Text('Retirer un élève'),
+                            title: Text(AppLocalizations.of(context).dashRemoveStudentFromGroup),
                             contentPadding: EdgeInsets.zero,
                           ),
                         ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'edit',
                         child: ListTile(
                           leading: Icon(Icons.edit, size: 20),
-                          title: Text('Modifier le groupe'),
+                          title: Text(AppLocalizations.of(context).dashEditGroup),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
                         child: ListTile(
                           leading: Icon(Icons.delete, size: 20, color: Colors.red),
-                          title: Text('Supprimer le groupe'),
+                          title: Text(AppLocalizations.of(context).dashDeleteGroup),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
@@ -3779,7 +3761,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Occupation',
+                        AppLocalizations.of(context).dashOccupancy,
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -3858,6 +3840,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       amountPaid: payment.amount,
       month: '${_moisFr[payment.date.month - 1]} ${payment.date.year}',
       paymentMethod: 'Espèces',
+      // Contenu du reçu PDF : reste en français (documents V1, CDC §21).
       status: 'Payé',
       recordedByName: teacherName,
     );
@@ -3867,12 +3850,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Reçu de paiement'),
-        content: const Text('Le reçu a été généré. Que voulez-vous en faire ?'),
+        title: Text(AppLocalizations.of(context).dashReceiptTitle),
+        content: Text(AppLocalizations.of(context).dashReceiptGenerated),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Plus tard'),
+            child: Text(AppLocalizations.of(context).actionLater),
           ),
           TextButton(
             onPressed: () async {
@@ -3880,7 +3863,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final bytes = await DocumentService().generatePaymentReceipt(metadata);
               await DocumentService().sharePdf(bytes, 'recu_${payment.receiptNumber ?? payment.id}.pdf');
             },
-            child: const Text('Partager'),
+            child: Text(AppLocalizations.of(context).actionShare),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -3889,7 +3872,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               await DocumentService().previewPdf(bytes);
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text('Aperçu / Imprimer'),
+            child: Text(AppLocalizations.of(context).actionPreviewPrint),
           ),
         ],
       ),
@@ -3905,7 +3888,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final students = context.read<StudentProvider>().students;
     if (students.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ajoutez d\'abord un élève')),
+        SnackBar(content: Text(AppLocalizations.of(context).commonAddStudentFirst)),
       );
       return;
     }
@@ -3953,11 +3936,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const AlertDialog(
+      builder: (_) => AlertDialog(
         content: Row(children: [
           CircularProgressIndicator(),
           SizedBox(width: 16),
-          Expanded(child: Text('Génération du rapport...')),
+          Expanded(child: Text(AppLocalizations.of(context).dashGeneratingReport)),
         ]),
       ),
     );
@@ -3976,7 +3959,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final entries = attendances
           .map((a) => DailyEntry(
                 date: a.date,
-                status: _attendanceStatusLabel(a.status),
+                status: _pdfAttendanceStatusLabel(a.status),
                 lesson: a.lesson,
                 observation: null,
               ))
@@ -4004,7 +3987,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors de la génération : $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context).dashGenerationError(e)), backgroundColor: Colors.red),
       );
     }
   }
@@ -4019,11 +4002,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const AlertDialog(
+      builder: (_) => AlertDialog(
         content: Row(children: [
           CircularProgressIndicator(),
           SizedBox(width: 16),
-          Expanded(child: Text('Génération du rapport...')),
+          Expanded(child: Text(AppLocalizations.of(context).dashGeneratingReport)),
         ]),
       ),
     );
@@ -4050,6 +4033,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           .map((p) => MonthlyPaymentEntry(
                 date: p.date,
                 amount: p.amount,
+                // Contenu du rapport PDF : reste en français (CDC §21).
                 status: p.status == PaymentStatus.paid ? 'Payé' : 'Non payé',
               ))
           .toList();
@@ -4078,12 +4062,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors de la génération : $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context).dashGenerationError(e)), backgroundColor: Colors.red),
       );
     }
   }
 
-  String _attendanceStatusLabel(AttendanceStatus status) {
+  /// Libellé d'un statut dans les documents PDF — restent en français
+  /// (documents de la V1, CDC §7.2/§21), quelle que soit la langue de l'app.
+  String _pdfAttendanceStatusLabel(AttendanceStatus status) {
     switch (status) {
       case AttendanceStatus.present:
         return 'Présent';
@@ -4093,6 +4079,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return 'Retard';
       case AttendanceStatus.justified:
         return 'Absence justifiée';
+    }
+  }
+
+  /// Libellé d'un statut à l'écran (traduit — doc/audit.md K8).
+  String _attendanceStatusLabel(AttendanceStatus status) {
+    switch (status) {
+      case AttendanceStatus.present:
+        return AppLocalizations.of(context).attendancePresent;
+      case AttendanceStatus.absent:
+        return AppLocalizations.of(context).attendanceAbsent;
+      case AttendanceStatus.late:
+        return AppLocalizations.of(context).attendanceLate;
+      case AttendanceStatus.justified:
+        return AppLocalizations.of(context).attendanceJustified;
     }
   }
 
@@ -4121,16 +4121,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Rapport généré'),
-        content: const Text('Que voulez-vous faire de ce rapport ?'),
+        title: Text(AppLocalizations.of(context).dashReportGenerated),
+        content: Text(AppLocalizations.of(context).dashReportWhatToDo),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Plus tard')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(AppLocalizations.of(context).actionLater)),
           TextButton(
             onPressed: () async {
               Navigator.pop(dialogContext);
               await DocumentService().sharePdf(bytes, fileName);
             },
-            child: const Text('Partager'),
+            child: Text(AppLocalizations.of(context).actionShare),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -4138,7 +4138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               await DocumentService().previewPdf(bytes);
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text('Aperçu / Imprimer'),
+            child: Text(AppLocalizations.of(context).actionPreviewPrint),
           ),
         ],
       ),
@@ -4196,17 +4196,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Déconnexion'),
-        content: const Text('Êtes-vous sûr de vouloir vous déconnecter?'),
+        title: Text(AppLocalizations.of(context).navLogout),
+        content: Text(AppLocalizations.of(context).dashLogoutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(AppLocalizations.of(context).actionCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child:
-                const Text('Déconnecter', style: TextStyle(color: Colors.red)),
+                Text(AppLocalizations.of(context).actionLogout, style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -4222,7 +4222,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur déconnexion: $e')),
+            SnackBar(content: Text(AppLocalizations.of(context).dashLogoutError(e))),
           );
         }
       }
@@ -4241,50 +4241,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Ajouter un groupe'),
+          title: Text(AppLocalizations.of(context).dashAddGroup),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nom du groupe',
-                    hintText: 'Ex: Groupe Nouroul Bayan',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldGroupName,
+                    hintText: AppLocalizations.of(context).dashGroupNameHint,
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: levelController,
-                  decoration: const InputDecoration(
-                    labelText: 'Niveau du groupe',
-                    hintText: 'Ex: Djouzou Amma, Nouroul Bayan, etc.',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldGroupLevel,
+                    hintText: AppLocalizations.of(context).dashGroupLevelHint,
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
-                    hintText: 'Description du groupe',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldDescription,
+                    hintText: AppLocalizations.of(context).fieldGroupDescription,
                   ),
                   maxLines: 3,
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: teacherController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nom de l\'enseignant',
-                    hintText: 'Ex: Cheikh Ibrahim',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldTeacherName,
+                    hintText: AppLocalizations.of(context).dashTeacherHint,
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: maxStudentsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre maximum d\'élèves',
-                    hintText: 'Ex: 30 (modifiable, jusqu\'à 500)',
-                    helperText: 'Vous pouvez augmenter ce nombre à tout moment.',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldMaxStudents,
+                    hintText: AppLocalizations.of(context).dashMaxStudentsHint,
+                    helperText: AppLocalizations.of(context).dashMaxStudentsHelp,
                   ),
                   keyboardType: TextInputType.number,
                 ),
@@ -4294,7 +4294,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler'),
+              child: Text(AppLocalizations.of(context).actionCancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -4311,8 +4311,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (context.mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Classe ajoutée avec succès!'),
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context).dashGroupAdded),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -4321,7 +4321,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Erreur: $e'),
+                        content: Text(AppLocalizations.of(context).commonErrorColon(e)),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -4331,7 +4331,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
               ),
-              child: const Text('Ajouter'),
+              child: Text(AppLocalizations.of(context).actionAdd),
             ),
           ],
         ),
@@ -4350,46 +4350,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text('Modifier: ${classModel.name}'),
+          title: Text(AppLocalizations.of(context).dashEditNamed(classModel.name)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nom du groupe',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldGroupName,
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: levelController,
-                  decoration: const InputDecoration(
-                    labelText: 'Niveau du groupe',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldGroupLevel,
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldDescription,
                   ),
                   maxLines: 3,
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: teacherController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nom de l\'enseignant',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldTeacherName,
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: maxStudentsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre maximum d\'élèves',
-                    hintText: 'Ex: 30 (modifiable, jusqu\'à 500)',
-                    helperText: 'Vous pouvez augmenter ce nombre à tout moment.',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldMaxStudents,
+                    hintText: AppLocalizations.of(context).dashMaxStudentsHint,
+                    helperText: AppLocalizations.of(context).dashMaxStudentsHelp,
                   ),
                   keyboardType: TextInputType.number,
                 ),
@@ -4399,7 +4399,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler'),
+              child: Text(AppLocalizations.of(context).actionCancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -4417,8 +4417,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (context.mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Classe modifiée avec succès!'),
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context).dashGroupUpdated),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -4427,7 +4427,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Erreur: $e'),
+                        content: Text(AppLocalizations.of(context).commonErrorColon(e)),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -4437,7 +4437,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
               ),
-              child: const Text('Modifier'),
+              child: Text(AppLocalizations.of(context).actionEdit),
             ),
           ],
         ),
@@ -4449,12 +4449,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Supprimer: ${classModel.name}'),
-        content: Text('Êtes-vous sûr de vouloir supprimer ce groupe? Cette action est irréversible et retirera tous les élèves du groupe.'),
+        title: Text(AppLocalizations.of(context).dashDeleteNamed(classModel.name)),
+        content: Text(AppLocalizations.of(context).dashDeleteGroupConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
+            child: Text(AppLocalizations.of(context).actionCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -4464,8 +4464,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Classe supprimée avec succès!'),
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context).dashGroupDeleted),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -4475,7 +4475,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Erreur: $e'),
+                      content: Text(AppLocalizations.of(context).commonErrorColon(e)),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -4485,7 +4485,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
             ),
-            child: const Text('Supprimer'),
+            child: Text(AppLocalizations.of(context).actionDelete),
           ),
         ],
       ),
@@ -4515,12 +4515,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Ajouter un élève'),
-          content: const Text('Tous les élèves sont déjà dans ce groupe.'),
+          title: Text(AppLocalizations.of(context).dashAddStudentToGroup),
+          content: Text(AppLocalizations.of(context).dashAllStudentsInGroup),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Fermer'),
+              child: Text(AppLocalizations.of(context).actionClose),
             ),
           ],
         ),
@@ -4533,17 +4533,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Ajouter un élève à ${groupModel.name}'),
+        title: Text(AppLocalizations.of(context).dashAddStudentTo(groupModel.name)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Sélectionnez un élève à ajouter:'),
+            Text(AppLocalizations.of(context).dashSelectStudentToAdd),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               initialValue: selectedStudentId,
-              decoration: const InputDecoration(
-                labelText: 'Élève',
-                hintText: 'Choisissez un élève',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).fieldStudent,
+                hintText: AppLocalizations.of(context).dashChooseStudent,
               ),
               items: availableStudents.map((student) {
                 return DropdownMenuItem(
@@ -4560,7 +4560,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
+            child: Text(AppLocalizations.of(context).actionCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -4571,8 +4571,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (context.mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Élève ajouté au groupe avec succès!'),
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context).dashStudentAddedToGroup),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -4581,7 +4581,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Erreur: $e'),
+                        content: Text(AppLocalizations.of(context).commonErrorColon(e)),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -4592,7 +4592,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
             ),
-            child: const Text('Ajouter'),
+            child: Text(AppLocalizations.of(context).actionAdd),
           ),
         ],
       ),
@@ -4613,12 +4613,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Retirer un élève'),
-          content: const Text('Ce groupe ne contient aucun élève.'),
+          title: Text(AppLocalizations.of(context).dashRemoveStudentFromGroup),
+          content: Text(AppLocalizations.of(context).dashGroupEmpty),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Fermer'),
+              child: Text(AppLocalizations.of(context).actionClose),
             ),
           ],
         ),
@@ -4631,17 +4631,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Retirer un élève de ${groupModel.name}'),
+        title: Text(AppLocalizations.of(context).dashRemoveStudentFrom(groupModel.name)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Sélectionnez un élève à retirer:'),
+            Text(AppLocalizations.of(context).dashSelectStudentToRemove),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               initialValue: selectedStudentId,
-              decoration: const InputDecoration(
-                labelText: 'Élève',
-                hintText: 'Choisissez un élève',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).fieldStudent,
+                hintText: AppLocalizations.of(context).dashChooseStudent,
               ),
               items: groupStudents.map((student) {
                 return DropdownMenuItem(
@@ -4658,7 +4658,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
+            child: Text(AppLocalizations.of(context).actionCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -4669,8 +4669,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (context.mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Élève retiré du groupe avec succès!'),
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context).dashStudentRemovedFromGroup),
                         backgroundColor: Colors.orange,
                       ),
                     );
@@ -4679,7 +4679,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Erreur: $e'),
+                        content: Text(AppLocalizations.of(context).commonErrorColon(e)),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -4690,7 +4690,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
             ),
-            child: const Text('Retirer'),
+            child: Text(AppLocalizations.of(context).actionRemove),
           ),
         ],
       ),
@@ -4726,19 +4726,22 @@ class _StudentReportPickerDialog extends StatefulWidget {
 }
 
 class _StudentReportPickerDialogState extends State<_StudentReportPickerDialog> {
+  /// Textes traduits (doc/audit.md K8).
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   late String _studentId = widget.students.first.id;
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Générer un rapport'),
+      title: Text(_l10n.dashGenerateReport),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DropdownButtonFormField<String>(
             initialValue: _studentId,
-            decoration: const InputDecoration(labelText: 'Élève'),
+            decoration: InputDecoration(labelText: _l10n.fieldStudent),
             items: widget.students
                 .map((s) => DropdownMenuItem(value: s.id, child: Text(s.name)))
                 .toList(),
@@ -4746,21 +4749,21 @@ class _StudentReportPickerDialogState extends State<_StudentReportPickerDialog> 
           ),
           const SizedBox(height: 16),
           Text(
-            'Choisissez la période du rapport :',
+            _l10n.dashChooseReportPeriod,
             style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textMedium),
           ),
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(_l10n.actionCancel)),
         TextButton(
           onPressed: () => widget.onWeekly(widget.students.firstWhere((s) => s.id == _studentId)),
-          child: const Text('Hebdomadaire'),
+          child: Text(_l10n.dashWeekly),
         ),
         ElevatedButton(
           onPressed: () => widget.onMonthly(widget.students.firstWhere((s) => s.id == _studentId)),
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-          child: const Text('Mensuel'),
+          child: Text(_l10n.dashMonthly),
         ),
       ],
     );

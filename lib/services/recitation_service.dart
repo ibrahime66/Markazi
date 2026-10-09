@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../models/recitation.dart';
 import '../repositories/recitation_repository.dart';
 import 'auth_service.dart';
+import '../utils/app_exception.dart';
 
 /// Service métier pour le suivi des récitations coraniques (CDC section 8.5).
 class RecitationService {
@@ -21,12 +22,12 @@ class RecitationService {
     String? note,
   }) async {
     if (surah.trim().isEmpty) {
-      throw Exception('La sourate est obligatoire');
+      throw AppException((l) => l.recitationSurahRequired);
     }
 
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     const uuid = Uuid();
@@ -57,10 +58,10 @@ class RecitationService {
   }) async {
     final existing = _repository.getRecitationById(recitationId);
     if (existing == null) {
-      throw Exception('Récitation non trouvée');
+      throw AppException((l) => l.errRecitationNotFound);
     }
     if (!_authService.hasAccessToMarkaz(existing.markazId)) {
-      throw Exception('Accès refusé à cette récitation');
+      throw AppException((l) => l.errRecitationAccessDenied);
     }
 
     final updated = existing.copyWith(
@@ -80,10 +81,10 @@ class RecitationService {
   Future<void> deleteRecitation(String recitationId) async {
     final existing = _repository.getRecitationById(recitationId);
     if (existing == null) {
-      throw Exception('Récitation non trouvée');
+      throw AppException((l) => l.errRecitationNotFound);
     }
     if (!_authService.hasAccessToMarkaz(existing.markazId)) {
-      throw Exception('Accès refusé à cette récitation');
+      throw AppException((l) => l.errRecitationAccessDenied);
     }
     await _repository.removeRecitation(recitationId);
   }
@@ -91,7 +92,7 @@ class RecitationService {
   List<Recitation> getRecitationsForCurrentMarkaz() {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
     return _repository.getRecitationsByMarkaz(markazId);
   }

@@ -4,6 +4,7 @@ import '../models/student.dart';
 import '../repositories/student_repository.dart';
 import 'auth_service.dart';
 import 'class_service.dart';
+import '../utils/app_exception.dart';
 
 /// Service métier pour la gestion des élèves
 /// Centralise la logique métier et les validations
@@ -22,17 +23,16 @@ class StudentService {
   }) async {
     // Validation du nom
     if (name.isEmpty) {
-      throw Exception('Le nom de l\'élève est obligatoire');
+      throw AppException((l) => l.errStudentNameRequired);
     }
 
     if (name.length < 3) {
-      throw Exception('Le nom doit contenir au moins 3 caractères');
+      throw AppException((l) => l.errNameMinLength);
     }
 
     // Validation du numéro parent
     if (!_isValidPhoneNumber(parentPhone)) {
-      throw Exception(
-        'Numéro de téléphone invalide',
+      throw AppException((l) => l.commonInvalidPhone,
       );
     }
 
@@ -40,12 +40,12 @@ class StudentService {
     final finalMarkazId = markazId ?? _authService.currentMarkazId;
 
     if (finalMarkazId == null) {
-      throw Exception('Markaz ID obligatoire et pas d\'utilisateur connecté');
+      throw AppException((l) => l.errMarkazRequired);
     }
 
     // Vérifier l'accès multi-markaz
     if (!_authService.hasAccessToMarkaz(finalMarkazId)) {
-      throw Exception('Accès refusé à cette Markaz');
+      throw AppException((l) => l.errMarkazAccessDenied);
     }
 
     // Objet local temporaire : son id sera remplacé par celui attribué par le
@@ -72,22 +72,21 @@ class StudentService {
     // Récupérer l'élève existant
     final existingStudent = _repository.getStudentById(studentId);
     if (existingStudent == null) {
-      throw Exception('Élève non trouvé');
+      throw AppException((l) => l.errStudentNotFound);
     }
 
     // Vérifier l'accès multi-markaz
     if (!_authService.hasAccessToMarkaz(existingStudent.markazId)) {
-      throw Exception('Accès refusé à cette Markaz');
+      throw AppException((l) => l.errMarkazAccessDenied);
     }
 
     // Validations
     if (name.isEmpty || name.length < 3) {
-      throw Exception('Nom invalide (3+ caractères)');
+      throw AppException((l) => l.errNameInvalid);
     }
 
     if (!_isValidPhoneNumber(parentPhone)) {
-      throw Exception(
-          'Numéro de téléphone invalide');
+      throw AppException((l) => l.commonInvalidPhone);
     }
 
     // Mettre à jour
@@ -105,12 +104,12 @@ class StudentService {
   Future<void> deleteStudent(String studentId) async {
     final student = _repository.getStudentById(studentId);
     if (student == null) {
-      throw Exception('Élève non trouvé');
+      throw AppException((l) => l.errStudentNotFound);
     }
 
     // Vérifier l'accès multi-markaz
     if (!_authService.hasAccessToMarkaz(student.markazId)) {
-      throw Exception('Accès refusé à cette Markaz');
+      throw AppException((l) => l.errMarkazAccessDenied);
     }
 
     // Retirer l'élève de tous les groupes où il était inscrit
@@ -136,11 +135,11 @@ class StudentService {
   Future<Student> setGuardian(String studentId, String? guardianId) async {
     final existingStudent = _repository.getStudentById(studentId);
     if (existingStudent == null) {
-      throw Exception('Élève non trouvé');
+      throw AppException((l) => l.errStudentNotFound);
     }
 
     if (!_authService.hasAccessToMarkaz(existingStudent.markazId)) {
-      throw Exception('Accès refusé à cette Markaz');
+      throw AppException((l) => l.errMarkazAccessDenied);
     }
 
     return await _repository.setGuardian(studentId, guardianId);
@@ -150,7 +149,7 @@ class StudentService {
   List<Student> getStudentsForCurrentMarkaz() {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
     return _repository.getStudentsByMarkaz(markazId);
   }
@@ -159,7 +158,7 @@ class StudentService {
   Student? getStudentById(String studentId) {
     final student = _repository.getStudentById(studentId);
     if (student != null && !_authService.hasAccessToMarkaz(student.markazId)) {
-      throw Exception('Accès refusé à cet élève');
+      throw AppException((l) => l.errStudentAccessDenied);
     }
     return student;
   }
@@ -168,7 +167,7 @@ class StudentService {
   Map<String, dynamic> getStudentStatistics() {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     final students = _repository.getStudentsByMarkaz(markazId);

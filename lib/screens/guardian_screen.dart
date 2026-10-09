@@ -343,7 +343,7 @@ class _GuardianFormDialogState extends State<_GuardianFormDialog> {
       ),
       actions: [
         TextButton(onPressed: _isSaving ? null : () => Navigator.pop(context), child: Text(_l10n.actionCancel)),
-        TextButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? 'Enregistrement...' : _l10n.actionSave)),
+        TextButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? _l10n.actionSaving : _l10n.actionSave)),
       ],
     );
   }

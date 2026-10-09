@@ -187,7 +187,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return [
       _field(_emailController, _l10n.fieldEmail, _l10n.authEmailHint, Icons.email_outlined),
       const SizedBox(height: 32),
-      _submitButton(_isLoading ? 'Envoi...' : _l10n.forgotSendCode, _requestCode),
+      _submitButton(_isLoading ? _l10n.forgotSending : _l10n.forgotSendCode, _requestCode),
     ];
   }
 
@@ -199,7 +199,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       const SizedBox(height: 16),
       _field(_confirmController, _l10n.forgotConfirmPassword, '', Icons.lock_outline, obscure: true),
       const SizedBox(height: 24),
-      _submitButton(_isLoading ? 'Réinitialisation...' : _l10n.forgotResetButton, _resetPassword),
+      _submitButton(_isLoading ? _l10n.forgotResetting : _l10n.forgotResetButton, _resetPassword),
       const SizedBox(height: 12),
       Center(
         child: TextButton(

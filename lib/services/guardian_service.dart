@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../models/guardian.dart';
 import '../repositories/guardian_repository.dart';
 import 'auth_service.dart';
+import '../utils/app_exception.dart';
 
 /// Service métier pour la gestion des tuteurs/parents (CDC section 8.3).
 class GuardianService {
@@ -18,15 +19,15 @@ class GuardianService {
     String? address,
   }) async {
     if (name.trim().isEmpty) {
-      throw Exception('Le nom du tuteur est obligatoire');
+      throw AppException((l) => l.errGuardianNameRequired);
     }
     if (phone.trim().isEmpty) {
-      throw Exception('Le téléphone du tuteur est obligatoire');
+      throw AppException((l) => l.errGuardianPhoneRequired);
     }
 
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     const uuid = Uuid();
@@ -51,16 +52,16 @@ class GuardianService {
   }) async {
     final existing = _repository.getGuardianById(guardianId);
     if (existing == null) {
-      throw Exception('Tuteur non trouvé');
+      throw AppException((l) => l.errGuardianNotFound);
     }
     if (!_authService.hasAccessToMarkaz(existing.markazId)) {
-      throw Exception('Accès refusé à ce tuteur');
+      throw AppException((l) => l.errGuardianAccessDenied);
     }
     if (name.trim().isEmpty) {
-      throw Exception('Le nom du tuteur est obligatoire');
+      throw AppException((l) => l.errGuardianNameRequired);
     }
     if (phone.trim().isEmpty) {
-      throw Exception('Le téléphone du tuteur est obligatoire');
+      throw AppException((l) => l.errGuardianPhoneRequired);
     }
 
     final updated = existing.copyWith(
@@ -77,10 +78,10 @@ class GuardianService {
   Future<void> deleteGuardian(String guardianId) async {
     final existing = _repository.getGuardianById(guardianId);
     if (existing == null) {
-      throw Exception('Tuteur non trouvé');
+      throw AppException((l) => l.errGuardianNotFound);
     }
     if (!_authService.hasAccessToMarkaz(existing.markazId)) {
-      throw Exception('Accès refusé à ce tuteur');
+      throw AppException((l) => l.errGuardianAccessDenied);
     }
     await _repository.removeGuardian(guardianId);
   }
@@ -88,7 +89,7 @@ class GuardianService {
   List<Guardian> getGuardiansForCurrentMarkaz() {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
     return _repository.getGuardiansByMarkaz(markazId);
   }

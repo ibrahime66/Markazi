@@ -4,6 +4,7 @@ import '../repositories/class_repository.dart';
 import 'auth_service.dart';
 import 'student_service.dart';
 import 'package:uuid/uuid.dart';
+import '../utils/app_exception.dart';
 
 /// Service pour la gestion des classes
 /// Encapsule la logique métier pour les classes
@@ -26,30 +27,30 @@ class ClassService {
   }) async {
     // Validation des entrées
     if (name.trim().isEmpty) {
-      throw Exception('Le nom de la classe est obligatoire');
+      throw AppException((l) => l.errGroupNameRequired);
     }
 
     if (level.trim().isEmpty) {
-      throw Exception('Le niveau de la classe est obligatoire');
+      throw AppException((l) => l.errGroupLevelRequired);
     }
 
     if (teacherName.trim().isEmpty) {
-      throw Exception('Le nom de l\'enseignant est obligatoire');
+      throw AppException((l) => l.errTeacherNameRequired);
     }
 
-    if (maxStudents < 1 || maxStudents > 50) {
-      throw Exception('Le nombre maximum d\'élèves doit être entre 1 et 50');
+    if (maxStudents < 1 || maxStudents > 500) {
+      throw AppException((l) => l.errMaxStudentsRange);
     }
 
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     // Vérifier si une classe avec le même nom existe déjà
     final existingClasses = _repository.getClassesByMarkaz(markazId);
     if (existingClasses.any((c) => c.name.toLowerCase() == name.toLowerCase())) {
-      throw Exception('Un groupe avec ce nom existe déjà');
+      throw AppException((l) => l.errGroupNameExists);
     }
 
     // Créer la nouvelle classe
@@ -85,12 +86,12 @@ class ClassService {
   }) async {
     final existingClass = _repository.getClassById(classId);
     if (existingClass == null) {
-      throw Exception('Groupe non trouvé');
+      throw AppException((l) => l.errGroupNotFound);
     }
 
     // Vérifier l'accès à cette classe
     if (!_authService.hasAccessToMarkaz(existingClass.markazId)) {
-      throw Exception('Accès refusé à ce groupe');
+      throw AppException((l) => l.errGroupAccessDenied);
     }
 
     // Validation si le nom est modifié
@@ -101,19 +102,19 @@ class ClassService {
         if (existingClasses.any((c) =>
             c.id != classId &&
             c.name.toLowerCase() == name.toLowerCase())) {
-          throw Exception('Un groupe avec ce nom existe déjà');
+          throw AppException((l) => l.errGroupNameExists);
         }
       }
     }
 
     // Validation du nombre maximum d'élèves
-    if (maxStudents != null && (maxStudents < 1 || maxStudents > 50)) {
-      throw Exception('Le nombre maximum d\'élèves doit être entre 1 et 50');
+    if (maxStudents != null && (maxStudents < 1 || maxStudents > 500)) {
+      throw AppException((l) => l.errMaxStudentsRange);
     }
 
     // Vérifier qu'on ne réduit pas le nombre de places en dessous du nombre actuel d'élèves
     if (maxStudents != null && maxStudents < existingClass.currentStudentCount) {
-      throw Exception('Impossible de réduire le nombre de places en dessous du nombre actuel d\'élèves (${existingClass.currentStudentCount})');
+      throw AppException((l) => l.errCapacityBelowCount(existingClass.currentStudentCount));
     }
 
     final updatedClass = existingClass.copyWith(
@@ -135,12 +136,12 @@ class ClassService {
   Future<void> deleteClass(String classId) async {
     final existingClass = _repository.getClassById(classId);
     if (existingClass == null) {
-      throw Exception('Groupe non trouvé');
+      throw AppException((l) => l.errGroupNotFound);
     }
 
     // Vérifier l'accès à cette classe
     if (!_authService.hasAccessToMarkaz(existingClass.markazId)) {
-      throw Exception('Accès refusé à ce groupe');
+      throw AppException((l) => l.errGroupAccessDenied);
     }
 
     // Vérifier que le groupe n'a pas d'élèves réels
@@ -155,7 +156,7 @@ class ClassService {
             .length;
             
         if (realStudentCount > 0) {
-          throw Exception('Impossible de supprimer un groupe contenant des élèves');
+          throw AppException((l) => l.errGroupNotEmpty);
         }
         // Si realStudentCount == 0, on peut supprimer même si studentIds n'est pas vide
       } catch (e) {
@@ -172,20 +173,20 @@ class ClassService {
   Future<void> addStudentToClass(String classId, String studentId) async {
     final existingClass = _repository.getClassById(classId);
     if (existingClass == null) {
-      throw Exception('Groupe non trouvé');
+      throw AppException((l) => l.errGroupNotFound);
     }
 
     // Vérifier l'accès à cette classe
     if (!_authService.hasAccessToMarkaz(existingClass.markazId)) {
-      throw Exception('Accès refusé à ce groupe');
+      throw AppException((l) => l.errGroupAccessDenied);
     }
 
     if (existingClass.isFull) {
-      throw Exception('Le groupe est déjà plein (${existingClass.maxStudents} élèves)');
+      throw AppException((l) => l.errGroupFull(existingClass.maxStudents));
     }
 
     if (existingClass.studentIds.contains(studentId)) {
-      throw Exception('L\'élève est déjà dans ce groupe');
+      throw AppException((l) => l.errStudentAlreadyInGroup);
     }
 
     await _repository.addStudentToClass(classId, studentId);
@@ -195,16 +196,16 @@ class ClassService {
   Future<void> removeStudentFromClass(String classId, String studentId) async {
     final existingClass = _repository.getClassById(classId);
     if (existingClass == null) {
-      throw Exception('Groupe non trouvé');
+      throw AppException((l) => l.errGroupNotFound);
     }
 
     // Vérifier l'accès à cette classe
     if (!_authService.hasAccessToMarkaz(existingClass.markazId)) {
-      throw Exception('Accès refusé à ce groupe');
+      throw AppException((l) => l.errGroupAccessDenied);
     }
 
     if (!existingClass.studentIds.contains(studentId)) {
-      throw Exception('L\'élève n\'est pas dans ce groupe');
+      throw AppException((l) => l.errStudentNotInGroup);
     }
 
     await _repository.removeStudentFromClass(classId, studentId);
@@ -217,7 +218,7 @@ class ClassService {
 
     // Vérifier l'accès
     if (!_authService.hasAccessToMarkaz(classModel.markazId)) {
-      throw Exception('Accès refusé à ce groupe');
+      throw AppException((l) => l.errGroupAccessDenied);
     }
 
     return classModel;
@@ -227,7 +228,7 @@ class ClassService {
   List<ClassModel> getAllClasses() {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     final classes = _repository.getClassesByMarkaz(markazId);
@@ -240,7 +241,7 @@ class ClassService {
   List<ClassModel> getActiveClasses() {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     final classes = _repository.getActiveClassesByMarkaz(markazId);
@@ -253,7 +254,7 @@ class ClassService {
   List<ClassModel> getClassesByLevel(String level) {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     return _repository.getClassesByLevel(markazId, level);
@@ -263,7 +264,7 @@ class ClassService {
   List<ClassModel> getAvailableClasses() {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     return _repository.getAvailableClasses(markazId);
@@ -273,7 +274,7 @@ class ClassService {
   Map<String, dynamic> getClassStatistics() {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     return _repository.getClassStatistics(markazId);

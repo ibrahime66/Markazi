@@ -1007,4 +1007,732 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get featCtaButton => 'Créer mon compte';
+
+  @override
+  String get dashUserFallback => 'Utilisateur';
+
+  @override
+  String dashWelcome(Object userName) {
+    return 'Bienvenue, $userName';
+  }
+
+  @override
+  String get dashGeneralStats => 'Statistiques générales';
+
+  @override
+  String get dashQuickActions => 'Actions rapides';
+
+  @override
+  String get dashMyGroups => 'Mes groupes';
+
+  @override
+  String get dashRecentPayments => 'Paiements récents';
+
+  @override
+  String get dashSeeAll => 'Tout voir';
+
+  @override
+  String get dashNoGroupYet => 'Aucun groupe créé pour l\'instant';
+
+  @override
+  String dashActiveGroups(Object activeCount) {
+    return '$activeCount groupe(s) actif(s)';
+  }
+
+  @override
+  String dashSeatsOccupied(Object occupied, Object capacity) {
+    return '$occupied / $capacity places occupées';
+  }
+
+  @override
+  String get dashNoPaymentYet => 'Aucun paiement enregistré pour l\'instant';
+
+  @override
+  String dashStudentsCount(Object studentsCount) {
+    return '$studentsCount élève(s)';
+  }
+
+  @override
+  String get dashNoStudent => 'Aucun élève enregistré';
+
+  @override
+  String dashPhoneShort(Object parentPhone) {
+    return 'Tél: $parentPhone';
+  }
+
+  @override
+  String get dashEditStudent => 'Modifier l\'élève';
+
+  @override
+  String get dashDeleteStudent => 'Supprimer l\'élève';
+
+  @override
+  String dashPaymentsCount(Object validPaymentsCount) {
+    return '$validPaymentsCount paiement(s)';
+  }
+
+  @override
+  String get dashNoPayment => 'Aucun paiement enregistré';
+
+  @override
+  String get dashNoValidPayment => 'Aucun paiement valide (élèves supprimés)';
+
+  @override
+  String dashPaymentsOfRemoved(Object paymentsCount) {
+    return '$paymentsCount paiement(s) lié(s) à des élèves supprimés';
+  }
+
+  @override
+  String dashAttendancesCount(Object validAttendancesCount) {
+    return '$validAttendancesCount présence(s)';
+  }
+
+  @override
+  String get dashNoAttendance => 'Aucune présence enregistrée';
+
+  @override
+  String get dashNoValidAttendance =>
+      'Aucune présence valide (élèves supprimés)';
+
+  @override
+  String dashAttendancesOfRemoved(Object attendancesCount) {
+    return '$attendancesCount présence(s) liée(s) à des élèves supprimés';
+  }
+
+  @override
+  String get attendancePresent => 'Présent';
+
+  @override
+  String get attendanceAbsent => 'Absent';
+
+  @override
+  String get attendanceJustified => 'Absence justifiée';
+
+  @override
+  String get attendanceLate => 'Tardif';
+
+  @override
+  String get dashGenerateReports => 'Générer des rapports';
+
+  @override
+  String get dashWeeklyReport => 'Rapport hebdomadaire';
+
+  @override
+  String get dashMonthlyReport => 'Rapport mensuel';
+
+  @override
+  String get dashPaymentReport => 'Rapport des paiements';
+
+  @override
+  String get dashPerformanceReport => 'Rapport de performance';
+
+  @override
+  String get dashAttendanceByStudentShort => 'Taux présence par élève';
+
+  @override
+  String get dashExport => 'Export';
+
+  @override
+  String get dashExportPdf => 'Exporter en PDF';
+
+  @override
+  String get dashAddNewStudent => 'Ajouter un nouvel élève';
+
+  @override
+  String get fieldParentPhone => 'Téléphone du parent';
+
+  @override
+  String get dashPhoneHint => 'Ex: 622180933';
+
+  @override
+  String get commonFillAllFields => 'Veuillez remplir tous les champs';
+
+  @override
+  String get commonInvalidPhone => 'Numéro de téléphone invalide';
+
+  @override
+  String get dashStudentAdded => 'Élève ajouté avec succès!';
+
+  @override
+  String commonErrorColon(Object error) {
+    return 'Erreur: $error';
+  }
+
+  @override
+  String get dashStudentUpdated => 'Élève modifié avec succès!';
+
+  @override
+  String get dashArchiveStudentTitle => 'Archiver cet élève ?';
+
+  @override
+  String get dashArchiveStudentQuestion =>
+      'Êtes-vous sûr de vouloir retirer cet élève de la liste ?';
+
+  @override
+  String dashNameLine(Object student) {
+    return 'Nom: $student';
+  }
+
+  @override
+  String get dashArchiveStudentBody =>
+      'L\'élève sera archivé : il n\'apparaîtra plus dans les listes, mais son historique (paiements, présences, récitations) est conservé et reste compté dans les totaux financiers.';
+
+  @override
+  String get dashStudentArchived => 'Élève archivé avec succès';
+
+  @override
+  String get actionArchive => 'Archiver';
+
+  @override
+  String get dashAddPayment => 'Ajouter un paiement';
+
+  @override
+  String get dashNoStudentAddFirst =>
+      'Aucun élève enregistré. Veuillez d\'abord ajouter des élèves.';
+
+  @override
+  String get dashRecordPayment => 'Enregistrer un paiement';
+
+  @override
+  String get dashSelectStudent => 'Sélectionner un élève';
+
+  @override
+  String dashAmountWithCurrency(Object currency) {
+    return 'Montant ($currency)';
+  }
+
+  @override
+  String get fieldMonth => 'Mois';
+
+  @override
+  String get paymentPaid => 'Payé';
+
+  @override
+  String get paymentUnpaid => 'Non payé';
+
+  @override
+  String get dashPaymentDay => 'Jour du paiement';
+
+  @override
+  String get dashInvalidAmount => 'Montant invalide';
+
+  @override
+  String dashPaymentRecorded(Object month) {
+    return 'Paiement pour $month enregistré!';
+  }
+
+  @override
+  String get dashPaymentAlreadyRecorded => 'Paiement déjà enregistré';
+
+  @override
+  String get dashConfirmAnyway => 'Confirmer quand même';
+
+  @override
+  String get dashMarkAttendance => 'Marquer présence';
+
+  @override
+  String get dashLessonField => 'Leçon/Cours';
+
+  @override
+  String get dashLessonHint => 'Ex: Coran, Hadith';
+
+  @override
+  String get dashSelectStudentAndStatus =>
+      'Veuillez sélectionner un élève et un statut';
+
+  @override
+  String get dashNoLessonDefault => 'Absence de cours';
+
+  @override
+  String get dashAttendanceRecorded => 'Présence enregistrée avec succès!';
+
+  @override
+  String dashWeekRange(Object day, Object month, Object day2, Object month2) {
+    return 'Semaine du $day/$month au $day2/$month2';
+  }
+
+  @override
+  String get dashPresentPlural => 'Présents';
+
+  @override
+  String get dashAbsentPlural => 'Absents';
+
+  @override
+  String get dashLatePlural => 'Tardifs';
+
+  @override
+  String dashTotalSessionsWeek(Object weeklyAttendancesCount) {
+    return 'Total sessions: $weeklyAttendancesCount';
+  }
+
+  @override
+  String dashMonthLine(Object month, Object year) {
+    return 'Mois: $month/$year';
+  }
+
+  @override
+  String dashTotalSessionsMonth(Object monthlyAttendancesCount) {
+    return 'Total sessions: $monthlyAttendancesCount';
+  }
+
+  @override
+  String dashAttendanceRateLine(Object length) {
+    return 'Taux de présence: $length%';
+  }
+
+  @override
+  String get dashAttendanceAlreadyRecorded => 'Présence déjà enregistrée';
+
+  @override
+  String dashReplaceAttendanceBody(
+      Object status, Object lesson, Object newStatus, Object newLesson) {
+    return 'Cet élève a déjà une présence aujourd\'hui :\n• Statut : $status\n• Leçon : $lesson\n\nUne seule présence est conservée par élève et par jour. Voulez-vous la remplacer par « $newStatus — $newLesson » ?';
+  }
+
+  @override
+  String get actionReplace => 'Remplacer';
+
+  @override
+  String get dashAttendanceReplaced => 'Présence remplacée';
+
+  @override
+  String get dashTotalPending => 'Total en attente';
+
+  @override
+  String get dashGrandTotal => 'Total général';
+
+  @override
+  String dashPaymentsNumber(Object paymentsCount) {
+    return 'Nombre de paiements: $paymentsCount';
+  }
+
+  @override
+  String dashActiveStudents(Object studentsCount) {
+    return 'Élèves actifs: $studentsCount';
+  }
+
+  @override
+  String get dashManagementMetrics => 'Métriques de gestion:';
+
+  @override
+  String get statAttendanceRateFull => 'Taux de présence';
+
+  @override
+  String get statPaymentRateFull => 'Taux de paiement';
+
+  @override
+  String get dashSummary => 'Résumé:';
+
+  @override
+  String dashSummaryStudents(Object totalStudents) {
+    return '• Total élèves: $totalStudents';
+  }
+
+  @override
+  String dashSummarySessions(Object totalAttendance) {
+    return '• Sessions enregistrées: $totalAttendance';
+  }
+
+  @override
+  String dashSummaryPayments(Object paymentsCount) {
+    return '• Paiements enregistrés: $paymentsCount';
+  }
+
+  @override
+  String dashSummaryPaid(Object paidCount) {
+    return '• Paiements complétés: $paidCount';
+  }
+
+  @override
+  String get commonNotAvailable => 'Non disponible';
+
+  @override
+  String get dashPaymentDetails => 'Détails du paiement';
+
+  @override
+  String get fieldStudent => 'Élève';
+
+  @override
+  String get paymentPending => 'En attente';
+
+  @override
+  String get dashPaymentDate => 'Date du paiement';
+
+  @override
+  String get dashPaymentId => 'ID Paiement';
+
+  @override
+  String get dashPaymentMarkedPaid => 'Paiement marqué comme payé';
+
+  @override
+  String get dashMarkAsPaid => 'Marquer comme payé';
+
+  @override
+  String get dashReceipt => 'Reçu';
+
+  @override
+  String get commonNotSpecified => 'Non spécifié';
+
+  @override
+  String get dashAttendanceDetails => 'Détails de la présence';
+
+  @override
+  String get fieldLesson => 'Leçon';
+
+  @override
+  String get fieldDate => 'Date';
+
+  @override
+  String get dashAttendanceId => 'ID Présence';
+
+  @override
+  String get dashEditAttendance => 'Modifier la présence';
+
+  @override
+  String get dashAttendanceCorrected => 'Présence corrigée';
+
+  @override
+  String get dashStudentProfile => 'Profil de l\'élève';
+
+  @override
+  String get fieldContact => 'Contact';
+
+  @override
+  String get dashPaidPayments => 'Paiements payés';
+
+  @override
+  String get dashStudentId => 'ID Élève';
+
+  @override
+  String get dashAttendanceByStudent => 'Taux de présence par élève';
+
+  @override
+  String dashThisWeekSessions(Object weekAttendancesCount) {
+    return 'Cette semaine ($weekAttendancesCount sessions)';
+  }
+
+  @override
+  String dashThisMonthSessions(Object monthAttendancesCount) {
+    return 'Ce mois ($monthAttendancesCount sessions)';
+  }
+
+  @override
+  String dashGroupsCount(Object classesCount) {
+    return '$classesCount groupes';
+  }
+
+  @override
+  String get dashNoGroup => 'Aucun groupe';
+
+  @override
+  String get dashCreateFirstGroup => 'Commencez par créer votre premier groupe';
+
+  @override
+  String get dashCreateGroup => 'Créer un groupe';
+
+  @override
+  String get groupFull => 'Complet';
+
+  @override
+  String get groupAlmostFull => 'Presque complet';
+
+  @override
+  String get groupAvailable => 'Disponible';
+
+  @override
+  String get dashAddStudentToGroup => 'Ajouter un élève';
+
+  @override
+  String get dashRemoveStudentFromGroup => 'Retirer un élève';
+
+  @override
+  String get dashEditGroup => 'Modifier le groupe';
+
+  @override
+  String get dashDeleteGroup => 'Supprimer le groupe';
+
+  @override
+  String get dashOccupancy => 'Occupation';
+
+  @override
+  String get dashReceiptTitle => 'Reçu de paiement';
+
+  @override
+  String get dashReceiptGenerated =>
+      'Le reçu a été généré. Que voulez-vous en faire ?';
+
+  @override
+  String get actionLater => 'Plus tard';
+
+  @override
+  String get actionPreviewPrint => 'Aperçu / Imprimer';
+
+  @override
+  String get dashGeneratingReport => 'Génération du rapport...';
+
+  @override
+  String dashGenerationError(Object error) {
+    return 'Erreur lors de la génération : $error';
+  }
+
+  @override
+  String get dashReportGenerated => 'Rapport généré';
+
+  @override
+  String get dashReportWhatToDo => 'Que voulez-vous faire de ce rapport ?';
+
+  @override
+  String get dashLogoutConfirm => 'Êtes-vous sûr de vouloir vous déconnecter?';
+
+  @override
+  String get actionLogout => 'Déconnecter';
+
+  @override
+  String dashLogoutError(Object error) {
+    return 'Erreur déconnexion: $error';
+  }
+
+  @override
+  String get dashAddGroup => 'Ajouter un groupe';
+
+  @override
+  String get fieldGroupName => 'Nom du groupe';
+
+  @override
+  String get dashGroupNameHint => 'Ex: Groupe Nouroul Bayan';
+
+  @override
+  String get fieldGroupLevel => 'Niveau du groupe';
+
+  @override
+  String get dashGroupLevelHint => 'Ex: Djouzou Amma, Nouroul Bayan, etc.';
+
+  @override
+  String get fieldGroupDescription => 'Description du groupe';
+
+  @override
+  String get fieldTeacherName => 'Nom de l\'enseignant';
+
+  @override
+  String get dashTeacherHint => 'Ex: Cheikh Ibrahim';
+
+  @override
+  String get fieldMaxStudents => 'Nombre maximum d\'élèves';
+
+  @override
+  String get dashMaxStudentsHint => 'Ex: 30 (modifiable, jusqu\'à 500)';
+
+  @override
+  String get dashMaxStudentsHelp =>
+      'Vous pouvez augmenter ce nombre à tout moment.';
+
+  @override
+  String get dashGroupAdded => 'Classe ajoutée avec succès!';
+
+  @override
+  String dashEditNamed(Object classModel) {
+    return 'Modifier: $classModel';
+  }
+
+  @override
+  String get dashGroupUpdated => 'Classe modifiée avec succès!';
+
+  @override
+  String dashDeleteNamed(Object classModel) {
+    return 'Supprimer: $classModel';
+  }
+
+  @override
+  String get dashDeleteGroupConfirm =>
+      'Êtes-vous sûr de vouloir supprimer ce groupe ? Le groupe sera archivé et tous ses élèves en seront retirés.';
+
+  @override
+  String get dashGroupDeleted => 'Classe supprimée avec succès!';
+
+  @override
+  String get dashAllStudentsInGroup =>
+      'Tous les élèves sont déjà dans ce groupe.';
+
+  @override
+  String dashAddStudentTo(Object groupModel) {
+    return 'Ajouter un élève à $groupModel';
+  }
+
+  @override
+  String get dashSelectStudentToAdd => 'Sélectionnez un élève à ajouter:';
+
+  @override
+  String get dashChooseStudent => 'Choisissez un élève';
+
+  @override
+  String get dashStudentAddedToGroup => 'Élève ajouté au groupe avec succès!';
+
+  @override
+  String get dashGroupEmpty => 'Ce groupe ne contient aucun élève.';
+
+  @override
+  String dashRemoveStudentFrom(Object groupModel) {
+    return 'Retirer un élève de $groupModel';
+  }
+
+  @override
+  String get dashSelectStudentToRemove => 'Sélectionnez un élève à retirer:';
+
+  @override
+  String get dashStudentRemovedFromGroup =>
+      'Élève retiré du groupe avec succès!';
+
+  @override
+  String get actionRemove => 'Retirer';
+
+  @override
+  String get dashGenerateReport => 'Générer un rapport';
+
+  @override
+  String get dashChooseReportPeriod => 'Choisissez la période du rapport :';
+
+  @override
+  String get dashWeekly => 'Hebdomadaire';
+
+  @override
+  String get dashMonthly => 'Mensuel';
+
+  @override
+  String get forgotResetting => 'Réinitialisation...';
+
+  @override
+  String get forgotSending => 'Envoi...';
+
+  @override
+  String get commonActive => 'Actif';
+
+  @override
+  String get errClassNotFound => 'Classe non trouvée';
+
+  @override
+  String get errStudentNotFound => 'Élève non trouvé';
+
+  @override
+  String get errMarkazAccessDenied => 'Accès refusé à cette Markaz';
+
+  @override
+  String get errLessonRequired => 'Le nom de la leçon est obligatoire';
+
+  @override
+  String get errAttendanceNotFound => 'Présence non trouvée';
+
+  @override
+  String get errStudentAccessDenied => 'Accès refusé à cet élève';
+
+  @override
+  String get errNotAuthenticated => 'Utilisateur non authentifié';
+
+  @override
+  String get errEmailPasswordRequired => 'Email et mot de passe requis';
+
+  @override
+  String get errRequiredFieldsMissing =>
+      'Tous les champs obligatoires doivent être remplis';
+
+  @override
+  String get errPasswordTooShort => 'Mot de passe trop court (6+ caractères)';
+
+  @override
+  String get errEmailRequired => 'Email requis';
+
+  @override
+  String get errAllFieldsRequired => 'Tous les champs sont obligatoires';
+
+  @override
+  String get errGroupNameRequired => 'Le nom de la classe est obligatoire';
+
+  @override
+  String get errGroupLevelRequired => 'Le niveau de la classe est obligatoire';
+
+  @override
+  String get errTeacherNameRequired =>
+      'Le nom de l\'enseignant est obligatoire';
+
+  @override
+  String get errMaxStudentsRange =>
+      'Le nombre maximum d\'élèves doit être entre 1 et 500';
+
+  @override
+  String get errGroupNameExists => 'Un groupe avec ce nom existe déjà';
+
+  @override
+  String get errGroupNotFound => 'Groupe non trouvé';
+
+  @override
+  String get errGroupAccessDenied => 'Accès refusé à ce groupe';
+
+  @override
+  String errCapacityBelowCount(Object currentStudentCount) {
+    return 'Impossible de réduire le nombre de places en dessous du nombre actuel d\'élèves ($currentStudentCount)';
+  }
+
+  @override
+  String get errGroupNotEmpty =>
+      'Impossible de supprimer un groupe contenant des élèves';
+
+  @override
+  String errGroupFull(Object maxStudents) {
+    return 'Le groupe est déjà plein ($maxStudents élèves)';
+  }
+
+  @override
+  String get errStudentAlreadyInGroup => 'L\'élève est déjà dans ce groupe';
+
+  @override
+  String get errStudentNotInGroup => 'L\'élève n\'est pas dans ce groupe';
+
+  @override
+  String get errGuardianNameRequired => 'Le nom du tuteur est obligatoire';
+
+  @override
+  String get errGuardianPhoneRequired =>
+      'Le téléphone du tuteur est obligatoire';
+
+  @override
+  String get errGuardianNotFound => 'Tuteur non trouvé';
+
+  @override
+  String get errGuardianAccessDenied => 'Accès refusé à ce tuteur';
+
+  @override
+  String get errAmountPositive => 'Le montant doit être supérieur à 0';
+
+  @override
+  String get errPaymentNotFound => 'Paiement non trouvé';
+
+  @override
+  String get errRecitationNotFound => 'Récitation non trouvée';
+
+  @override
+  String get errRecitationAccessDenied => 'Accès refusé à cette récitation';
+
+  @override
+  String get errStudentNameRequired => 'Le nom de l\'élève est obligatoire';
+
+  @override
+  String get errNameMinLength => 'Le nom doit contenir au moins 3 caractères';
+
+  @override
+  String get errMarkazRequired =>
+      'Markaz ID obligatoire et pas d\'utilisateur connecté';
+
+  @override
+  String get errNameInvalid => 'Nom invalide (3+ caractères)';
+
+  @override
+  String get errServerTimeout =>
+      'Le serveur ne répond pas. Vérifiez votre connexion.';
+
+  @override
+  String get errServerUnreachable =>
+      'Impossible de joindre le serveur. Vérifiez votre connexion internet.';
+
+  @override
+  String get errServerCommunication =>
+      'Erreur de communication avec le serveur.';
 }
