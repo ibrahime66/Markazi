@@ -139,11 +139,18 @@ class AttendanceController extends Controller
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
 
+        // whereDate (et non whereBetween sur la colonne brute) : le dernier
+        // jour de la période reste inclus quel que soit le format de
+        // stockage de la date selon le moteur SQL.
         $query = Attendance::where('student_id', $studentId)
-            ->whereBetween('date', [$dateFrom, $dateTo]);
+            ->whereDate('date', '>=', $dateFrom)
+            ->whereDate('date', '<=', $dateTo);
 
         $present = (clone $query)->where('status', 'present')->count();
+        // Une absence justifiée reste une absence dans les taux (CDC §8.6) ;
+        // elle est aussi détaillée à part pour l'affichage.
         $absent = (clone $query)->whereIn('status', ['absent', 'justified'])->count();
+        $justified = (clone $query)->where('status', 'justified')->count();
         $late = (clone $query)->where('status', 'late')->count();
 
         $totalCourseDays = $this->countExpectedCourseDays($student->markaz, $dateFrom, $dateTo);
@@ -152,6 +159,7 @@ class AttendanceController extends Controller
             'total_days' => $totalCourseDays,
             'present' => $present,
             'absent' => $absent,
+            'justified' => $justified,
             'late' => $late,
             'attendance_rate' => $totalCourseDays > 0 ? round($present / $totalCourseDays * 100, 1) : 0,
             'absence_rate' => $totalCourseDays > 0 ? round($absent / $totalCourseDays * 100, 1) : 0,

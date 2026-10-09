@@ -60,6 +60,20 @@ class AttendanceService {
     );
   }
 
+  /// Marque une absence justifiée (CDC §8.6)
+  Future<Attendance> markJustified({
+    required String studentId,
+    required String markazId,
+    required String lesson,
+  }) async {
+    return _recordAttendance(
+      studentId,
+      markazId,
+      AttendanceStatus.justified,
+      lesson,
+    );
+  }
+
   /// Enregistre une présence
   Future<Attendance> _recordAttendance(
     String studentId,
@@ -171,7 +185,7 @@ class AttendanceService {
         .where((a) => a.status == AttendanceStatus.present)
         .length;
     final absent = weekAttendances
-        .where((a) => a.status == AttendanceStatus.absent)
+        .where((a) => a.status.isAbsence)
         .length;
     final late =
         weekAttendances.where((a) => a.status == AttendanceStatus.late).length;
@@ -227,7 +241,7 @@ class AttendanceService {
         .where((a) => a.status == AttendanceStatus.present)
         .length;
     final absent = monthAttendances
-        .where((a) => a.status == AttendanceStatus.absent)
+        .where((a) => a.status.isAbsence)
         .length;
     final late =
         monthAttendances.where((a) => a.status == AttendanceStatus.late).length;
@@ -310,7 +324,7 @@ class AttendanceService {
         .where((a) => a.status == AttendanceStatus.present)
         .length;
     final absent = markazAttendances
-        .where((a) => a.status == AttendanceStatus.absent)
+        .where((a) => a.status.isAbsence)
         .length;
     final late = markazAttendances
         .where((a) => a.status == AttendanceStatus.late)

@@ -95,6 +95,28 @@ class AttendanceProvider extends ChangeNotifier {
     }
   }
 
+  /// Marque une absence justifiée (CDC §8.6)
+  Future<void> markJustified({
+    required String studentId,
+    required String markazId,
+    required String lesson,
+  }) async {
+    try {
+      _errorMessage = null;
+      final newAttendance = await _service.markJustified(
+        studentId: studentId,
+        markazId: markazId,
+        lesson: lesson,
+      );
+      _attendances = [..._attendances, newAttendance];
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   /// Corrige une présence déjà enregistrée (statut et/ou leçon).
   Future<Attendance> updateAttendance({
     required String attendanceId,

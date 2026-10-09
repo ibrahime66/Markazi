@@ -69,7 +69,7 @@ class HiveAttendanceDataSource {
   /// Retourne le nombre d'absences d'un étudiant.
   int getAbsenceCountForStudent(String studentId) {
     return _box.values
-        .where((a) => a.studentId == studentId && a.status == AttendanceStatus.absent)
+        .where((a) => a.studentId == studentId && a.status.isAbsence)
         .length;
   }
 

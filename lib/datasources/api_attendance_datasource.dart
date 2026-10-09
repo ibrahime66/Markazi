@@ -62,6 +62,8 @@ class ApiAttendanceDatasource {
         return 'absent';
       case AttendanceStatus.late:
         return 'late';
+      case AttendanceStatus.justified:
+        return 'justified';
     }
   }
 
@@ -71,8 +73,9 @@ class ApiAttendanceDatasource {
         return AttendanceStatus.present;
       case 'late':
         return AttendanceStatus.late;
-      case 'absent':
       case 'justified':
+        return AttendanceStatus.justified;
+      case 'absent':
       default:
         return AttendanceStatus.absent;
     }

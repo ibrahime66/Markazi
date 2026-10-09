@@ -341,7 +341,8 @@ paths:
                 properties:
                   total_days: { type: integer }
                   present: { type: integer }
-                  absent: { type: integer }
+                  absent: { type: integer, description: "Absences, justifiées comprises" }
+                  justified: { type: integer, description: "Dont absences justifiées (CDC §8.6)" }
                   late: { type: integer }
                   attendance_rate: { type: number, format: float }
                   absence_rate: { type: number, format: float }
