@@ -12,6 +12,9 @@ import '../l10n/app_localizations.dart';
 import '../providers/class_provider.dart';
 import '../providers/markaz_provider.dart';
 import '../providers/sync_queue_provider.dart';
+import '../providers/guardian_provider.dart';
+import '../providers/recitation_provider.dart';
+import '../widgets/sync_status_banner.dart';
 import '../services/auth_service.dart';
 import '../services/student_service.dart';
 import '../services/payment_service.dart';
@@ -167,19 +170,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 icon: Badge(
                   isLabelVisible: pending > 0,
                   label: Text('$pending'),
-                  child: const Icon(Icons.sync, color: Colors.white),
+                  child: Icon(
+                    syncQueueProvider.isOnline ? Icons.sync : Icons.cloud_off_rounded,
+                    color: Colors.white,
+                  ),
                 ),
-                onPressed: _syncFromApi,
+                onPressed: syncQueueProvider.isSyncing ? null : _syncFromApi,
                 tooltip: pending > 0
-                    ? '$pending action(s) en attente de synchronisation'
-                    : 'Synchroniser avec le serveur',
+                    ? l10n.syncPendingBanner('$pending')
+                    : l10n.syncNow,
               );
             },
           ),
         ],
       ),
       drawer: _buildNavigationDrawer(context, userName),
-      body: _buildTabContent(),
+      body: Column(
+        children: [
+          // Indicateur hors ligne / actions en attente (CDC §20).
+          const SyncStatusBanner(),
+          Expanded(child: _buildTabContent()),
+        ],
+      ),
     );
   }
 
@@ -268,6 +280,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _buildDrawerRoute(Icons.family_restroom_rounded, l10n.navGuardians, '/guardians'),
                   _buildDrawerRoute(Icons.menu_book_rounded, l10n.navRecitations, '/recitations'),
                   _buildDrawerRoute(Icons.history_rounded, l10n.navActivityLog, '/activity-log'),
+                  _buildDrawerRoute(Icons.cloud_sync_rounded, l10n.navSync, '/sync'),
                 ],
               ),
             ),
@@ -3785,6 +3798,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// d'un paiement payé (CDC section 21 : "prévisualisable, téléchargeable,
   /// imprimable et partageable").
   Future<void> _offerPaymentReceipt(Payment payment) async {
+    // Paiement saisi hors ligne : le numéro de reçu (séquence par Markaz,
+    // CDC §21) n'est attribué que par le serveur — pas de reçu "N° —".
+    if (payment.receiptNumber == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).receiptPendingSync)),
+      );
+      return;
+    }
     final studentProvider = context.read<StudentProvider>();
     final student = studentProvider.students
         .where((s) => s.id == payment.studentId)
@@ -4101,58 +4122,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // ─── API Sync Handler ───────────────────
+  /// Synchronisation complète demandée par l'utilisateur (CDC §20) : rejeu
+  /// des actions hors ligne PUIS rechargement de toutes les données depuis
+  /// le serveur — auparavant seuls les élèves étaient rechargés, et avant
+  /// le rejeu (ce qui écrasait les saisies en attente).
   Future<void> _syncFromApi() async {
-    try {
-      // Afficher un indicateur de chargement
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const AlertDialog(
-          content: Row(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 16),
-              // Expanded pour que le texte passe à la ligne au lieu de
-              // déborder horizontalement — la Row d'un AlertDialog n'a
-              // qu'une largeur de contenu restreinte par défaut.
-              Expanded(child: Text('Synchronisation avec le serveur...')),
-            ],
-          ),
-        ),
-      );
+    final l10n = AppLocalizations.of(context);
+    final markazId = context.read<AuthService>().currentMarkazId;
+    if (markazId == null) return;
 
-      final studentService = context.read<StudentService>();
-      await studentService.syncFromApi();
-      if (!mounted) return;
+    final syncProvider = context.read<SyncQueueProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.syncInProgress)));
 
-      // Recharger les données
-      final studentProvider = context.read<StudentProvider>();
-      await studentProvider.loadStudents();
+    final report = await syncProvider.syncAll(markazId);
+    if (!mounted) return;
 
-      // Rejoue les actions hors ligne en attente (CDC section 20).
-      if (!mounted) return;
-      await context.read<SyncQueueProvider>().replayPending();
+    // Recharger l'affichage depuis les caches à jour.
+    await Future.wait([
+      context.read<StudentProvider>().loadStudents(),
+      context.read<ClassProvider>().loadClasses(),
+      context.read<PaymentProvider>().loadPayments(),
+      context.read<AttendanceProvider>().loadAttendances(),
+      context.read<GuardianProvider>().loadGuardians(),
+      context.read<RecitationProvider>().loadRecitations(),
+    ]);
+    if (!mounted) return;
 
-      if (mounted) {
-        Navigator.pop(context); // Fermer le dialogue de chargement
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Données synchronisées avec succès!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Fermer le dialogue de chargement
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur de synchronisation: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    messenger.hideCurrentSnackBar();
+    final String message;
+    final Color color;
+    if (report.offline) {
+      message = l10n.syncStillOffline;
+      color = Colors.blueGrey;
+    } else if (report.failed > 0) {
+      message = l10n.syncResult('${report.synced}', '${report.failed}');
+      color = Colors.red;
+    } else {
+      message = report.synced > 0
+          ? l10n.syncResult('${report.synced}', '0')
+          : l10n.syncAllDone;
+      color = Colors.green;
     }
+    messenger.showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 
   // ─── Logout Handler ────────────────────────

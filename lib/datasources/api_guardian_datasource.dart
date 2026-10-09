@@ -16,25 +16,34 @@ class ApiGuardianDatasource {
     return _mapJsonToGuardian(response.data as Map<String, dynamic>, markazId);
   }
 
-  Future<Guardian> updateGuardian(Guardian guardian, String markazId) async {
-    final response = await _dio.put('/guardians/${guardian.id}', data: {
-      'name': guardian.name,
-      'phone': guardian.phone,
-      'email': guardian.email,
-      'address': guardian.address,
-    });
+  /// [performedAt] : date réelle d'une saisie hors ligne rejouée (CDC §27).
+  Future<Guardian> updateGuardian(Guardian guardian, String markazId,
+      {DateTime? performedAt}) async {
+    final response = await _dio.put('/guardians/${guardian.id}',
+        options: ApiClient.performedAtOptions(performedAt),
+        data: {
+          'name': guardian.name,
+          'phone': guardian.phone,
+          'email': guardian.email,
+          'address': guardian.address,
+        });
     return _mapJsonToGuardian(response.data as Map<String, dynamic>, markazId);
   }
 
-  Future<void> deleteGuardian(String guardianId) async {
-    await _dio.delete('/guardians/$guardianId');
+  Future<void> deleteGuardian(String guardianId,
+      {DateTime? performedAt}) async {
+    await _dio.delete('/guardians/$guardianId',
+        options: ApiClient.performedAtOptions(performedAt));
   }
 
   Future<List<Guardian>> getGuardiansByMarkaz(String markazId) async {
-    final response = await _dio.get('/guardians', queryParameters: {'per_page': 500});
-    final data = (response.data as Map<String, dynamic>)['data'] as List<dynamic>;
+    final response =
+        await _dio.get('/guardians', queryParameters: {'per_page': 500});
+    final data =
+        (response.data as Map<String, dynamic>)['data'] as List<dynamic>;
     return data
-        .map((json) => _mapJsonToGuardian(json as Map<String, dynamic>, markazId))
+        .map((json) =>
+            _mapJsonToGuardian(json as Map<String, dynamic>, markazId))
         .toList();
   }
 

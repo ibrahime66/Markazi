@@ -6,25 +6,39 @@ import '../services/api_client.dart';
 class ApiRecitationDatasource {
   final _dio = ApiClient.instance.dio;
 
-  Future<Recitation> addRecitation(Recitation recitation, String markazId) async {
-    final response = await _dio.post('/recitations', data: _toPayload(recitation));
-    return _mapJsonToRecitation(response.data as Map<String, dynamic>, markazId);
+  /// [performedAt] : date réelle d'une saisie hors ligne rejouée (CDC §27).
+  Future<Recitation> addRecitation(Recitation recitation, String markazId,
+      {DateTime? performedAt}) async {
+    final response = await _dio.post('/recitations',
+        options: ApiClient.performedAtOptions(performedAt),
+        data: _toPayload(recitation));
+    return _mapJsonToRecitation(
+        response.data as Map<String, dynamic>, markazId);
   }
 
-  Future<Recitation> updateRecitation(Recitation recitation, String markazId) async {
-    final response = await _dio.put('/recitations/${recitation.id}', data: _toPayload(recitation));
-    return _mapJsonToRecitation(response.data as Map<String, dynamic>, markazId);
+  Future<Recitation> updateRecitation(Recitation recitation, String markazId,
+      {DateTime? performedAt}) async {
+    final response = await _dio.put('/recitations/${recitation.id}',
+        options: ApiClient.performedAtOptions(performedAt),
+        data: _toPayload(recitation));
+    return _mapJsonToRecitation(
+        response.data as Map<String, dynamic>, markazId);
   }
 
-  Future<void> deleteRecitation(String recitationId) async {
-    await _dio.delete('/recitations/$recitationId');
+  Future<void> deleteRecitation(String recitationId,
+      {DateTime? performedAt}) async {
+    await _dio.delete('/recitations/$recitationId',
+        options: ApiClient.performedAtOptions(performedAt));
   }
 
   Future<List<Recitation>> getRecitationsByMarkaz(String markazId) async {
-    final response = await _dio.get('/recitations', queryParameters: {'per_page': 500});
-    final data = (response.data as Map<String, dynamic>)['data'] as List<dynamic>;
+    final response =
+        await _dio.get('/recitations', queryParameters: {'per_page': 500});
+    final data =
+        (response.data as Map<String, dynamic>)['data'] as List<dynamic>;
     return data
-        .map((json) => _mapJsonToRecitation(json as Map<String, dynamic>, markazId))
+        .map((json) =>
+            _mapJsonToRecitation(json as Map<String, dynamic>, markazId))
         .toList();
   }
 

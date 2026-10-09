@@ -91,5 +91,72 @@
       }
     }
   },
-  "activityConflictHint": "Touchez pour voir la version remplacée"
+  "activityConflictHint": "Touchez pour voir la version remplacée",
+  "receiptPendingSync": "Paiement enregistré hors ligne. Le reçu sera disponible après synchronisation (son numéro est attribué par le serveur).",
+  "navSync": "Synchronisation",
+  "syncOnline": "Connecté au serveur",
+  "syncOffline": "Hors ligne",
+  "syncOfflineBanner": "Hors ligne — vos saisies sont enregistrées sur l'appareil et seront envoyées automatiquement.",
+  "syncPendingBanner": "{count} action(s) en attente de synchronisation",
+  "@syncPendingBanner": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "syncFailedBanner": "{count} action(s) refusée(s) par le serveur — à vérifier",
+  "@syncFailedBanner": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "syncNow": "Synchroniser maintenant",
+  "syncInProgress": "Synchronisation en cours…",
+  "syncAllDone": "Tout est synchronisé.",
+  "syncResult": "{synced} action(s) envoyée(s), {failed} refusée(s).",
+  "@syncResult": {
+    "placeholders": {
+      "synced": {
+        "type": "String"
+      },
+      "failed": {
+        "type": "String"
+      }
+    }
+  },
+  "syncStillOffline": "Serveur toujours injoignable. Nouvel essai automatique dès le retour de la connexion.",
+  "syncEmpty": "Aucune action en attente. Toutes vos saisies sont sur le serveur.",
+  "syncPendingTitle": "Actions en attente",
+  "syncOpCreate": "Création",
+  "syncOpUpdate": "Modification",
+  "syncOpDelete": "Suppression",
+  "syncEntityPayment": "Paiement",
+  "syncEntityAttendance": "Présence",
+  "syncEntityGuardian": "Tuteur",
+  "syncEntityRecitation": "Récitation",
+  "syncEntityClass": "Groupe",
+  "syncEntityStudentClass": "Affectation à un groupe",
+  "syncDoneAt": "Saisi le {date}",
+  "@syncDoneAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "syncRejected": "Refusé par le serveur : {message}",
+  "@syncRejected": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "syncDiscard": "Abandonner cette action",
+  "syncDiscardConfirmTitle": "Abandonner cette action ?",
+  "syncDiscardConfirmBody": "Elle ne sera jamais envoyée au serveur. Une création sera retirée de l'appareil ; une modification sera remplacée par la version du serveur à la prochaine synchronisation.",
+  "syncConflictsHint": "Les conflits éventuels (donnée modifiée entre-temps sur le serveur) sont consultables dans le journal d'activité."
 }

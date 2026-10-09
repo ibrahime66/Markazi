@@ -36,6 +36,7 @@ import 'datasources/api_recitation_datasource.dart';
 import 'datasources/api_activity_log_datasource.dart';
 import 'providers/activity_log_provider.dart';
 import 'screens/activity_log_screen.dart';
+import 'screens/sync_status_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -96,7 +97,7 @@ void main() async {
   final attendanceRepository = AttendanceRepository(
       hiveAttendanceDataSource, apiAttendanceDataSource, syncQueueService);
   final classRepository = ClassRepository(
-      hiveClassDataSource, apiClassDataSource);
+      hiveClassDataSource, apiClassDataSource, syncQueueService);
   final guardianRepository = GuardianRepository(
       hiveGuardianDataSource, apiGuardianDataSource, syncQueueService);
   final recitationRepository = RecitationRepository(
@@ -131,6 +132,8 @@ void main() async {
     attendanceRepository: attendanceRepository,
     guardianRepository: guardianRepository,
     recitationRepository: recitationRepository,
+    classRepository: classRepository,
+    studentRepository: studentRepository,
   );
 
   // Mode clair/sombre (doc/audit.md K7) — chargé avant runApp() pour éviter
@@ -152,19 +155,14 @@ void main() async {
   final markazProvider = MarkazProvider(markazService);
   final markazId = authService.currentMarkazId;
   if (markazId != null) {
+    // Rejoue D'ABORD les actions hors ligne laissées en attente lors d'une
+    // session précédente, PUIS recharge les caches depuis le serveur
+    // (CDC section 20, doc/audit.md F5) : dans l'ordre inverse, le
+    // rechargement écrasait les saisies locales avant leur envoi.
     await Future.wait([
-      studentRepository.syncFromMarkaz(markazId),
-      classRepository.syncFromMarkaz(markazId),
-      attendanceRepository.syncFromMarkaz(markazId),
-      paymentRepository.syncFromMarkaz(markazId),
-      guardianRepository.syncFromMarkaz(markazId),
-      recitationRepository.syncFromMarkaz(markazId),
+      syncOrchestrator.syncAll(markazId),
       markazProvider.load(),
     ]);
-    // Rejoue les actions hors ligne laissées en attente lors d'une session
-    // précédente (CDC section 20) avant que l'utilisateur ne commence à
-    // interagir avec l'app.
-    await syncOrchestrator.replayPending();
   }
 
   runApp(
@@ -255,6 +253,7 @@ class MarkaziApp extends StatelessWidget {
             '/guardians': (context) => const GuardianScreen(),
             '/recitations': (context) => const RecitationScreen(),
             '/activity-log': (context) => const ActivityLogScreen(),
+            '/sync': (context) => const SyncStatusScreen(),
           },
         );
       },

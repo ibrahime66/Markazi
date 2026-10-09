@@ -243,4 +243,107 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activityConflictHint => 'Tap to see the replaced version';
+
+  @override
+  String get receiptPendingSync =>
+      'Payment saved offline. The receipt will be available after synchronization (its number is assigned by the server).';
+
+  @override
+  String get navSync => 'Synchronization';
+
+  @override
+  String get syncOnline => 'Connected to the server';
+
+  @override
+  String get syncOffline => 'Offline';
+
+  @override
+  String get syncOfflineBanner =>
+      'Offline — your entries are saved on the device and will be sent automatically.';
+
+  @override
+  String syncPendingBanner(String count) {
+    return '$count action(s) waiting to be synchronized';
+  }
+
+  @override
+  String syncFailedBanner(String count) {
+    return '$count action(s) rejected by the server — please check';
+  }
+
+  @override
+  String get syncNow => 'Synchronize now';
+
+  @override
+  String get syncInProgress => 'Synchronizing…';
+
+  @override
+  String get syncAllDone => 'Everything is synchronized.';
+
+  @override
+  String syncResult(String synced, String failed) {
+    return '$synced action(s) sent, $failed rejected.';
+  }
+
+  @override
+  String get syncStillOffline =>
+      'Server still unreachable. Automatic retry as soon as the connection is back.';
+
+  @override
+  String get syncEmpty =>
+      'No pending actions. All your entries are on the server.';
+
+  @override
+  String get syncPendingTitle => 'Pending actions';
+
+  @override
+  String get syncOpCreate => 'Creation';
+
+  @override
+  String get syncOpUpdate => 'Change';
+
+  @override
+  String get syncOpDelete => 'Deletion';
+
+  @override
+  String get syncEntityPayment => 'Payment';
+
+  @override
+  String get syncEntityAttendance => 'Attendance';
+
+  @override
+  String get syncEntityGuardian => 'Guardian';
+
+  @override
+  String get syncEntityRecitation => 'Recitation';
+
+  @override
+  String get syncEntityClass => 'Group';
+
+  @override
+  String get syncEntityStudentClass => 'Group assignment';
+
+  @override
+  String syncDoneAt(String date) {
+    return 'Entered on $date';
+  }
+
+  @override
+  String syncRejected(String message) {
+    return 'Rejected by the server: $message';
+  }
+
+  @override
+  String get syncDiscard => 'Discard this action';
+
+  @override
+  String get syncDiscardConfirmTitle => 'Discard this action?';
+
+  @override
+  String get syncDiscardConfirmBody =>
+      'It will never be sent to the server. A creation will be removed from the device; a change will be replaced by the server version at the next synchronization.';
+
+  @override
+  String get syncConflictsHint =>
+      'Possible conflicts (data changed on the server in the meantime) can be reviewed in the activity log.';
 }

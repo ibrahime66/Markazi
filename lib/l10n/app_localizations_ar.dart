@@ -241,4 +241,107 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get activityConflictHint => 'اضغط لعرض النسخة المستبدلة';
+
+  @override
+  String get receiptPendingSync =>
+      'تم حفظ الدفعة دون اتصال. سيتوفر الإيصال بعد المزامنة (يُخصَّص رقمه من الخادم).';
+
+  @override
+  String get navSync => 'المزامنة';
+
+  @override
+  String get syncOnline => 'متصل بالخادم';
+
+  @override
+  String get syncOffline => 'دون اتصال';
+
+  @override
+  String get syncOfflineBanner =>
+      'دون اتصال — يتم حفظ إدخالاتك على الجهاز وسيتم إرسالها تلقائيًا.';
+
+  @override
+  String syncPendingBanner(String count) {
+    return '$count إجراء(ات) بانتظار المزامنة';
+  }
+
+  @override
+  String syncFailedBanner(String count) {
+    return '$count إجراء(ات) رفضها الخادم — يُرجى التحقق';
+  }
+
+  @override
+  String get syncNow => 'زامن الآن';
+
+  @override
+  String get syncInProgress => 'جارٍ المزامنة…';
+
+  @override
+  String get syncAllDone => 'تمت مزامنة كل شيء.';
+
+  @override
+  String syncResult(String synced, String failed) {
+    return 'تم إرسال $synced إجراء(ات)، ورُفض $failed.';
+  }
+
+  @override
+  String get syncStillOffline =>
+      'لا يزال الخادم غير متاح. ستتم إعادة المحاولة تلقائيًا عند عودة الاتصال.';
+
+  @override
+  String get syncEmpty =>
+      'لا توجد إجراءات معلّقة. جميع إدخالاتك موجودة على الخادم.';
+
+  @override
+  String get syncPendingTitle => 'الإجراءات المعلّقة';
+
+  @override
+  String get syncOpCreate => 'إنشاء';
+
+  @override
+  String get syncOpUpdate => 'تعديل';
+
+  @override
+  String get syncOpDelete => 'حذف';
+
+  @override
+  String get syncEntityPayment => 'دفعة';
+
+  @override
+  String get syncEntityAttendance => 'حضور';
+
+  @override
+  String get syncEntityGuardian => 'ولي أمر';
+
+  @override
+  String get syncEntityRecitation => 'تسميع';
+
+  @override
+  String get syncEntityClass => 'مجموعة';
+
+  @override
+  String get syncEntityStudentClass => 'تعيين في مجموعة';
+
+  @override
+  String syncDoneAt(String date) {
+    return 'أُدخل في $date';
+  }
+
+  @override
+  String syncRejected(String message) {
+    return 'رفضه الخادم: $message';
+  }
+
+  @override
+  String get syncDiscard => 'تجاهل هذا الإجراء';
+
+  @override
+  String get syncDiscardConfirmTitle => 'تجاهل هذا الإجراء؟';
+
+  @override
+  String get syncDiscardConfirmBody =>
+      'لن يُرسل إلى الخادم أبدًا. سيُحذف الإنشاء من الجهاز، وسيُستبدل التعديل بنسخة الخادم في المزامنة التالية.';
+
+  @override
+  String get syncConflictsHint =>
+      'يمكن مراجعة التعارضات المحتملة (بيانات تغيّرت على الخادم في هذه الأثناء) في سجل النشاط.';
 }

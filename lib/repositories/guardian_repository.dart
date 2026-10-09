@@ -3,6 +3,7 @@ import '../models/guardian.dart';
 import '../models/sync_queue_item.dart';
 import '../datasources/hive_guardian_datasource.dart';
 import '../datasources/api_guardian_datasource.dart';
+import '../services/api_client.dart';
 import '../services/sync_queue_service.dart';
 
 /// Repository pour la gestion des données Guardian.
@@ -27,12 +28,28 @@ class GuardianRepository {
   }
 
   Future<void> updateGuardian(Guardian guardian) async {
+    final previous = _hiveDataSource.getGuardianById(guardian.id);
     await _hiveDataSource.updateGuardian(guardian);
+
+    if (_syncQueue.hasPendingCreate(SyncEntityType.guardian, guardian.id)) {
+      await _syncQueue.enqueue(
+        entityType: SyncEntityType.guardian,
+        operation: SyncOperation.update,
+        entityId: guardian.id,
+      );
+      return;
+    }
+
     try {
       final saved = await _apiDataSource.updateGuardian(guardian, guardian.markazId);
       await _hiveDataSource.updateGuardian(saved);
-    } catch (e) {
-      debugPrint('Erreur sync API (mise à jour tuteur) : $e');
+      await _syncQueue.resolve(SyncEntityType.guardian, guardian.id);
+    } catch (e, st) {
+      if (!ApiClient.isOfflineError(e)) {
+        if (previous != null) await _hiveDataSource.updateGuardian(previous);
+        ApiClient.throwReadable(e, st);
+      }
+      debugPrint('Hors ligne : mise à jour de tuteur mise en file ($e)');
       await _syncQueue.enqueue(
         entityType: SyncEntityType.guardian,
         operation: SyncOperation.update,
@@ -42,11 +59,27 @@ class GuardianRepository {
   }
 
   Future<void> removeGuardian(String guardianId) async {
+    final previous = _hiveDataSource.getGuardianById(guardianId);
     await _hiveDataSource.deleteGuardian(guardianId);
+
+    if (_syncQueue.hasPendingCreate(SyncEntityType.guardian, guardianId)) {
+      await _syncQueue.enqueue(
+        entityType: SyncEntityType.guardian,
+        operation: SyncOperation.delete,
+        entityId: guardianId,
+      );
+      return;
+    }
+
     try {
       await _apiDataSource.deleteGuardian(guardianId);
-    } catch (e) {
-      debugPrint('Erreur sync API (suppression tuteur) : $e');
+      await _syncQueue.resolve(SyncEntityType.guardian, guardianId);
+    } catch (e, st) {
+      if (!ApiClient.isOfflineError(e)) {
+        if (previous != null) await _hiveDataSource.addGuardian(previous);
+        ApiClient.throwReadable(e, st);
+      }
+      debugPrint('Hors ligne : suppression de tuteur mise en file ($e)');
       await _syncQueue.enqueue(
         entityType: SyncEntityType.guardian,
         operation: SyncOperation.delete,
@@ -56,16 +89,22 @@ class GuardianRepository {
   }
 
   /// Rejoue une mise à jour en attente — réservé à SyncOrchestrator.
-  Future<void> retrySyncUpdate(String guardianId) async {
+  /// Ne rattrape PAS l'erreur : l'appelant décide de garder l'action en file.
+  Future<void> retrySyncUpdate(String guardianId, DateTime performedAt) async {
     final guardian = _hiveDataSource.getGuardianById(guardianId);
     if (guardian == null) return;
-    final saved = await _apiDataSource.updateGuardian(guardian, guardian.markazId);
+    final saved = await _apiDataSource.updateGuardian(guardian, guardian.markazId, performedAt: performedAt);
     await _hiveDataSource.updateGuardian(saved);
   }
 
   /// Rejoue une suppression en attente — réservé à SyncOrchestrator.
-  Future<void> retrySyncDelete(String guardianId) async {
-    await _apiDataSource.deleteGuardian(guardianId);
+  Future<void> retrySyncDelete(String guardianId, DateTime performedAt) async {
+    await _apiDataSource.deleteGuardian(guardianId, performedAt: performedAt);
+  }
+
+  /// Résumé lisible pour l'écran "Synchronisation".
+  String? describe(String guardianId) {
+    return _hiveDataSource.getGuardianById(guardianId)?.name;
   }
 
   Guardian? getGuardianById(String guardianId) {
@@ -88,12 +127,23 @@ class GuardianRepository {
     await _hiveDataSource.close();
   }
 
-  /// Recharge le cache local depuis l'API pour la Markaz donnée.
+  /// Recharge le cache local depuis l'API pour la Markaz donnée, sans
+  /// écraser les saisies locales encore en attente de synchronisation
+  /// (CDC §20).
   Future<void> syncFromMarkaz(String markazId) async {
     try {
-      final guardians = await _apiDataSource.getGuardiansByMarkaz(markazId);
+      final remote = await _apiDataSource.getGuardiansByMarkaz(markazId);
+      final pendingIds = _syncQueue.pendingIds(SyncEntityType.guardian);
+      final pendingLocal = pendingIds
+          .map(_hiveDataSource.getGuardianById)
+          .whereType<Guardian>()
+          .toList();
       await _hiveDataSource.clearAll();
-      for (final guardian in guardians) {
+      for (final guardian in remote) {
+        if (pendingIds.contains(guardian.id)) continue;
+        await _hiveDataSource.addGuardian(guardian);
+      }
+      for (final guardian in pendingLocal) {
         await _hiveDataSource.addGuardian(guardian);
       }
     } catch (e) {

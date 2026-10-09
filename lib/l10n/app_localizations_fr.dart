@@ -244,4 +244,107 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get activityConflictHint => 'Touchez pour voir la version remplacée';
+
+  @override
+  String get receiptPendingSync =>
+      'Paiement enregistré hors ligne. Le reçu sera disponible après synchronisation (son numéro est attribué par le serveur).';
+
+  @override
+  String get navSync => 'Synchronisation';
+
+  @override
+  String get syncOnline => 'Connecté au serveur';
+
+  @override
+  String get syncOffline => 'Hors ligne';
+
+  @override
+  String get syncOfflineBanner =>
+      'Hors ligne — vos saisies sont enregistrées sur l\'appareil et seront envoyées automatiquement.';
+
+  @override
+  String syncPendingBanner(String count) {
+    return '$count action(s) en attente de synchronisation';
+  }
+
+  @override
+  String syncFailedBanner(String count) {
+    return '$count action(s) refusée(s) par le serveur — à vérifier';
+  }
+
+  @override
+  String get syncNow => 'Synchroniser maintenant';
+
+  @override
+  String get syncInProgress => 'Synchronisation en cours…';
+
+  @override
+  String get syncAllDone => 'Tout est synchronisé.';
+
+  @override
+  String syncResult(String synced, String failed) {
+    return '$synced action(s) envoyée(s), $failed refusée(s).';
+  }
+
+  @override
+  String get syncStillOffline =>
+      'Serveur toujours injoignable. Nouvel essai automatique dès le retour de la connexion.';
+
+  @override
+  String get syncEmpty =>
+      'Aucune action en attente. Toutes vos saisies sont sur le serveur.';
+
+  @override
+  String get syncPendingTitle => 'Actions en attente';
+
+  @override
+  String get syncOpCreate => 'Création';
+
+  @override
+  String get syncOpUpdate => 'Modification';
+
+  @override
+  String get syncOpDelete => 'Suppression';
+
+  @override
+  String get syncEntityPayment => 'Paiement';
+
+  @override
+  String get syncEntityAttendance => 'Présence';
+
+  @override
+  String get syncEntityGuardian => 'Tuteur';
+
+  @override
+  String get syncEntityRecitation => 'Récitation';
+
+  @override
+  String get syncEntityClass => 'Groupe';
+
+  @override
+  String get syncEntityStudentClass => 'Affectation à un groupe';
+
+  @override
+  String syncDoneAt(String date) {
+    return 'Saisi le $date';
+  }
+
+  @override
+  String syncRejected(String message) {
+    return 'Refusé par le serveur : $message';
+  }
+
+  @override
+  String get syncDiscard => 'Abandonner cette action';
+
+  @override
+  String get syncDiscardConfirmTitle => 'Abandonner cette action ?';
+
+  @override
+  String get syncDiscardConfirmBody =>
+      'Elle ne sera jamais envoyée au serveur. Une création sera retirée de l\'appareil ; une modification sera remplacée par la version du serveur à la prochaine synchronisation.';
+
+  @override
+  String get syncConflictsHint =>
+      'Les conflits éventuels (donnée modifiée entre-temps sur le serveur) sont consultables dans le journal d\'activité.';
 }
