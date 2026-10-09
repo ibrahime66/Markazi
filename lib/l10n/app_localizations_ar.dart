@@ -36,6 +36,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navRecitations => 'التسميع';
 
   @override
+  String get navActivityLog => 'سجل النشاط';
+
+  @override
   String get navLogout => 'تسجيل الخروج';
 
   @override

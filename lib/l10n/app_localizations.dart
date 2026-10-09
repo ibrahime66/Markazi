@@ -154,6 +154,12 @@ abstract class AppLocalizations {
   /// **'Récitations'**
   String get navRecitations;
 
+  /// No description provided for @navActivityLog.
+  ///
+  /// In fr, this message translates to:
+  /// **'Journal d\'activité'**
+  String get navActivityLog;
+
   /// No description provided for @navLogout.
   ///
   /// In fr, this message translates to:

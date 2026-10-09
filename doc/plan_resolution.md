@@ -342,8 +342,55 @@ fonctionnalités manquantes, puis fragilité de config, puis dette technique.
       visuelle du rendu (branding, tableau de présence, bloc assiduité,
       tableau des paiements — tout correctement mappé, aucun bug de rendu).
 - [x] ✅ **F3.** Résolu avec B1/B2 ci-dessus (Étape 3).
-- [ ] 🔴 **F4.** Ajouter un écran Flutter listant le journal d'activité
-      (`GET /api/activity-logs`).
+- [x] ✅ **F4.** Résolu le 9 octobre 2026 (côté code ; affichage réel sur
+      appareil à confirmer, voir limite ci-dessous). Écran Flutter du
+      journal d'activité branché sur `GET /api/activity-logs`, en lecture
+      seule et sans cache Hive (le journal se consulte en ligne, il n'est
+      jamais modifié depuis l'app — CDC §19) :
+      - `models/activity_log_entry.dart` : `ActivityLogEntry` (id, action,
+        entity_type, description, created_at converti en heure locale,
+        `user.name`) + `ActivityLogPage` (pagination Laravel `data`,
+        `current_page`, `last_page`, `hasMore`). Exporté dans
+        `models/index.dart`.
+      - `services/activity_log_service.dart` : `fetchPage(page, perPage,
+        entityType)` via `ApiClient.instance.dio`. Exporté dans
+        `services/index.dart`.
+      - `screens/activity_log_screen.dart` : liste paginée (page suivante
+        chargée en approchant du bas), tirer pour rafraîchir, filtres par
+        domaine (Tout, Élèves, Paiements, Présences, Récitations, Classes,
+        Tuteurs, Compte, Markaz) envoyés en `?entity_type=`, icône et
+        couleur par domaine (déduites du préfixe de l'action,
+        `payment.recorded` → paiements), date lisible en français
+        (« Aujourd'hui à 14:32 », « Hier à 09:05 », « 3 oct. 2026 à
+        18:10 »), nom de l'utilisateur, état vide, et état d'erreur réseau
+        (message `ApiClient.describeError` + bouton « Réessayer », y compris
+        en bas de liste si une page suivante échoue). Une réponse arrivée
+        après un changement de filtre est ignorée (compteur de génération),
+        pour ne jamais mélanger deux listes.
+      - Route `/activity-log` (`main.dart`), entrée « Journal d'activité »
+        dans le tiroir du tableau de bord sous « Récitations », clé
+        `navActivityLog` ajoutée en fr/en/ar et `flutter gen-l10n` relancé.
+      **Choix assumé** : « Compte » et « Markaz » sont deux filtres
+      distincts et non un seul, car le serveur ne filtre que sur un
+      `entity_type` exact à la fois (`App\Models\User` vs
+      `App\Models\Markaz`) — les fusionner aurait demandé de modifier le
+      backend, hors périmètre de ce point.
+      Vérifié : `flutter analyze` → 0 problème ; `flutter test` → 4/4 (2
+      préexistants + 2 nouveaux dans `test/activity_log_entry_test.dart`,
+      qui lisent une page au format exact produit par
+      `ActivityLogController::index` : pagination, `user` absent, date
+      nulle, conversion UTC). Flutter 3.47.7 installé pour l'occasion dans
+      l'environnement cloud.
+      **Limites de vérification** : (1) le backend n'a pas pu être lancé
+      ici (PHP 8.3 disponible, les dépendances verrouillées exigent PHP
+      8.4) — le format de la réponse a donc été vérifié par lecture du
+      contrôleur et du modèle `ActivityLog::record`, pas par un appel réel ;
+      (2) un test widget de l'écran a été tenté (affichage des filtres +
+      état d'erreur hors réseau) : ses vérifications passaient, mais
+      `google_fonts` tente de télécharger la police Cairo pendant le test
+      et fait échouer/bloquer la suite hors ligne — test retiré plutôt que
+      de laisser une suite instable ; (3) aucun appareil disponible : le
+      rendu, le défilement et les filtres sont à confirmer sur le téléphone.
 - [ ] 🔴 **F5.** Implémenter un vrai mécanisme hors ligne : statut "en
       attente de synchronisation" par action, file d'attente rejouée à la
       reconnexion, résolution de conflit journalisée, indicateur visuel
@@ -436,6 +483,7 @@ fait, comment ça a été vérifié.)_
 | 30/08/2026 | D2 (majoritaire) | File d'attente hors-ligne persistante (paiements/présences/tuteurs/récitations) + rejeu automatique + badge UI | `flutter analyze` 0, `flutter test` 2/2, script isolé (persistance/idempotence/ordre) ; rejeu réseau réel non testé (pas d'appareil, limite FFI en script pur) |
 | 30/08/2026 | C2 (code) | Bug racine (500 systématique) corrigé + emails traduits en français ; reste : choix d'un fournisseur SMTP réel (décision produit) | Test curl réel (200, code présent, tout en français) + test automatisé + suite 32/32 |
 | 30/08/2026 | F1 | Décision assumée avec l'utilisateur : pas de reconstruction serveur, écart documenté comme choix technique | — |
+| 09/10/2026 | F4 + H6 | Écran « Journal d'activité » (modèle, service, écran paginé avec filtres par domaine, route, tiroir, traductions fr/en/ar) ; texte de suppression d'élève corrigé (archivage, données conservées) | `flutter analyze` 0 ; `flutter test` 4/4 (2 nouveaux tests du format de réponse) ; backend non lancé (PHP 8.4 requis), rendu sur appareil à confirmer |
 
 ---
 
@@ -550,11 +598,20 @@ maintenant tous résolus et confirmés sur appareil physique.
       la resynchronisation. Deux options : ajouter une colonne
       `teacher_name` texte libre côté backend, ou remplacer le champ par un
       choix parmi les comptes utilisateurs existants (`teacher_id`).
-- [ ] ⬜ **H6.** Non résolu. Le message de confirmation de suppression d'un
-      élève affirme à tort que les paiements/présences associés seront
-      supprimés (en réalité : archivage soft-delete, données conservées en
-      base mais disparues des totaux/rapports affichés). Texte à corriger ;
-      comportement à clarifier avec l'utilisateur.
+- [x] ✅ **H6 (texte corrigé).** Résolu le 9 octobre 2026 pour le texte,
+      sans changer le comportement. L'ancien message (« Cette action est
+      irréversible et supprimera également toutes les données associées
+      (paiements, présences) ») est remplacé dans
+      `_showDeleteStudentDialog` (`dashboard_screen.dart`) par : « L'élève
+      sera archivé : il n'apparaîtra plus dans les listes, les totaux ni
+      les rapports. Ses paiements et présences ne sont pas effacés, ils
+      restent conservés sur le serveur. » — conforme à
+      `StudentController::destroy()` (soft delete, journalisé
+      `student.archived`).
+      Vérifié : `flutter analyze` 0, `flutter test` 4/4 ; texte relu
+      contre le contrôleur. **Reste ouvert (décision du propriétaire, non
+      tranchée ici)** : faut-il que les paiements d'un élève archivé
+      continuent de compter dans les totaux historiques ?
 - [ ] ⬜ **H7.** Non résolu — écart mineur. Le contrôle de doublon de
       présence côté app (élève+leçon+jour) ne correspond pas à la règle
       serveur réelle (un seul enregistrement par élève et par jour, toutes

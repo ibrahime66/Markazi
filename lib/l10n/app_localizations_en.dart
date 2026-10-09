@@ -36,6 +36,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navRecitations => 'Recitations';
 
   @override
+  String get navActivityLog => 'Activity log';
+
+  @override
   String get navLogout => 'Log out';
 
   @override

@@ -36,6 +36,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navRecitations => 'Récitations';
 
   @override
+  String get navActivityLog => 'Journal d\'activité';
+
+  @override
   String get navLogout => 'Déconnexion';
 
   @override

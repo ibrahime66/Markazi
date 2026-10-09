@@ -267,6 +267,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _buildDrawerRoute(Icons.mosque_outlined, l10n.navMyMarkaz, '/markaz-settings'),
                   _buildDrawerRoute(Icons.family_restroom_rounded, l10n.navGuardians, '/guardians'),
                   _buildDrawerRoute(Icons.menu_book_rounded, l10n.navRecitations, '/recitations'),
+                  _buildDrawerRoute(Icons.history_rounded, l10n.navActivityLog, '/activity-log'),
                 ],
               ),
             ),
@@ -1471,7 +1472,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Cette action est irréversible et supprimera également toutes les données associées (paiements, présences).',
+              "L'élève sera archivé : il n'apparaîtra plus dans les listes, les totaux ni les rapports. Ses paiements et présences ne sont pas effacés, ils restent conservés sur le serveur.",
               style: TextStyle(color: Colors.red[700], fontSize: 12),
             ),
           ],

@@ -9,3 +9,4 @@ export 'class_model.dart';
 export 'guardian.dart';
 export 'recitation.dart';
 export 'sync_queue_item.dart';
+export 'activity_log_entry.dart';

@@ -8,3 +8,4 @@ export 'guardian_service.dart';
 export 'recitation_service.dart';
 export 'sync_queue_service.dart';
 export 'sync_orchestrator.dart';
+export 'activity_log_service.dart';

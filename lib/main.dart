@@ -20,6 +20,7 @@ import 'screens/about_screen.dart';
 import 'screens/markaz_settings_screen.dart';
 import 'screens/guardian_screen.dart';
 import 'screens/recitation_screen.dart';
+import 'screens/activity_log_screen.dart';
 import 'utils/app_colors.dart';
 import 'datasources/hive_student_datasource.dart';
 import 'datasources/hive_payment_datasource.dart';
@@ -248,6 +249,7 @@ class MarkaziApp extends StatelessWidget {
             '/markaz-settings': (context) => const MarkazSettingsScreen(),
             '/guardians': (context) => const GuardianScreen(),
             '/recitations': (context) => const RecitationScreen(),
+            '/activity-log': (context) => const ActivityLogScreen(),
           },
         );
       },
