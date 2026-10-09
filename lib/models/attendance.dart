@@ -12,6 +12,17 @@ enum AttendanceStatus {
   absent,
   @HiveField(2)
   late,
+
+  /// Absence justifiée (CDC §8.6) — comptée comme une absence dans les taux,
+  /// comme côté serveur (AttendanceController::statsForStudent).
+  @HiveField(3)
+  justified,
+}
+
+extension AttendanceStatusX on AttendanceStatus {
+  /// Absence, justifiée ou non : même règle que le calcul serveur.
+  bool get isAbsence =>
+      this == AttendanceStatus.absent || this == AttendanceStatus.justified;
 }
 
 /// Modèle représentant une présence

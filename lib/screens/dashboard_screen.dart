@@ -1085,25 +1085,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
             final studentName = student.name;
 
             // Déterminer le statut et la couleur
-            final isPresent = attendance.status == AttendanceStatus.present;
-            final isAbsent = attendance.status == AttendanceStatus.absent;
-
             Color statusColor;
             IconData statusIcon;
             String statusText;
 
-            if (isPresent) {
-              statusColor = Colors.green;
-              statusIcon = Icons.check_circle;
-              statusText = 'Présent';
-            } else if (isAbsent) {
-              statusColor = Colors.red;
-              statusIcon = Icons.cancel;
-              statusText = 'Absent';
-            } else {
-              statusColor = Colors.orange;
-              statusIcon = Icons.schedule;
-              statusText = 'Tardif';
+            switch (attendance.status) {
+              case AttendanceStatus.present:
+                statusColor = Colors.green;
+                statusIcon = Icons.check_circle;
+                statusText = 'Présent';
+              case AttendanceStatus.absent:
+                statusColor = Colors.red;
+                statusIcon = Icons.cancel;
+                statusText = 'Absent';
+              case AttendanceStatus.justified:
+                statusColor = Colors.blue;
+                statusIcon = Icons.event_busy;
+                statusText = 'Absence justifiée';
+              case AttendanceStatus.late:
+                statusColor = Colors.orange;
+                statusIcon = Icons.schedule;
+                statusText = 'Tardif';
             }
 
             return Card(
@@ -1957,6 +1959,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ],
                           ),
                         ),
+                        DropdownMenuItem(
+                          value: 'justified',
+                          child: Row(
+                            children: [
+                              Icon(Icons.event_busy,
+                                  color: Colors.blue, size: 20),
+                              SizedBox(width: 8),
+                              Text('Absence justifiée'),
+                            ],
+                          ),
+                        ),
                       ],
                       onChanged: (value) {
                         if (value != null) {
@@ -2007,6 +2020,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         );
                       } else if (selectedStatus == 'late') {
                         await attendanceProvider.markLate(
+                          studentId: selectedStudentId!,
+                          markazId: markazId,
+                          lesson: lesson,
+                        );
+                      } else if (selectedStatus == 'justified') {
+                        await attendanceProvider.markJustified(
                           studentId: selectedStudentId!,
                           markazId: markazId,
                           lesson: lesson,
@@ -2082,7 +2101,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               .where((a) => a.status == AttendanceStatus.present)
               .length;
           final absent = weeklyAttendances
-              .where((a) => a.status == AttendanceStatus.absent)
+              .where((a) => a.status.isAbsence)
               .length;
           final late = weeklyAttendances
               .where((a) => a.status == AttendanceStatus.late)
@@ -2142,7 +2161,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               .where((a) => a.status == AttendanceStatus.present)
               .length;
           final absent = monthlyAttendances
-              .where((a) => a.status == AttendanceStatus.absent)
+              .where((a) => a.status.isAbsence)
               .length;
           final late = monthlyAttendances
               .where((a) => a.status == AttendanceStatus.late)
@@ -2193,6 +2212,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return AttendanceStatus.absent;
       case 'late':
         return AttendanceStatus.late;
+      case 'justified':
+        return AttendanceStatus.justified;
       default:
         return AttendanceStatus.present;
     }
@@ -2722,6 +2743,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     DropdownMenuItem(value: AttendanceStatus.present, child: Text('Présent')),
                     DropdownMenuItem(value: AttendanceStatus.absent, child: Text('Absent')),
                     DropdownMenuItem(value: AttendanceStatus.late, child: Text('Tardif')),
+                    DropdownMenuItem(value: AttendanceStatus.justified, child: Text('Absence justifiée')),
                   ],
                   onChanged: (value) {
                     if (value != null) setState(() => selectedStatus = value);
@@ -2843,7 +2865,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               .length;
 
           final absentCount = studentAttendances
-              .where((a) => a.status == AttendanceStatus.absent)
+              .where((a) => a.status.isAbsence)
               .length;
 
           final lateCount = studentAttendances
@@ -3185,7 +3207,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           .length;
 
                       final monthAbsent = monthAttendances
-                          .where((a) => a.status == AttendanceStatus.absent)
+                          .where((a) => a.status.isAbsence)
                           .length;
 
                       final monthLate = monthAttendances
@@ -3194,7 +3216,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                       // Calculer les taux pour la semaine
                       final weekAbsent = weekAttendances
-                          .where((a) => a.status == AttendanceStatus.absent)
+                          .where((a) => a.status.isAbsence)
                           .length;
 
                       final weekLate = weekAttendances
@@ -4016,7 +4038,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               !a.date.isAfter(monthEnd))
           .toList();
       final presentDays = attendances.where((a) => a.status == AttendanceStatus.present).length;
-      final absentDays = attendances.where((a) => a.status == AttendanceStatus.absent).length;
+      final absentDays = attendances.where((a) => a.status.isAbsence).length;
 
       final payments = context
           .read<PaymentProvider>()
@@ -4069,6 +4091,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return 'Absent';
       case AttendanceStatus.late:
         return 'Retard';
+      case AttendanceStatus.justified:
+        return 'Absence justifiée';
     }
   }
 

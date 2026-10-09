@@ -68,6 +68,8 @@ class AttendanceStatusAdapter extends TypeAdapter<AttendanceStatus> {
         return AttendanceStatus.absent;
       case 2:
         return AttendanceStatus.late;
+      case 3:
+        return AttendanceStatus.justified;
       default:
         return AttendanceStatus.present;
     }
@@ -84,6 +86,9 @@ class AttendanceStatusAdapter extends TypeAdapter<AttendanceStatus> {
         break;
       case AttendanceStatus.late:
         writer.writeByte(2);
+        break;
+      case AttendanceStatus.justified:
+        writer.writeByte(3);
         break;
     }
   }

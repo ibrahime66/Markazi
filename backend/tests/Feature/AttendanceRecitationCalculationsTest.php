@@ -156,4 +156,36 @@ class AttendanceRecitationCalculationsTest extends TestCase
         $this->assertSame(0, $response->json('total_sessions'));
         $this->assertSame(0, $response->json('progress_rate'));
     }
+
+    public function test_justified_absence_counts_as_absence_and_last_day_is_included(): void
+    {
+        // CDC §8.6 : "absence justifiée" — comptée dans les absences (taux),
+        // détaillée à part. Le vendredi 7 août est le DERNIER jour de la
+        // période : il doit être inclus dans le calcul.
+        $entries = [
+            '2026-08-03' => 'present',
+            '2026-08-04' => 'justified',
+            '2026-08-05' => 'present',
+            '2026-08-06' => 'absent',
+            '2026-08-07' => 'present',
+        ];
+        foreach ($entries as $date => $status) {
+            Attendance::create([
+                'markaz_id' => $this->markaz->id,
+                'student_id' => $this->student->id,
+                'date' => $date,
+                'status' => $status,
+            ]);
+        }
+
+        $response = $this->stats('2026-08-03', '2026-08-07');
+
+        $response->assertOk()
+            ->assertJsonPath('total_days', 5)
+            ->assertJsonPath('present', 3)
+            ->assertJsonPath('absent', 2)
+            ->assertJsonPath('justified', 1);
+        $this->assertEquals(60, $response->json('attendance_rate'));
+        $this->assertEquals(40, $response->json('absence_rate'));
+    }
 }
