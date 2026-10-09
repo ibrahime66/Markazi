@@ -1785,4 +1785,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activityActionSyncConflict => 'Sync conflict';
+
+  @override
+  String get groupReport => 'Group report';
+
+  @override
+  String get groupReportChoose =>
+      'Report for the whole group: choose the period.';
+
+  @override
+  String get groupReportWeekly => 'This week';
+
+  @override
+  String get groupReportMonthly => 'This month';
 }

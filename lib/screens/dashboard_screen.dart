@@ -3946,9 +3946,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
 
     try {
+      // Toutes les présences de la semaine (cache local complet) : le
+      // provider ne contient que la journée en cours, le rapport n'affichait
+      // donc que le jour même.
       final attendances = context
-          .read<AttendanceProvider>()
-          .attendances
+          .read<AttendanceService>()
+          .getAttendancesForCurrentMarkaz()
           .where((a) =>
               a.studentId == student.id &&
               !a.date.isBefore(weekStart) &&
@@ -4012,16 +4015,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
 
     try {
+      // Toutes les présences du mois (cache local complet — le provider ne
+      // contient que la journée en cours).
       final attendances = context
-          .read<AttendanceProvider>()
-          .attendances
+          .read<AttendanceService>()
+          .getAttendancesForCurrentMarkaz()
           .where((a) =>
               a.studentId == student.id &&
               !a.date.isBefore(monthStart) &&
               !a.date.isAfter(monthEnd))
           .toList();
-      final presentDays = attendances.where((a) => a.status == AttendanceStatus.present).length;
-      final absentDays = attendances.where((a) => a.status.isAbsence).length;
 
       final payments = context
           .read<PaymentProvider>()
@@ -4048,8 +4051,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         month: now.month,
         year: now.year,
         totalDays: stats['total_days'] as int? ?? attendances.length,
-        presentDays: presentDays,
-        absentDays: absentDays,
+        // Comptes du serveur (référence), à défaut ceux du cache local.
+        presentDays: stats['present'] as int? ??
+            attendances.where((a) => a.status == AttendanceStatus.present).length,
+        absentDays: stats['absent'] as int? ??
+            attendances.where((a) => a.status.isAbsence).length,
         attendanceRate: (stats['attendance_rate'] as num?)?.toDouble() ?? 0,
         payments: payments,
       );

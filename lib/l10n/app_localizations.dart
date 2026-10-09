@@ -3341,6 +3341,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Conflit de synchronisation'**
   String get activityActionSyncConflict;
+
+  /// No description provided for @groupReport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rapport du groupe'**
+  String get groupReport;
+
+  /// No description provided for @groupReportChoose.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rapport de tout le groupe : choisissez la période.'**
+  String get groupReportChoose;
+
+  /// No description provided for @groupReportWeekly.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette semaine'**
+  String get groupReportWeekly;
+
+  /// No description provided for @groupReportMonthly.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce mois-ci'**
+  String get groupReportMonthly;
 }
 
 class _AppLocalizationsDelegate

@@ -13,6 +13,11 @@ import '../models/student.dart';
 import '../models/payment.dart';
 import '../models/attendance.dart';
 import '../l10n/app_localizations.dart';
+import '../document_engine/document_service.dart';
+import '../document_engine/models/markaz_branding.dart';
+import '../services/attendance_service.dart';
+import '../services/class_report_builder.dart';
+import '../services/recitation_service.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
   final ClassModel group;
@@ -49,6 +54,99 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     });
   }
 
+  /// Choix de la période puis génération du rapport du groupe (CDC §11.3 :
+  /// "le maître génère le rapport correspondant pour un élève ou
+  /// l'ensemble d'une classe").
+  Future<void> _chooseGroupReport() async {
+    final monthly = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(_l10n.groupReport),
+        content: Text(_l10n.groupReportChoose),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(_l10n.actionCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(_l10n.groupReportWeekly),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: Text(_l10n.groupReportMonthly),
+          ),
+        ],
+      ),
+    );
+    if (monthly == null || !mounted) return;
+
+    final markaz = context.read<MarkazProvider>().markaz;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final metadata = ClassReportBuilder.build(
+        markaz: MarkazBranding(
+          markazName: markaz?.name ?? 'Markazi',
+          slogan: markaz?.slogan,
+          address: markaz?.address,
+          city: markaz?.city,
+          country: markaz?.country,
+          currency: markaz?.currency ?? 'GNF',
+          phone: markaz?.phone,
+          primaryColorHex: markaz?.primaryColorHex,
+        ),
+        workingDays: markaz?.workingDays ?? const [],
+        group: widget.group,
+        students: context.read<StudentProvider>().students,
+        // Cache local complet (le provider ne garde que la journée).
+        attendances: context.read<AttendanceService>().getAttendancesForCurrentMarkaz(),
+        recitations: context.read<RecitationService>().getRecitationsForCurrentMarkaz(),
+        payments: context.read<PaymentProvider>().payments,
+        monthly: monthly,
+        now: DateTime.now(),
+      );
+      final bytes = await DocumentService().generateClassReport(metadata);
+      if (!mounted) return;
+      final start = metadata.periodStart;
+      final fileName =
+          'rapport_groupe_${widget.group.name}_${start.day}${start.month}${start.year}.pdf';
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(_l10n.dashReportGenerated),
+          content: Text(_l10n.dashReportWhatToDo),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(_l10n.actionLater),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                await DocumentService().sharePdf(bytes, fileName);
+              },
+              child: Text(_l10n.actionShare),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                await DocumentService().previewPdf(bytes);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              child: Text(_l10n.actionPreviewPrint),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(
+        content: Text(_l10n.dashGenerationError(e)),
+        backgroundColor: Colors.red,
+      ));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     context.watch<ThemeProvider>();
@@ -68,6 +166,14 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          // Rapport pour le groupe entier (CDC §11.3).
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white),
+            tooltip: _l10n.groupReport,
+            onPressed: _chooseGroupReport,
+          ),
+        ],
       ),
       body: Consumer4<ClassProvider, StudentProvider, PaymentProvider, AttendanceProvider>(
         builder: (context, classProvider, studentProvider, paymentProvider, attendanceProvider, _) {

@@ -35,8 +35,26 @@ class PdfHelpers {
     final arabic = pw.Font.ttf(
       await rootBundle.load('assets/fonts/NotoSansArabic-Regular.ttf'),
     );
+    // Police grasse dédiée : sans elle, tout texte en gras (titres, en-têtes
+    // de tableaux) retombait sur "Helvetica-Bold", sans support Unicode
+    // (avertissement dart_pdf, cases vides possibles pour les accents
+    // étendus ou l'arabe). L'arabe en gras utilise la police de repli
+    // (graisse normale), la bibliothèque n'ayant qu'une liste de repli
+    // commune à tous les styles.
+    final bold = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/NotoSans-Bold.ttf'),
+    );
 
-    _cachedTheme = pw.ThemeData.withFont(base: base, fontFallback: [arabic]);
+    // Pas de police italique embarquée : l'italique (slogan) utilise les
+    // mêmes polices que le texte droit plutôt qu'une police PDF standard
+    // sans Unicode.
+    _cachedTheme = pw.ThemeData.withFont(
+      base: base,
+      bold: bold,
+      italic: base,
+      boldItalic: bold,
+      fontFallback: [arabic],
+    );
     return _cachedTheme!;
   }
 
@@ -53,7 +71,10 @@ class PdfHelpers {
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Column(
+            // Expanded : un nom de Markaz long passe à la ligne au lieu de
+            // pousser le titre du document hors de la page.
+            pw.Expanded(
+              child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text(
@@ -84,7 +105,9 @@ class PdfHelpers {
                     style: pw.TextStyle(fontSize: DocumentTheme.captionSize, color: theme.mutedTextColor),
                   ),
               ],
+              ),
             ),
+            pw.SizedBox(width: 12),
             pw.Container(
               padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: pw.BoxDecoration(

@@ -539,5 +539,9 @@
   "activityActionRecitationUpdated": "Recitation corrected",
   "activityActionRecitationDeleted": "Recitation deleted",
   "activityActionMarkazUpdated": "Markaz details updated",
-  "activityActionSyncConflict": "Sync conflict"
+  "activityActionSyncConflict": "Sync conflict",
+  "groupReport": "Group report",
+  "groupReportChoose": "Report for the whole group: choose the period.",
+  "groupReportWeekly": "This week",
+  "groupReportMonthly": "This month"
 }

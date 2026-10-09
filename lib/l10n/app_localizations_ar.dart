@@ -1772,4 +1772,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get activityActionSyncConflict => 'تعارض في المزامنة';
+
+  @override
+  String get groupReport => 'تقرير المجموعة';
+
+  @override
+  String get groupReportChoose => 'تقرير المجموعة بأكملها: اختر الفترة.';
+
+  @override
+  String get groupReportWeekly => 'هذا الأسبوع';
+
+  @override
+  String get groupReportMonthly => 'هذا الشهر';
 }
