@@ -342,6 +342,17 @@ class AttendanceService {
     };
   }
 
+  /// Toutes les présences du Markaz connues localement (cache complet,
+  /// synchronisé depuis le serveur), pour les rapports sur une période.
+  /// À ne pas confondre avec [getTodayAttendance] (journée en cours).
+  List<Attendance> getAttendancesForCurrentMarkaz() {
+    final markazId = _authService.currentMarkazId;
+    if (markazId == null) {
+      throw AppException((l) => l.errNotAuthenticated);
+    }
+    return _repository.getAttendancesByMarkaz(markazId);
+  }
+
   /// Obtient les présences d'aujourd'hui pour une markaz
   List<Attendance> getTodayAttendance() {
     final markazId = _authService.currentMarkazId;

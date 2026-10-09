@@ -6,6 +6,7 @@ import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'generators/class_report_generator.dart';
 import 'generators/monthly_report_generator.dart';
 import 'generators/payment_receipt_generator.dart';
 import 'generators/weekly_report_generator.dart';
@@ -30,6 +31,12 @@ class DocumentService {
 
   Future<Uint8List> generateMonthlyReport(MonthlyReportMetadata metadata) async {
     final doc = await MonthlyReportGenerator.generate(metadata);
+    return doc.save();
+  }
+
+  /// Rapport hebdomadaire ou mensuel d'un groupe entier (CDC §11.3).
+  Future<Uint8List> generateClassReport(ClassReportMetadata metadata) async {
+    final doc = await ClassReportGenerator.generate(metadata);
     return doc.save();
   }
 

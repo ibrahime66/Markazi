@@ -917,5 +917,9 @@
   "activityActionRecitationUpdated": "Récitation corrigée",
   "activityActionRecitationDeleted": "Récitation supprimée",
   "activityActionMarkazUpdated": "Fiche du Markaz mise à jour",
-  "activityActionSyncConflict": "Conflit de synchronisation"
+  "activityActionSyncConflict": "Conflit de synchronisation",
+  "groupReport": "Rapport du groupe",
+  "groupReportChoose": "Rapport de tout le groupe : choisissez la période.",
+  "groupReportWeekly": "Cette semaine",
+  "groupReportMonthly": "Ce mois-ci"
 }

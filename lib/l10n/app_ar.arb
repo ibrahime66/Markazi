@@ -539,5 +539,9 @@
   "activityActionRecitationUpdated": "تم تصحيح تسميع",
   "activityActionRecitationDeleted": "تم حذف تسميع",
   "activityActionMarkazUpdated": "تم تحديث بيانات المركز",
-  "activityActionSyncConflict": "تعارض في المزامنة"
+  "activityActionSyncConflict": "تعارض في المزامنة",
+  "groupReport": "تقرير المجموعة",
+  "groupReportChoose": "تقرير المجموعة بأكملها: اختر الفترة.",
+  "groupReportWeekly": "هذا الأسبوع",
+  "groupReportMonthly": "هذا الشهر"
 }

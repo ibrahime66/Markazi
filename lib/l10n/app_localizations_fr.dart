@@ -1800,4 +1800,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get activityActionSyncConflict => 'Conflit de synchronisation';
+
+  @override
+  String get groupReport => 'Rapport du groupe';
+
+  @override
+  String get groupReportChoose =>
+      'Rapport de tout le groupe : choisissez la période.';
+
+  @override
+  String get groupReportWeekly => 'Cette semaine';
+
+  @override
+  String get groupReportMonthly => 'Ce mois-ci';
 }

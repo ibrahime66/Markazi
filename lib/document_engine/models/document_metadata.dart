@@ -108,3 +108,61 @@ class MonthlyReportMetadata extends DocumentMetadata {
     required this.payments,
   });
 }
+
+/// Une ligne (un élève) du rapport de groupe.
+class ClassReportRow {
+  final String studentName;
+  final int presentDays;
+  final int absentDays;
+  final int lateDays;
+
+  /// Présents / jours de cours réels de la période (CDC §8.6), en %.
+  final double attendanceRate;
+  final int recitations;
+
+  /// Statut du paiement du mois concerné (texte du document, en français).
+  final String paymentStatus;
+
+  const ClassReportRow({
+    required this.studentName,
+    required this.presentDays,
+    required this.absentDays,
+    required this.lateDays,
+    required this.attendanceRate,
+    required this.recitations,
+    required this.paymentStatus,
+  });
+}
+
+/// Métadonnées d'un rapport hebdomadaire ou mensuel pour un groupe entier
+/// (CDC §11.3 : "le maître génère le rapport correspondant pour un élève ou
+/// l'ensemble d'une classe").
+class ClassReportMetadata extends DocumentMetadata {
+  final String className;
+  final String? teacherName;
+  final bool isMonthly;
+  final DateTime periodStart;
+  final DateTime periodEnd;
+
+  /// Jours de cours réels de la période (jusqu'à aujourd'hui au plus tard).
+  final int courseDays;
+  final List<ClassReportRow> rows;
+  final double totalPaid;
+
+  const ClassReportMetadata({
+    required super.markaz,
+    required this.className,
+    this.teacherName,
+    required this.isMonthly,
+    required this.periodStart,
+    required this.periodEnd,
+    required this.courseDays,
+    required this.rows,
+    required this.totalPaid,
+  });
+
+  /// Taux de présence moyen du groupe.
+  double get averageAttendanceRate => rows.isEmpty
+      ? 0
+      : rows.fold<double>(0, (sum, r) => sum + r.attendanceRate) / rows.length;
+}
