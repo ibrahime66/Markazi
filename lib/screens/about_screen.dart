@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_colors.dart';
 import '../widgets/common_widgets.dart';
+import '../l10n/app_localizations.dart';
 
 /// Page À propos de Markazi
 class AboutScreen extends StatelessWidget {
@@ -11,35 +12,35 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const MarkaziAppBar(title: 'À propos'),
+      appBar: MarkaziAppBar(title: AppLocalizations.of(context).navAbout),
       body: SingleChildScrollView(
         child: Column(
           children: [
             // Header avec logo
-            _buildHeader(),
+            _buildHeader(context),
 
             // Objectif
             _buildSection(
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-              child: _buildObjectifSection(),
+              child: _buildObjectifSection(context),
             ),
 
             // Vision
             _buildSection(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: _buildVisionSection(),
+              child: _buildVisionSection(context),
             ),
 
             // Notre approche
             _buildSection(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: _buildApproacSection(),
+              child: _buildApproacSection(context),
             ),
 
             // Valeurs
             _buildSection(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: _buildValeursSection(),
+              child: _buildValeursSection(context),
             ),
 
             // Contact
@@ -57,7 +58,7 @@ class AboutScreen extends StatelessWidget {
     return Padding(padding: padding, child: child);
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(24, 36, 24, 40),
@@ -112,7 +113,7 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 8),
 
           Text(
-            'La solution digitale pour les markaz islamiques',
+            AppLocalizations.of(context).appTagline,
             textAlign: TextAlign.center,
             style: GoogleFonts.cairo(
               fontSize: 14,
@@ -129,9 +130,9 @@ class AboutScreen extends StatelessWidget {
             runSpacing: 10,
             alignment: WrapAlignment.center,
             children: [
-              _badge(Icons.mosque_rounded, 'Islamique'),
-              _badge(Icons.phone_iphone_rounded, 'Mobile First'),
-              _badge(Icons.public_rounded, 'Afrique'),
+              _badge(Icons.mosque_rounded, AppLocalizations.of(context).aboutBadgeIslamic),
+              _badge(Icons.phone_iphone_rounded, AppLocalizations.of(context).aboutBadgeMobile),
+              _badge(Icons.public_rounded, AppLocalizations.of(context).aboutBadgeAfrica),
             ],
           ),
         ],
@@ -165,11 +166,11 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildObjectifSection() {
+  Widget _buildObjectifSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle(title: 'Notre objectif'),
+        SectionTitle(title: AppLocalizations.of(context).aboutGoalTitle),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(20),
@@ -195,7 +196,7 @@ class AboutScreen extends StatelessWidget {
                   const SizedBox(width: 14),
                   Expanded(
                     child: Text(
-                      'Digitaliser les markaz',
+                      AppLocalizations.of(context).aboutGoalSubtitle,
                       style: GoogleFonts.cairo(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -207,7 +208,7 @@ class AboutScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Markazi est né d\'un constat simple : les maîtres de markaz gèrent encore leur école avec des cahiers, des notes manuscrites et de la mémoire.',
+                AppLocalizations.of(context).aboutGoalBody1,
                 style: GoogleFonts.cairo(
                   fontSize: 14,
                   color: AppColors.textMedium,
@@ -216,7 +217,7 @@ class AboutScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Notre objectif est de leur offrir un outil numérique moderne, simple et adapté à leurs besoins, pour qu\'ils puissent se concentrer sur l\'essentiel : transmettre le savoir islamique.',
+                AppLocalizations.of(context).aboutGoalBody2,
                 style: GoogleFonts.cairo(
                   fontSize: 14,
                   color: AppColors.textMedium,
@@ -230,11 +231,11 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVisionSection() {
+  Widget _buildVisionSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle(title: 'Notre vision'),
+        SectionTitle(title: AppLocalizations.of(context).aboutVisionTitle),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(20),
@@ -247,20 +248,20 @@ class AboutScreen extends StatelessWidget {
             children: [
               _visionItem(
                 Icons.auto_awesome_rounded,
-                'Solution moderne',
-                'Une application pensée pour les réalités des maîtres africains : simple, rapide et fonctionnant même avec une connexion limitée.',
+                AppLocalizations.of(context).aboutVisionModernTitle,
+                AppLocalizations.of(context).aboutVisionModernBody,
               ),
               const Divider(height: 24),
               _visionItem(
                 Icons.hub_rounded,
-                'Écosystème connecté',
-                'À terme, relier les maîtres, les élèves et les parents dans un seul écosystème pour une meilleure communication et suivi.',
+                AppLocalizations.of(context).aboutVisionEcosystemTitle,
+                AppLocalizations.of(context).aboutVisionEcosystemBody,
               ),
               const Divider(height: 24),
               _visionItem(
                 Icons.public_rounded,
-                'Impact continental',
-                'Devenir la référence en gestion de markaz à travers l\'Afrique francophone et au-delà.',
+                AppLocalizations.of(context).aboutVisionImpactTitle,
+                AppLocalizations.of(context).aboutVisionImpactBody,
               ),
             ],
           ),
@@ -311,27 +312,27 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildApproacSection() {
+  Widget _buildApproacSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle(title: 'Notre approche'),
+        SectionTitle(title: AppLocalizations.of(context).aboutApproachTitle),
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: _approachCard(
                 Icons.center_focus_strong_rounded,
-                'Centré utilisateur',
-                'Conçu avec et pour les maîtres de markaz',
+                AppLocalizations.of(context).aboutApproachUserTitle,
+                AppLocalizations.of(context).aboutApproachUserBody,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _approachCard(
                 Icons.wifi_off_rounded,
-                'Hors ligne',
-                'Fonctionne sans connexion internet permanente',
+                AppLocalizations.of(context).syncOffline,
+                AppLocalizations.of(context).aboutApproachOfflineBody,
               ),
             ),
           ],
@@ -342,16 +343,16 @@ class AboutScreen extends StatelessWidget {
             Expanded(
               child: _approachCard(
                 Icons.lock_rounded,
-                'Sécurisé',
-                'Vos données protégées et confidentielles',
+                AppLocalizations.of(context).aboutApproachSecureTitle,
+                AppLocalizations.of(context).aboutApproachSecureBody,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _approachCard(
                 Icons.language_rounded,
-                'Multilingue',
-                'Français, Arabe et langues locales',
+                AppLocalizations.of(context).aboutApproachLangTitle,
+                AppLocalizations.of(context).aboutApproachLangBody,
               ),
             ),
           ],
@@ -409,11 +410,11 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildValeursSection() {
+  Widget _buildValeursSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle(title: 'Nos valeurs'),
+        SectionTitle(title: AppLocalizations.of(context).aboutValuesTitle),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(20),
@@ -425,14 +426,14 @@ class AboutScreen extends StatelessWidget {
           ),
           child: Column(
             children: [
-              _valeurItem('Simplicité',
-                  'Un outil qui ne demande pas de formation. Intuitif dès le premier jour.'),
+              _valeurItem(AppLocalizations.of(context).aboutValueSimplicityTitle,
+                  AppLocalizations.of(context).aboutValueSimplicityBody),
               const SizedBox(height: 16),
-              _valeurItem('Respect',
-                  'Respectueux des valeurs islamiques et des pratiques des communautés.'),
+              _valeurItem(AppLocalizations.of(context).aboutValueRespectTitle,
+                  AppLocalizations.of(context).aboutValueRespectBody),
               const SizedBox(height: 16),
-              _valeurItem('Impact',
-                  'Chaque fonctionnalité est conçue pour avoir un impact réel sur le quotidien du maître.'),
+              _valeurItem(AppLocalizations.of(context).aboutValueImpactTitle,
+                  AppLocalizations.of(context).aboutValueImpactBody),
             ],
           ),
         ),
@@ -494,7 +495,7 @@ class AboutScreen extends StatelessWidget {
           const Icon(Icons.email_rounded, color: Colors.white, size: 36),
           const SizedBox(height: 12),
           Text(
-            'Contactez-nous',
+            AppLocalizations.of(context).aboutContactTitle,
             style: GoogleFonts.cairo(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -503,7 +504,7 @@ class AboutScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Une question, une suggestion ou un partenariat ?\nNous sommes à votre écoute.',
+            AppLocalizations.of(context).aboutContactBody,
             textAlign: TextAlign.center,
             style: GoogleFonts.cairo(
               fontSize: 14,
@@ -537,7 +538,7 @@ class AboutScreen extends StatelessWidget {
             ),
             icon: const Icon(Icons.send_rounded, size: 18),
             label: Text(
-              'Nous contacter',
+              AppLocalizations.of(context).aboutContactButton,
               style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
             ),
           ),

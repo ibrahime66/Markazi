@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../utils/app_colors.dart';
 import '../widgets/common_widgets.dart';
+import '../l10n/app_localizations.dart';
 
 /// Écran "mot de passe oublié" (CDC section 8.1). Corrige doc/audit.md,
 /// point C2 : ce flux existait côté API mais n'avait jamais été construit
@@ -19,6 +20,9 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  /// Textes traduits (doc/audit.md K8).
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   final _emailController = TextEditingController();
   final _codeController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -39,7 +43,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _requestCode() async {
     if (_emailController.text.isEmpty || !_emailController.text.contains('@')) {
-      setState(() => _errorMessage = 'Entrez un email valide');
+      setState(() => _errorMessage = _l10n.authEnterValidEmail);
       return;
     }
 
@@ -56,7 +60,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Code envoyé par email. Vérifiez aussi vos spams.')),
+        SnackBar(content: Text(_l10n.forgotCodeSent)),
       );
     } catch (e) {
       if (!mounted) return;
@@ -71,11 +75,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (_codeController.text.isEmpty ||
         _passwordController.text.isEmpty ||
         _confirmController.text.isEmpty) {
-      setState(() => _errorMessage = 'Tous les champs doivent être remplis');
+      setState(() => _errorMessage = _l10n.authAllFieldsRequired);
       return;
     }
     if (_passwordController.text != _confirmController.text) {
-      setState(() => _errorMessage = 'Les mots de passe ne correspondent pas');
+      setState(() => _errorMessage = _l10n.authPasswordsDoNotMatch);
       return;
     }
 
@@ -92,8 +96,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mot de passe réinitialisé. Connectez-vous.'),
+        SnackBar(
+          content: Text(_l10n.forgotPasswordReset),
           backgroundColor: Colors.green,
         ),
       );
@@ -132,14 +136,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     const MarkaziLogo(size: 56, lightMode: true),
                     const SizedBox(height: 24),
                     Text(
-                      'Mot de passe oublié',
+                      _l10n.forgotTitle,
                       style: GoogleFonts.cairo(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _codeRequested
-                          ? 'Entrez le code reçu par email et votre nouveau mot de passe.'
-                          : 'Entrez votre email, un code de réinitialisation vous sera envoyé.',
+                          ? _l10n.forgotStepCode
+                          : _l10n.forgotStepEmail,
                       style: GoogleFonts.cairo(fontSize: 14, color: Colors.white.withValues(alpha: 0.85)),
                     ),
                     const SizedBox(height: 32),
@@ -181,27 +185,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   List<Widget> _buildRequestStep() {
     return [
-      _field(_emailController, 'Email', 'votre.email@exemple.com', Icons.email_outlined),
+      _field(_emailController, _l10n.fieldEmail, _l10n.authEmailHint, Icons.email_outlined),
       const SizedBox(height: 32),
-      _submitButton(_isLoading ? 'Envoi...' : 'Envoyer le code', _requestCode),
+      _submitButton(_isLoading ? 'Envoi...' : _l10n.forgotSendCode, _requestCode),
     ];
   }
 
   List<Widget> _buildResetStep() {
     return [
-      _field(_codeController, 'Code reçu par email', 'Collez le code ici', Icons.pin_outlined),
+      _field(_codeController, _l10n.forgotCodeLabel, _l10n.forgotCodeHint, Icons.pin_outlined),
       const SizedBox(height: 16),
-      _field(_passwordController, 'Nouveau mot de passe', 'Au moins 6 caractères', Icons.lock_outline, obscure: true),
+      _field(_passwordController, _l10n.forgotNewPassword, _l10n.authPasswordHint, Icons.lock_outline, obscure: true),
       const SizedBox(height: 16),
-      _field(_confirmController, 'Confirmer le mot de passe', '', Icons.lock_outline, obscure: true),
+      _field(_confirmController, _l10n.forgotConfirmPassword, '', Icons.lock_outline, obscure: true),
       const SizedBox(height: 24),
-      _submitButton(_isLoading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe', _resetPassword),
+      _submitButton(_isLoading ? 'Réinitialisation...' : _l10n.forgotResetButton, _resetPassword),
       const SizedBox(height: 12),
       Center(
         child: TextButton(
           onPressed: _isLoading ? null : () => setState(() => _codeRequested = false),
           child: Text(
-            "Je n'ai pas reçu de code, recommencer",
+            _l10n.forgotRestart,
             style: GoogleFonts.cairo(color: Colors.white.withValues(alpha: 0.85), fontSize: 13),
           ),
         ),

@@ -12,6 +12,7 @@ import '../models/class_model.dart';
 import '../models/student.dart';
 import '../models/payment.dart';
 import '../models/attendance.dart';
+import '../l10n/app_localizations.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
   final ClassModel group;
@@ -23,6 +24,9 @@ class GroupDetailsScreen extends StatefulWidget {
 }
 
 class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
+  /// Textes traduits (doc/audit.md K8).
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   /// Devise configurée pour ce Markaz (doc/audit.md, point I4).
   String get _currency => context.read<MarkazProvider>().markaz?.currency ?? 'GNF';
 
@@ -114,7 +118,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Informations du groupe',
+              _l10n.groupInfoTitle,
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -122,17 +126,17 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            _buildInfoRow('Niveau', widget.group.level),
-            _buildInfoRow('Enseignant', widget.group.teacherName),
-            _buildInfoRow('Capacité', '${widget.group.studentIds.length}/${widget.group.maxStudents} élèves'),
+            _buildInfoRow(_l10n.fieldLevel, widget.group.level),
+            _buildInfoRow(_l10n.fieldTeacher, widget.group.teacherName),
+            _buildInfoRow(_l10n.fieldCapacity, _l10n.groupCapacityValue(widget.group.studentIds.length, widget.group.maxStudents)),
             if (widget.group.description.isNotEmpty)
-              _buildInfoRow('Description', widget.group.description),
+              _buildInfoRow(_l10n.fieldDescription, widget.group.description),
             if (widget.group.schedule != null)
-              _buildInfoRow('Emploi du temps', widget.group.schedule!),
+              _buildInfoRow(_l10n.fieldSchedule, widget.group.schedule!),
             if (widget.group.room != null)
-              _buildInfoRow('Salle', widget.group.room!),
-            _buildInfoRow('Statut', widget.group.isActive ? 'Actif' : 'Inactif'),
-            _buildInfoRow('Créé le',
+              _buildInfoRow(_l10n.fieldRoom, widget.group.room!),
+            _buildInfoRow(_l10n.fieldStatus, widget.group.isActive ? 'Actif' : _l10n.commonInactive),
+            _buildInfoRow(_l10n.fieldCreatedOn,
                 '${widget.group.createdAt.day}/${widget.group.createdAt.month}/${widget.group.createdAt.year}'),
           ],
         ),
@@ -180,7 +184,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Statistiques du groupe',
+              _l10n.groupStatsTitle,
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -192,10 +196,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
               spacing: 12,
               runSpacing: 12,
               children: [
-                _buildStatCard('Élèves', '${stats['totalStudents']}', Icons.people, AppColors.primary),
-                _buildStatCard('Taux présence', '${stats['attendanceRate']}%', Icons.calendar_today, Colors.green),
-                _buildStatCard('Taux paiement', '${stats['paymentRate']}%', Icons.payments, Colors.blue),
-                _buildStatCard('Total payé', '${stats['totalPaid']} $_currency', Icons.account_balance, Colors.orange),
+                _buildStatCard(_l10n.navStudents, '${stats['totalStudents']}', Icons.people, AppColors.primary),
+                _buildStatCard(_l10n.statAttendanceRate, '${stats['attendanceRate']}%', Icons.calendar_today, Colors.green),
+                _buildStatCard(_l10n.statPaymentRate, '${stats['paymentRate']}%', Icons.payments, Colors.blue),
+                _buildStatCard(_l10n.statTotalPaid, '${stats['totalPaid']} $_currency', Icons.account_balance, Colors.orange),
               ],
             ),
           ],
@@ -250,7 +254,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 Icon(Icons.people_outline, size: 48, color: Colors.grey[400]),
                 const SizedBox(height: 12),
                 Text(
-                  'Aucun élève dans ce groupe',
+                  _l10n.groupNoStudents,
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     color: Colors.grey[600],
@@ -279,7 +283,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
               ),
             ),
             child: Text(
-              'Élèves du groupe',
+              _l10n.groupStudentsTitle,
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -299,7 +303,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 Expanded(
                   flex: 3,
                   child: Text(
-                    'Nom de l\'élève',
+                    _l10n.fieldStudentName,
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -310,19 +314,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'Paiement',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Présence',
+                    _l10n.syncEntityPayment,
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -334,7 +326,19 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'Montant',
+                    _l10n.syncEntityAttendance,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    _l10n.fieldAmount,
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -412,12 +416,12 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           // Paiement en pourcentage
           Expanded(
             flex: 2,
-            child: _buildPercentageCell(paymentRate, 'Paiement'),
+            child: _buildPercentageCell(paymentRate, _l10n.syncEntityPayment),
           ),
           // Présence en pourcentage
           Expanded(
             flex: 2,
-            child: _buildPercentageCell(attendanceRate, 'Présence'),
+            child: _buildPercentageCell(attendanceRate, _l10n.syncEntityAttendance),
           ),
           // Montant payé
           Expanded(
@@ -453,7 +457,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     Color color;
     IconData icon;
     
-    if (type == 'Paiement') {
+    if (type == _l10n.syncEntityPayment) {
       if (percentage >= 80) {
         color = Colors.green;
         icon = Icons.check_circle;

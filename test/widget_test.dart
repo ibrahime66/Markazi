@@ -34,9 +34,19 @@ Widget _wrapWithProviders(Widget child) {
   );
 }
 
+/// Langue de l'appareil simulée en français : depuis la traduction de
+/// l'app (doc/audit.md K8), les textes suivent la langue du téléphone, et
+/// l'environnement de test est en anglais par défaut.
+void _useFrenchLocale(WidgetTester tester) {
+  tester.platformDispatcher.localesTestValue = const [Locale('fr', 'FR')];
+  tester.platformDispatcher.localeTestValue = const Locale('fr', 'FR');
+  addTearDown(tester.platformDispatcher.clearAllTestValues);
+}
+
 void main() {
   testWidgets('Markazi app launches and displays splash screen',
       (WidgetTester tester) async {
+    _useFrenchLocale(tester);
     // Build our app and trigger a frame.
     await tester.pumpWidget(_wrapWithProviders(const MarkaziApp()));
 
@@ -56,6 +66,7 @@ void main() {
 
   testWidgets('Navigation to onboarding screen works',
       (WidgetTester tester) async {
+    _useFrenchLocale(tester);
     await tester.pumpWidget(_wrapWithProviders(const MarkaziApp()));
 
     // Wait for the splash screen animation and navigation

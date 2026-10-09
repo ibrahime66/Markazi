@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../utils/app_colors.dart';
 import '../widgets/common_widgets.dart';
+import '../l10n/app_localizations.dart';
 
 /// Écran de connexion / inscription
 class LoginScreen extends StatefulWidget {
@@ -16,6 +17,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  /// Textes traduits (doc/audit.md K8).
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   late bool _isLogin;
   late PageController _pageController;
 
@@ -58,12 +62,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleLogin() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      setState(() => _errorMessage = 'Tous les champs doivent être remplis');
+      setState(() => _errorMessage = _l10n.authAllFieldsRequired);
       return;
     }
 
     if (!_emailController.text.contains('@')) {
-      setState(() => _errorMessage = 'Email invalide');
+      setState(() => _errorMessage = _l10n.authInvalidEmail);
       return;
     }
 
@@ -84,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
       }
     } catch (e) {
-      String errorMsg = 'Erreur inconnue lors de la connexion';
+      String errorMsg = _l10n.loginUnknownError;
 
       try {
         // Essayer de formater le message d'erreur
@@ -96,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } catch (_) {
         // Si on ne peut pas formater, utiliser le message par défaut
-        errorMsg = 'Erreur de connexion. Veuillez réessayer.';
+        errorMsg = _l10n.loginError;
       }
 
       setState(() => _errorMessage = errorMsg);
@@ -113,12 +117,12 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
         _markazNameController.text.isEmpty) {
-      setState(() => _errorMessage = 'Tous les champs doivent être remplis');
+      setState(() => _errorMessage = _l10n.authAllFieldsRequired);
       return;
     }
 
     if (!_emailController.text.contains('@')) {
-      setState(() => _errorMessage = 'Email invalide');
+      setState(() => _errorMessage = _l10n.authInvalidEmail);
       return;
     }
 
@@ -141,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
       }
     } catch (e) {
-      String errorMsg = 'Erreur inconnue lors de la création du compte';
+      String errorMsg = _l10n.registerUnknownError;
 
       try {
         // Essayer de formater le message d'erreur
@@ -153,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } catch (_) {
         // Si on ne peut pas formater, utiliser le message par défaut
-        errorMsg = 'Erreur lors de la création du compte. Veuillez réessayer.';
+        errorMsg = _l10n.registerError;
       }
 
       setState(() => _errorMessage = errorMsg);
@@ -236,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
             // Titre
             Text(
-              'Se connecter',
+              _l10n.authLogin,
               style: GoogleFonts.cairo(
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
@@ -247,7 +251,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 8),
 
             Text(
-              'Accédez à votre compte markaz',
+              _l10n.loginSubtitle,
               style: GoogleFonts.cairo(
                 fontSize: 14,
                 color: Colors.white.withValues(alpha: 0.85),
@@ -281,8 +285,8 @@ class _LoginScreenState extends State<LoginScreen> {
             // Email input
             _buildTextField(
               controller: _emailController,
-              label: 'Email',
-              hint: 'votre.email@exemple.com',
+              label: _l10n.fieldEmail,
+              hint: _l10n.authEmailHint,
               icon: Icons.email_outlined,
               enabled: !_isLoading,
             ),
@@ -292,8 +296,8 @@ class _LoginScreenState extends State<LoginScreen> {
             // Password input
             _buildTextField(
               controller: _passwordController,
-              label: 'Mot de passe',
-              hint: 'Au moins 6 caractères',
+              label: _l10n.authPassword,
+              hint: _l10n.authPasswordHint,
               icon: Icons.lock_outline,
               obscure: true,
               enabled: !_isLoading,
@@ -309,7 +313,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? null
                     : () => Navigator.pushNamed(context, '/forgot-password'),
                 child: Text(
-                  'Mot de passe oublié ?',
+                  _l10n.loginForgotPassword,
                   style: GoogleFonts.cairo(
                     color: Colors.white.withValues(alpha: 0.85),
                     fontSize: 13,
@@ -346,7 +350,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       )
                     : Text(
-                        'Se connecter',
+                        _l10n.authLogin,
                         style: GoogleFonts.cairo(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -363,13 +367,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 onTap: () => _switchPage(false),
                 child: RichText(
                   text: TextSpan(
-                    text: "Pas encore de compte ? ",
+                    text: _l10n.loginNoAccount,
                     style: GoogleFonts.cairo(
                       color: Colors.white.withValues(alpha: 0.85),
                     ),
                     children: [
                       TextSpan(
-                        text: 'Créer un compte',
+                        text: _l10n.authCreateAccount,
                         style: GoogleFonts.cairo(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
@@ -402,7 +406,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
             // Titre
             Text(
-              'Créer un compte',
+              _l10n.authCreateAccount,
               style: GoogleFonts.cairo(
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
@@ -413,7 +417,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 8),
 
             Text(
-              'Rejoignez Markazi en quelques secondes',
+              _l10n.registerSubtitle,
               style: GoogleFonts.cairo(
                 fontSize: 14,
                 color: Colors.white.withValues(alpha: 0.85),
@@ -447,8 +451,8 @@ class _LoginScreenState extends State<LoginScreen> {
             // Nom input
             _buildTextField(
               controller: _nameController,
-              label: 'Nom complet',
-              hint: 'Ex: Ahmed Ben Ali',
+              label: _l10n.fieldFullName,
+              hint: _l10n.registerNameHint,
               icon: Icons.person_outline,
               enabled: !_isLoading,
             ),
@@ -458,8 +462,8 @@ class _LoginScreenState extends State<LoginScreen> {
             // Nom du Markaz (CDC 8.1/8.2 : la fiche Markaz est créée à l'inscription)
             _buildTextField(
               controller: _markazNameController,
-              label: 'Nom du Markaz',
-              hint: 'Ex: Markaz Al-Nour',
+              label: _l10n.fieldMarkazName,
+              hint: _l10n.registerMarkazHint,
               icon: Icons.mosque_outlined,
               enabled: !_isLoading,
             ),
@@ -469,8 +473,8 @@ class _LoginScreenState extends State<LoginScreen> {
             // Email input
             _buildTextField(
               controller: _emailController,
-              label: 'Email',
-              hint: 'votre.email@exemple.com',
+              label: _l10n.fieldEmail,
+              hint: _l10n.authEmailHint,
               icon: Icons.email_outlined,
               enabled: !_isLoading,
             ),
@@ -480,8 +484,8 @@ class _LoginScreenState extends State<LoginScreen> {
             // Password input
             _buildTextField(
               controller: _passwordController,
-              label: 'Mot de passe',
-              hint: 'Au moins 6 caractères',
+              label: _l10n.authPassword,
+              hint: _l10n.authPasswordHint,
               icon: Icons.lock_outline,
               obscure: true,
               enabled: !_isLoading,
@@ -514,7 +518,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       )
                     : Text(
-                        'Créer un compte',
+                        _l10n.authCreateAccount,
                         style: GoogleFonts.cairo(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -531,13 +535,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 onTap: () => _switchPage(true),
                 child: RichText(
                   text: TextSpan(
-                    text: "Vous avez déjà un compte ? ",
+                    text: _l10n.registerHaveAccount,
                     style: GoogleFonts.cairo(
                       color: Colors.white.withValues(alpha: 0.85),
                     ),
                     children: [
                       TextSpan(
-                        text: 'Se connecter',
+                        text: _l10n.authLogin,
                         style: GoogleFonts.cairo(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,

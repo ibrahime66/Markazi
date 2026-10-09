@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_colors.dart';
 import '../widgets/common_widgets.dart';
 import 'login_screen.dart';
+import '../l10n/app_localizations.dart';
 
 /// Page d'accueil / Landing screen de l'application Markazi
 class HomeScreen extends StatefulWidget {
@@ -14,6 +15,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
+  /// Textes traduits (doc/audit.md K8).
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   late AnimationController _animController;
   late Animation<double> _fadeIn;
   late Animation<Offset> _slideUp;
@@ -53,25 +57,25 @@ class _HomeScreenState extends State<HomeScreen>
           SliverToBoxAdapter(child: _buildHeroSection()),
 
           // Section fonctionnalités
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.fromLTRB(20, 32, 20, 0),
               child: SectionTitle(
-                title: 'Fonctionnalités principales',
+                title: _l10n.homeMainFeatures,
                 subtitle:
-                    'Tout ce dont vous avez besoin pour gérer votre markaz',
+                    _l10n.homeMainFeaturesSubtitle,
               ),
             ),
           ),
           SliverToBoxAdapter(child: _buildFeaturesGrid()),
 
           // Section avantages
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.fromLTRB(20, 32, 20, 0),
               child: SectionTitle(
-                title: 'Pourquoi choisir Markazi ?',
-                subtitle: 'Les avantages qui font la différence',
+                title: _l10n.homeWhyTitle,
+                subtitle: _l10n.homeWhySubtitle,
               ),
             ),
           ),
@@ -145,9 +149,9 @@ class _HomeScreenState extends State<HomeScreen>
                           const MarkaziLogo(size: 44, lightMode: true),
                           Row(
                             children: [
-                              _navButton('Fonctionnalités', '/features'),
+                              _navButton(_l10n.navFeatures, '/features'),
                               const SizedBox(width: 8),
-                              _navButton('À propos', '/about'),
+                              _navButton(_l10n.navAbout, '/about'),
                             ],
                           ),
                         ],
@@ -176,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Solution pour maîtres de markaz',
+                              _l10n.homeBadge,
                               style: GoogleFonts.cairo(
                                 color: Colors.white.withValues(alpha: 0.9),
                                 fontSize: 12,
@@ -191,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen>
 
                       // Titre principal
                       Text(
-                        'Gérez votre markaz\nde façon moderne',
+                        _l10n.homeHeroTitle,
                         style: GoogleFonts.cairo(
                           fontSize: 32,
                           fontWeight: FontWeight.w900,
@@ -203,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen>
                       const SizedBox(height: 14),
 
                       Text(
-                        'Élèves, paiements, présences, récitation — tout centralisé dans une seule application simple et efficace.',
+                        _l10n.homeHeroBody,
                         style: GoogleFonts.cairo(
                           fontSize: 15,
                           color: Colors.white.withValues(alpha: 0.85),
@@ -230,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen>
                                 elevation: 0,
                               ),
                               child: Text(
-                                'Se connecter',
+                                _l10n.authLogin,
                                 style: GoogleFonts.cairo(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 15,
@@ -252,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     borderRadius: BorderRadius.circular(12)),
                               ),
                               child: Text(
-                                'Créer un compte',
+                                _l10n.authCreateAccount,
                                 style: GoogleFonts.cairo(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 15,
@@ -306,11 +310,11 @@ class _HomeScreenState extends State<HomeScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _statItem('100%', 'Gratuit'),
+          _statItem('100%', _l10n.homeStatFree),
           _statDivider(),
-          _statItem('5 min', 'Pour démarrer'),
+          _statItem(_l10n.homeStatFiveMin, _l10n.homeStatToStart),
           _statDivider(),
-          _statItem('Multi', 'Markaz'),
+          _statItem(_l10n.homeStatMulti, _l10n.activityCategoryMarkaz),
         ],
       ),
     );
@@ -351,37 +355,37 @@ class _HomeScreenState extends State<HomeScreen>
     final features = [
       _FeatureItem(
         icon: Icons.people_alt_rounded,
-        title: 'Gestion élèves',
+        title: _l10n.homeFeatureStudents,
         cardColor: AppColors.cardGreen,
         iconColor: AppColors.iconGreen,
       ),
       _FeatureItem(
         icon: Icons.receipt_long_rounded,
-        title: 'Paiements',
+        title: _l10n.navPayments,
         cardColor: AppColors.cardBlue,
         iconColor: AppColors.iconBlue,
       ),
       _FeatureItem(
         icon: Icons.fact_check_rounded,
-        title: 'Présences',
+        title: _l10n.navAttendance,
         cardColor: AppColors.cardPurple,
         iconColor: AppColors.iconPurple,
       ),
       _FeatureItem(
         icon: Icons.auto_stories_rounded,
-        title: 'Récitation',
+        title: _l10n.syncEntityRecitation,
         cardColor: AppColors.cardOrange,
         iconColor: AppColors.iconOrange,
       ),
       _FeatureItem(
         icon: Icons.insights_rounded,
-        title: 'Statistiques',
+        title: _l10n.homeFeatureStats,
         cardColor: AppColors.cardTeal,
         iconColor: AppColors.iconTeal,
       ),
       _FeatureItem(
         icon: Icons.picture_as_pdf_rounded,
-        title: 'Rapports PDF',
+        title: _l10n.homeFeatureReports,
         cardColor: AppColors.cardRed,
         iconColor: AppColors.iconRed,
       ),
@@ -453,21 +457,21 @@ class _HomeScreenState extends State<HomeScreen>
     final advantages = [
       _AdvantageItem(
         icon: Icons.schedule_rounded,
-        title: 'Gain de temps',
+        title: _l10n.homeAdvTimeTitle,
         description:
-            'Réduisez le temps administratif de 80%. Concentrez-vous sur ce qui compte : l\'enseignement.',
+            _l10n.homeAdvTimeBody,
       ),
       _AdvantageItem(
         icon: Icons.folder_special_rounded,
-        title: 'Mieux organisé',
+        title: _l10n.homeAdvOrgTitle,
         description:
-            'Toutes vos données centralisées, accessibles partout et à tout moment depuis votre téléphone.',
+            _l10n.homeAdvOrgBody,
       ),
       _AdvantageItem(
         icon: Icons.family_restroom_rounded,
-        title: 'Communication parents',
+        title: _l10n.homeAdvParentsTitle,
         description:
-            'Envoyez des rapports et des notifications directement aux familles de vos élèves.',
+            _l10n.homeAdvParentsBody,
       ),
     ];
 
@@ -508,7 +512,7 @@ class _HomeScreenState extends State<HomeScreen>
         child: Column(
           children: [
             Text(
-              'Prêt à digitaliser votre markaz ?',
+              _l10n.homeCtaTitle,
               textAlign: TextAlign.center,
               style: GoogleFonts.cairo(
                 fontSize: 20,
@@ -518,7 +522,7 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             const SizedBox(height: 10),
             Text(
-              'Rejoignez les maîtres qui gèrent leur markaz avec Markazi.',
+              _l10n.homeCtaBody,
               textAlign: TextAlign.center,
               style: GoogleFonts.cairo(
                 fontSize: 14,
@@ -541,7 +545,7 @@ class _HomeScreenState extends State<HomeScreen>
                       elevation: 0,
                     ),
                     child: Text(
-                      'Commencer',
+                      _l10n.homeStart,
                       style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
                     ),
                   ),
@@ -558,7 +562,7 @@ class _HomeScreenState extends State<HomeScreen>
                           borderRadius: BorderRadius.circular(12)),
                     ),
                     child: Text(
-                      'En savoir plus',
+                      _l10n.homeLearnMore,
                       style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
                     ),
                   ),
@@ -596,7 +600,7 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'La solution digitale pour les markaz islamiques',
+            _l10n.appTagline,
             style: GoogleFonts.cairo(
               fontSize: 12,
               color: AppColors.textLight,
@@ -606,8 +610,8 @@ class _HomeScreenState extends State<HomeScreen>
           Wrap(
             spacing: 20,
             children: [
-              _footerLink('Fonctionnalités', '/features'),
-              _footerLink('À propos', '/about'),
+              _footerLink(_l10n.navFeatures, '/features'),
+              _footerLink(_l10n.navAbout, '/about'),
             ],
           ),
         ],

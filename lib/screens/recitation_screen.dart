@@ -21,6 +21,9 @@ class RecitationScreen extends StatefulWidget {
 }
 
 class _RecitationScreenState extends State<RecitationScreen> {
+  /// Textes traduits (doc/audit.md K8).
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   @override
   void initState() {
     super.initState();
@@ -35,7 +38,7 @@ class _RecitationScreenState extends State<RecitationScreen> {
     final students = context.read<StudentProvider>().students;
     if (students.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ajoutez d\'abord un élève')),
+        SnackBar(content: Text(_l10n.commonAddStudentFirst)),
       );
       return;
     }
@@ -49,13 +52,13 @@ class _RecitationScreenState extends State<RecitationScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Supprimer cette séance ?'),
-        content: const Text('Cette récitation sera définitivement supprimée.'),
+        title: Text(_l10n.recitationDeleteTitle),
+        content: Text(_l10n.recitationDeleteBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(_l10n.actionCancel)),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
+            child: Text(_l10n.actionDelete, style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -67,12 +70,12 @@ class _RecitationScreenState extends State<RecitationScreen> {
       await context.read<RecitationProvider>().removeRecitation(recitation.id);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Récitation supprimée'), backgroundColor: Colors.green),
+        SnackBar(content: Text(_l10n.recitationDeleted), backgroundColor: Colors.green),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(_l10n.commonErrorWithDetail(e)), backgroundColor: Colors.red),
       );
     }
   }
@@ -91,11 +94,11 @@ class _RecitationScreenState extends State<RecitationScreen> {
   String _statusLabel(RecitationStatus status) {
     switch (status) {
       case RecitationStatus.recited:
-        return 'Récité';
+        return _l10n.recitationStatusRecited;
       case RecitationStatus.partial:
-        return 'Partiel';
+        return _l10n.recitationStatusPartial;
       case RecitationStatus.notRecited:
-        return 'Non récité';
+        return _l10n.recitationStatusNotRecited;
     }
   }
 
@@ -127,12 +130,12 @@ class _RecitationScreenState extends State<RecitationScreen> {
                     Icon(Icons.menu_book_outlined, size: 56, color: AppColors.textMedium.withValues(alpha: 0.4)),
                     const SizedBox(height: 16),
                     Text(
-                      'Aucune récitation enregistrée',
+                      _l10n.recitationEmptyTitle,
                       style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textDark),
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Enregistrez la sourate étudiée par chaque élève après chaque séance.',
+                      _l10n.recitationEmptyBody,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textMedium),
                     ),
@@ -144,7 +147,7 @@ class _RecitationScreenState extends State<RecitationScreen> {
 
           String studentName(String id) {
             final match = studentProvider.students.where((s) => s.id == id);
-            return match.isEmpty ? 'Élève supprimé' : match.first.name;
+            return match.isEmpty ? _l10n.commonStudentDeleted : match.first.name;
           }
 
           return ListView.separated(
@@ -154,7 +157,7 @@ class _RecitationScreenState extends State<RecitationScreen> {
             itemBuilder: (context, index) {
               final recitation = recitations[index];
               final range = (recitation.ayahFrom != null && recitation.ayahTo != null)
-                  ? ' (versets ${recitation.ayahFrom}-${recitation.ayahTo})'
+                  ? _l10n.recitationVerseRange(recitation.ayahFrom!, recitation.ayahTo!)
                   : '';
               return Container(
                 padding: const EdgeInsets.all(14),
@@ -239,6 +242,9 @@ class _RecitationFormDialog extends StatefulWidget {
 }
 
 class _RecitationFormDialogState extends State<_RecitationFormDialog> {
+  /// Textes traduits (doc/audit.md K8).
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   late String _studentId = widget.recitation?.studentId ?? widget.students.first.id;
   late DateTime _date = widget.recitation?.date ?? DateTime.now();
   late final _surahController = TextEditingController(text: widget.recitation?.surah);
@@ -270,7 +276,7 @@ class _RecitationFormDialogState extends State<_RecitationFormDialog> {
   Future<void> _save() async {
     if (_surahController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('La sourate est obligatoire')),
+        SnackBar(content: Text(_l10n.recitationSurahRequired)),
       );
       return;
     }
@@ -309,7 +315,7 @@ class _RecitationFormDialogState extends State<_RecitationFormDialog> {
       if (!mounted) return;
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(_l10n.commonErrorWithDetail(e)), backgroundColor: Colors.red),
       );
     }
   }
@@ -318,14 +324,14 @@ class _RecitationFormDialogState extends State<_RecitationFormDialog> {
   Widget build(BuildContext context) {
     final isEdit = widget.recitation != null;
     return AlertDialog(
-      title: Text(isEdit ? 'Modifier la récitation' : 'Enregistrer une récitation'),
+      title: Text(isEdit ? _l10n.recitationEditTitle : _l10n.recitationAddTitle),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
               initialValue: _studentId,
-              decoration: const InputDecoration(labelText: 'Élève *'),
+              decoration: InputDecoration(labelText: _l10n.fieldStudentRequired),
               items: widget.students
                   .map((s) => DropdownMenuItem(value: s.id, child: Text(s.name)))
                   .toList(),
@@ -334,14 +340,14 @@ class _RecitationFormDialogState extends State<_RecitationFormDialog> {
             const SizedBox(height: 12),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text('Date : ${_date.day}/${_date.month}/${_date.year}'),
+              title: Text(_l10n.commonDateDmy(_date.day, _date.month, _date.year)),
               trailing: const Icon(Icons.calendar_today, size: 18),
               onTap: _pickDate,
             ),
             const SizedBox(height: 4),
             TextField(
               controller: _surahController,
-              decoration: const InputDecoration(labelText: 'Sourate *', prefixIcon: Icon(Icons.menu_book_outlined)),
+              decoration: InputDecoration(labelText: _l10n.fieldSurahRequired, prefixIcon: Icon(Icons.menu_book_outlined)),
             ),
             const SizedBox(height: 12),
             Row(
@@ -350,7 +356,7 @@ class _RecitationFormDialogState extends State<_RecitationFormDialog> {
                   child: TextField(
                     controller: _ayahFromController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Verset début'),
+                    decoration: InputDecoration(labelText: _l10n.fieldAyahFrom),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -358,7 +364,7 @@ class _RecitationFormDialogState extends State<_RecitationFormDialog> {
                   child: TextField(
                     controller: _ayahToController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Verset fin'),
+                    decoration: InputDecoration(labelText: _l10n.fieldAyahTo),
                   ),
                 ),
               ],
@@ -366,26 +372,26 @@ class _RecitationFormDialogState extends State<_RecitationFormDialog> {
             const SizedBox(height: 12),
             DropdownButtonFormField<RecitationStatus>(
               initialValue: _status,
-              decoration: const InputDecoration(labelText: 'Statut'),
-              items: const [
-                DropdownMenuItem(value: RecitationStatus.recited, child: Text('Récité')),
-                DropdownMenuItem(value: RecitationStatus.partial, child: Text('Partiel')),
-                DropdownMenuItem(value: RecitationStatus.notRecited, child: Text('Non récité')),
+              decoration: InputDecoration(labelText: _l10n.fieldStatus),
+              items: [
+                DropdownMenuItem(value: RecitationStatus.recited, child: Text(_l10n.recitationStatusRecited)),
+                DropdownMenuItem(value: RecitationStatus.partial, child: Text(_l10n.recitationStatusPartial)),
+                DropdownMenuItem(value: RecitationStatus.notRecited, child: Text(_l10n.recitationStatusNotRecited)),
               ],
               onChanged: (value) => setState(() => _status = value ?? _status),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _noteController,
-              decoration: const InputDecoration(labelText: 'Note (optionnel)'),
+              decoration: InputDecoration(labelText: _l10n.fieldNoteOptional),
               maxLines: 2,
             ),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: _isSaving ? null : () => Navigator.pop(context), child: const Text('Annuler')),
-        TextButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? 'Enregistrement...' : 'Enregistrer')),
+        TextButton(onPressed: _isSaving ? null : () => Navigator.pop(context), child: Text(_l10n.actionCancel)),
+        TextButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? 'Enregistrement...' : _l10n.actionSave)),
       ],
     );
   }
