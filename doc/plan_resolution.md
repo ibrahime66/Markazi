@@ -59,7 +59,7 @@ fonctionnalités manquantes, puis fragilité de config, puis dette technique.
       d'attente, un login avec les bons identifiants repasse en 200 — la
       fenêtre se réinitialise correctement. Suite de tests backend toujours
       au vert (2/2).
-- [~] 🟡 **C2 (code corrigé, décision produit restante).** Résolu le 30 août
+- [x] ✅ **C2 (entièrement résolu — SMTP configuré, voir étape 6).** Résolu le 30 août
       2026 pour tout ce qui relève du code — bien plus grave que prévu par
       l'audit initial :
       - **Bug racine découvert en corrigeant ce point** : `POST
@@ -163,7 +163,7 @@ fonctionnalités manquantes, puis fragilité de config, puis dette technique.
       Vérifié par un script isolé : sans `--dart-define`,
       `ApiConfig.baseUrl` retombe bien sur l'IP de secours ; avec, la
       valeur passée l'emporte.
-- [~] 🟡 **D2 (majoritairement résolu).** Résolu le 30 août 2026 pour
+- [x] ✅ **D2 (complété le 9 octobre 2026 — voir F5).** Résolu le 30 août 2026 pour
       paiements, présences, tuteurs et récitations — pas pour les classes
       (voir limite ci-dessous). Conforme au CDC §20 : "toute action de
       saisie effectuée hors ligne est stockée localement avec un statut
@@ -342,12 +342,46 @@ fonctionnalités manquantes, puis fragilité de config, puis dette technique.
       visuelle du rendu (branding, tableau de présence, bloc assiduité,
       tableau des paiements — tout correctement mappé, aucun bug de rendu).
 - [x] ✅ **F3.** Résolu avec B1/B2 ci-dessus (Étape 3).
-- [ ] 🔴 **F4.** Ajouter un écran Flutter listant le journal d'activité
-      (`GET /api/activity-logs`).
-- [ ] 🔴 **F5.** Implémenter un vrai mécanisme hors ligne : statut "en
-      attente de synchronisation" par action, file d'attente rejouée à la
-      reconnexion, résolution de conflit journalisée, indicateur visuel
-      dans l'UI (recoupe D2, Étape 4).
+- [x] ✅ **F4.** Résolu le 9 octobre 2026. Écran « Journal d'activité »
+      (tiroir de navigation, route `/activity-log`) : entrées groupées par
+      jour, auteur et heure, filtres par catégorie et par période,
+      chargement progressif, tirer pour rafraîchir. Côté serveur, nouveaux
+      filtres `category`, `date_from`, `date_to` et tri par date réelle.
+      Libellé de chaque action traduit d'après son code (et non la
+      description stockée en français), avec le nom concerné
+      (`meta.subject`). Badge « Saisi hors ligne » et conflits de
+      synchronisation affichés avec la version serveur remplacée.
+      Vérifié : `ActivityLogTest` (6 tests : isolation, tri, filtres,
+      validation, authentification) ; test de widget de l'écran ;
+      `flutter analyze` 0.
+- [x] ✅ **F5.** Résolu le 9 octobre 2026 (complète D2). **Bug racine
+      découvert** : au démarrage, l'app rechargeait tous les caches depuis
+      le serveur AVANT de rejouer la file, ce qui écrasait les saisies
+      locales en attente puis renvoyait la version serveur — toute saisie
+      hors ligne était perdue au redémarrage ; la synchronisation manuelle
+      ne rechargeait que les élèves. Corrigé et complété :
+      - ordre rejeu → rechargement (`SyncOrchestrator.syncAll`), et
+        rechargement qui préserve les entités encore en attente ;
+      - créations hors ligne (présences, récitations, paiements) sous
+        identifiant temporaire remplacé par l'id serveur au rejeu (pas de
+        reçu tant que le serveur n'a pas attribué son numéro) ;
+      - groupes couverts (modification, suppression, affectation d'élève
+        avec groupe cible mémorisé) — la limite assumée de D2 est levée ;
+      - seules les erreurs réseau sont mises en file ; un refus du serveur
+        restaure la version locale et affiche le message (plus de rejeu
+        sans fin d'une action invalide) ;
+      - date réelle de l'action envoyée (`X-Performed-At`) : le journal est
+        daté de la réalisation (CDC §27) ;
+      - conflits : dernière écriture serveur gagnante, version écrasée
+        conservée dans une entrée `sync.conflict` (CDC §20) ;
+      - rejeu automatique au retour de la connexion et toutes les 45 s ;
+        bandeau hors ligne / en attente / refusé, icône de connexion,
+        écran « Synchronisation » (liste, refus, abandon d'une action).
+      Vérifié : `OfflineSyncTest` (7 tests serveur) ; `offline_sync_test`
+      (14 tests app, vraie base Hive et faux serveur : fusion de la file,
+      création hors ligne, refus, ordre conservé, survie à la
+      synchronisation complète, abandon, groupes). **Limite** : pas testé
+      sur appareil réel avec coupure réseau (pas d'appareil disponible).
 - [x] ✅ **F6.** Résolu le 30 août 2026. Décision produit tranchée avec
       l'utilisateur : recalcul complet plutôt qu'un simple réglage inerte —
       "jours de cours" (`total_days`) n'est plus le nombre de présences
@@ -543,22 +577,27 @@ maintenant tous résolus et confirmés sur appareil physique.
       Appelle maintenant réellement `PaymentProvider.markAsPaid()` et
       propose le reçu PDF.
       Vérifié (H1-H4) : `flutter analyze` 0, `flutter test` 2/2.
-- [ ] ⬜ **H5.** Non résolu — nécessite une décision. Le champ "Nom de
-      l'enseignant" d'un groupe n'est jamais envoyé au serveur
-      (`_toRequestBody` dans `api_class_datasource.dart` l'omet ; le
-      backend n'a qu'un `teacher_id` numérique). Le nom tapé disparaît dès
-      la resynchronisation. Deux options : ajouter une colonne
-      `teacher_name` texte libre côté backend, ou remplacer le champ par un
-      choix parmi les comptes utilisateurs existants (`teacher_id`).
-- [ ] ⬜ **H6.** Non résolu. Le message de confirmation de suppression d'un
-      élève affirme à tort que les paiements/présences associés seront
-      supprimés (en réalité : archivage soft-delete, données conservées en
-      base mais disparues des totaux/rapports affichés). Texte à corriger ;
-      comportement à clarifier avec l'utilisateur.
-- [ ] ⬜ **H7.** Non résolu — écart mineur. Le contrôle de doublon de
-      présence côté app (élève+leçon+jour) ne correspond pas à la règle
-      serveur réelle (un seul enregistrement par élève et par jour, toutes
-      leçons confondues, écrasé silencieusement via `updateOrCreate`).
+- [x] ✅ **H5.** Résolu le 9 octobre 2026. Option retenue : colonne
+      `classes.teacher_name` en texte libre (correspond à l'usage réel du
+      formulaire ; un seul compte maître par Markaz en V1, `teacher_id`
+      conservé pour les rôles futurs). Envoyée et relue par l'app.
+      Vérifié : `ClassTeacherNameTest` (création, modification, relecture).
+- [x] ✅ **H6.** Résolu le 9 octobre 2026. Le dialogue annonce désormais
+      un archivage : l'élève disparaît des listes mais son historique
+      (paiements, présences, récitations) est conservé et reste compté dans
+      les totaux financiers — comportement conservé, conforme au CDC §18
+      (archivage sans perte d'historique). Même correction pour la
+      suppression d'un groupe. **Bug trouvé au passage** : le rapport des
+      paiements comptait les paiements « unpaid » comme payés
+      (`status.toString().contains('paid')`) — corrigé (26 comparaisons).
+- [x] ✅ **H7.** Résolu le 9 octobre 2026. L'app applique la règle du
+      serveur (une présence par élève et par jour, toutes leçons
+      confondues) et propose « Remplacer » en montrant la présence existante,
+      au lieu de l'écraser sans prévenir. Le contrôle ratait aussi les
+      présences relues depuis l'API (datées de minuit pile). Côté serveur,
+      la recherche de l'existante se fait par `whereDate` (le
+      `updateOrCreate` sur la date brute plantait en 500 selon le format
+      stocké). Vérifié : `attendance_duplicate_rule_test` (4 cas).
 
 Élèves, tuteurs, récitations, réglages Markaz et affectation aux groupes :
 vérifiés champ par champ jusqu'à l'appel API, aucune anomalie trouvée.
@@ -686,7 +725,8 @@ Travail pas à pas, un point à la fois.
       dégradé vert fixe. Voir doc/audit.md K7 pour le détail complet.
       Vérifié : `flutter analyze` 0, `flutter test` 2/2 (adapté pour
       fournir `ThemeProvider` en ancêtre de test).
-- [x] ✅ **K8.** Résolu — infrastructure + première couverture. Mise en
+- [x] ✅ **K8.** Résolu — couverture complète le 9 octobre 2026 (voir
+      étape 12). Infrastructure + première couverture le 30 août : Mise en
       place standard Flutter (`flutter_localizations`/`intl`, fichiers
       `.arb`, `flutter gen-l10n` → `AppLocalizations`) pour trois langues :
       français (référence), anglais, arabe (RTL natif, police déjà
@@ -714,3 +754,84 @@ Travail pas à pas, un point à la fois.
       `student_id`+`date`, voir doc/audit.md L1/H7).
       Vérifié : bout en bout via `curl` (create → update → delete, tous
       200/204), `flutter analyze` 0, `flutter test` 2/2.
+
+## Étape 12 — Passe de finition du 9 octobre 2026 (doc/audit.md, section M)
+
+Reprise de tous les points encore ouverts (F4, F5, H5, H6, H7, fin de K8 —
+voir ci-dessus) puis relecture du CDC. Chaque point a été vérifié par des
+tests automatisés (backend : `php artisan test` ; app : `flutter analyze`
++ `flutter test`) ; aucun appareil n'était disponible, les vérifications
+visuelles des PDF ont été faites sur des rendus générés.
+
+- [x] ✅ **M1. K8 terminé.** Toute l'interface traduite (fr/en/ar) :
+      tableau de bord (320 textes), écrans de connexion, mot de passe
+      oublié, accueil, onboarding, à propos, fonctionnalités, tuteurs,
+      récitations, groupes, Mon Markaz. Messages d'erreur des services
+      (`AppException`) traduits dans la langue active. Les documents PDF
+      restent en français (V1, CDC §21). Promesses inexactes corrigées au
+      passage (« notifications aux parents », « seuil d'alerte », « langues
+      locales »). Régression évitée : les boutons d'action rapide
+      choisissaient leur action d'après leur libellé. Vérifié :
+      `l10n_test` (mêmes clés et variables dans les 3 langues, erreurs
+      traduites, arabe de droite à gauche).
+- [x] ✅ **M2. Messages du serveur dans la langue de l'app.** Aucune
+      traduction de la validation n'existait : un maître francophone voyait
+      « The email has already been taken. » (et `.env.example` avait
+      `APP_LOCALE=en`). Middleware `Accept-Language`, `lang/fr|ar/validation.php`,
+      `lang/en|ar.json`, erreurs 401/403/404/429 lisibles. Vérifié :
+      `LocaleTest` (5 tests).
+- [x] ✅ **M3. Absence justifiée (CDC §8.6).** Statut accepté par le
+      serveur mais absent de l'app (converti en « absent » à la lecture).
+      Ajouté partout, compté comme absence. Les statistiques excluaient le
+      dernier jour de la période (`whereBetween` sur la date brute) —
+      corrigé. Vérifié : test dédié (échoue avec l'ancien filtre).
+- [x] ✅ **M4. Rapport d'un groupe entier (CDC §11.3).** Bouton dans la
+      fiche de groupe (semaine/mois) : présence, récitations et paiement
+      du mois par élève. **Bug corrigé au passage** : les rapports par
+      élève lisaient les présences du jour seulement (le rapport « de la
+      semaine » n'affichait que le jour même). Vérifié : `class_report_test`.
+- [x] ✅ **M5. Documents PDF.** Gras en vraie police Unicode (retombait sur
+      Helvetica-Bold), en-tête robuste à un nom de Markaz long (le titre
+      sortait de la page). Rendus des 4 documents inspectés.
+- [x] ✅ **M6. Paiement : mode et observation (CDC §8.7).** L'app envoyait
+      toujours « cash » et n'avait pas de champ observation. Ajoutés au
+      formulaire, aux détails et au reçu.
+- [x] ✅ **M7. Groupes : horaire et salle** (notes de la section H) dans
+      les formulaires ; **limite de 50 élèves** côté app alors que le
+      serveur et l'écran annoncent 500 — corrigée.
+- [x] ✅ **M8. Recherche et filtrage des élèves (CDC §8.3)** : nom (sans
+      accents), téléphone, groupe ou « sans groupe ». Vérifié :
+      `student_filter_test`.
+- [x] ✅ **M9. Logo du Markaz (CDC §8.2 / §21).** Colonne existante sans
+      aucun moyen de l'alimenter : routes `GET/POST/DELETE /markaz/logo`,
+      choix dans « Mon Markaz », cache local pour les PDF hors ligne, logo
+      du Markaz en en-tête et logo Markazi en pied de page. Vérifié :
+      `MarkazLogoTest` (6 tests, dont isolation et sécurité du chemin).
+- [x] ✅ **M10. Flutter Web (F9).** `flutter build web` réussit.
+
+**Ce qui reste hors de portée du code** (inchangé) : F1 (décision assumée
+de garder le moteur PDF côté app) ; F9 (Provider plutôt que Riverpod/Bloc,
+pas de Redis) ; déploiement, sauvegardes et monitoring (CDC §23-24) ; test
+sur appareil réel du mode hors ligne avec vraie coupure réseau.
+
+### Journal du 9 octobre 2026
+
+| Date | Point | Résumé de la correction | Vérification |
+|---|---|---|---|
+| 09/10/2026 | H5, H6 | `classes.teacher_name` ; texte d'archivage exact ; totaux payés/non payés corrigés | `ClassTeacherNameTest` ; `flutter analyze` 0 |
+| 09/10/2026 | H7 | Une présence par élève et par jour, proposition de remplacement ; `whereDate` côté serveur | `attendance_duplicate_rule_test` (4) ; suite backend |
+| 09/10/2026 | F4 | Écran Journal d'activité + filtres serveur | `ActivityLogTest` (6) ; test de widget |
+| 09/10/2026 | F5 / D2 | Ordre rejeu → rechargement, créations hors ligne, groupes, refus serveur, date réelle, conflits journalisés, indicateur et écran Synchronisation | `OfflineSyncTest` (7) ; `offline_sync_test` (14) |
+| 09/10/2026 | M3 | Absence justifiée ; dernier jour inclus dans les taux | Test serveur dédié (échoue avant correctif) |
+| 09/10/2026 | M1, M2 | Traduction complète fr/en/ar de l'app et des messages serveur | `l10n_test` (3) ; `LocaleTest` (5) |
+| 09/10/2026 | M4, M5 | Rapport de groupe ; rapports par élève sur toute la période ; polices et en-tête PDF | `class_report_test` (7) ; rendus PDF inspectés |
+| 09/10/2026 | M6, M7, M8 | Mode et observation de paiement ; horaire/salle ; limite 500 ; recherche d'élèves | `student_filter_test` (5) ; suite complète |
+| 09/10/2026 | M9, M10 | Logo du Markaz ; compilation Web | `MarkazLogoTest` (6) ; `flutter build web` |
+
+### Bilan au 9 octobre 2026
+
+Tous les points de l'audit sont résolus et vérifiés, à l'exception de F1
+(décision produit assumée) et des éléments de F9 relevant de choix
+techniques ou de l'exploitation. Suites de tests : backend **59/59**,
+app **36/36**, `flutter analyze` sans aucun problème.
+
