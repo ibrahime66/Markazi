@@ -68,14 +68,14 @@ class AuthController extends Controller
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Email ou mot de passe incorrect.'],
+                'email' => [__('Email ou mot de passe incorrect.')],
             ]);
         }
 
         $deviceName = $data['device_name'] ?? 'appareil-inconnu';
         $token = $user->createToken($deviceName)->plainTextToken;
 
-        ActivityLog::record('user.logged_in', $user, "Connexion depuis {$deviceName}");
+        ActivityLog::record('user.logged_in', $user, "Connexion depuis {$deviceName}", ['subject' => $deviceName]);
 
         return response()->json([
             'user' => $user->load('markaz'),
@@ -90,7 +90,7 @@ class AuthController extends Controller
     {
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json(['message' => 'Déconnecté.']);
+        return response()->json(['message' => __('Déconnecté.')]);
     }
 
     public function me(Request $request)
@@ -105,8 +105,8 @@ class AuthController extends Controller
         $status = Password::sendResetLink($request->only('email'));
 
         return $status === Password::RESET_LINK_SENT
-            ? response()->json(['message' => 'Lien de réinitialisation envoyé.'])
-            : response()->json(['message' => 'Impossible d\'envoyer le lien de réinitialisation.'], 422);
+            ? response()->json(['message' => __('Lien de réinitialisation envoyé.')])
+            : response()->json(['message' => __('Impossible d\'envoyer le lien de réinitialisation.')], 422);
     }
 
     public function resetPassword(Request $request)
@@ -126,8 +126,8 @@ class AuthController extends Controller
         );
 
         return $status === Password::PASSWORD_RESET
-            ? response()->json(['message' => 'Mot de passe réinitialisé.'])
-            : response()->json(['message' => 'Jeton invalide ou expiré.'], 422);
+            ? response()->json(['message' => __('Mot de passe réinitialisé.')])
+            : response()->json(['message' => __('Jeton invalide ou expiré.')], 422);
     }
 
     public function changePassword(Request $request)
@@ -141,12 +141,12 @@ class AuthController extends Controller
 
         if (! Hash::check($request->input('current_password'), $user->password)) {
             throw ValidationException::withMessages([
-                'current_password' => ['Mot de passe actuel incorrect.'],
+                'current_password' => [__('Mot de passe actuel incorrect.')],
             ]);
         }
 
         $user->forceFill(['password' => $request->input('password')])->save();
 
-        return response()->json(['message' => 'Mot de passe modifié.']);
+        return response()->json(['message' => __('Mot de passe modifié.')]);
     }
 }

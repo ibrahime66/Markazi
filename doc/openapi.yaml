@@ -17,6 +17,11 @@ info:
     conserve la version écrasée. En-tête ignoré s'il est invalide, futur ou
     vieux de plus d'un an.
 
+    Langue (doc/audit.md point K8) : l'en-tête `Accept-Language` (fr, en ou
+    ar) choisit la langue des messages renvoyés (validation, erreurs, emails).
+    Langue par défaut : français. Les erreurs 401/403/404/429 renvoient un
+    `message` lisible et traduit.
+
     Document maintenu à la main (doc/audit.md, point F8) plutôt que généré
     par un package Swagger : à mettre à jour manuellement à chaque évolution
     des routes (`backend/routes/api.php`) ou des Form Requests.

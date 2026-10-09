@@ -3215,6 +3215,132 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Erreur de communication avec le serveur.'**
   String get errServerCommunication;
+
+  /// No description provided for @activityActionPaymentRecorded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement enregistré'**
+  String get activityActionPaymentRecorded;
+
+  /// No description provided for @activityActionPaymentStatusUpdated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Statut de paiement mis à jour'**
+  String get activityActionPaymentStatusUpdated;
+
+  /// No description provided for @activityActionAttendanceRecorded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Présence enregistrée'**
+  String get activityActionAttendanceRecorded;
+
+  /// No description provided for @activityActionAttendanceUpdated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Présence corrigée'**
+  String get activityActionAttendanceUpdated;
+
+  /// No description provided for @activityActionAttendanceDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Présence supprimée'**
+  String get activityActionAttendanceDeleted;
+
+  /// No description provided for @activityActionClassCreated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Groupe créé'**
+  String get activityActionClassCreated;
+
+  /// No description provided for @activityActionClassUpdated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Groupe modifié'**
+  String get activityActionClassUpdated;
+
+  /// No description provided for @activityActionClassDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Groupe archivé'**
+  String get activityActionClassDeleted;
+
+  /// No description provided for @activityActionGuardianCreated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parent ajouté'**
+  String get activityActionGuardianCreated;
+
+  /// No description provided for @activityActionGuardianUpdated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parent modifié'**
+  String get activityActionGuardianUpdated;
+
+  /// No description provided for @activityActionGuardianDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parent supprimé'**
+  String get activityActionGuardianDeleted;
+
+  /// No description provided for @activityActionStudentCreated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élève ajouté'**
+  String get activityActionStudentCreated;
+
+  /// No description provided for @activityActionStudentUpdated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élève modifié'**
+  String get activityActionStudentUpdated;
+
+  /// No description provided for @activityActionStudentArchived.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élève archivé'**
+  String get activityActionStudentArchived;
+
+  /// No description provided for @activityActionUserRegistered.
+  ///
+  /// In fr, this message translates to:
+  /// **'Inscription et création du Markaz'**
+  String get activityActionUserRegistered;
+
+  /// No description provided for @activityActionUserLoggedIn.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion'**
+  String get activityActionUserLoggedIn;
+
+  /// No description provided for @activityActionRecitationRecorded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Récitation enregistrée'**
+  String get activityActionRecitationRecorded;
+
+  /// No description provided for @activityActionRecitationUpdated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Récitation corrigée'**
+  String get activityActionRecitationUpdated;
+
+  /// No description provided for @activityActionRecitationDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Récitation supprimée'**
+  String get activityActionRecitationDeleted;
+
+  /// No description provided for @activityActionMarkazUpdated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fiche du Markaz mise à jour'**
+  String get activityActionMarkazUpdated;
+
+  /// No description provided for @activityActionSyncConflict.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conflit de synchronisation'**
+  String get activityActionSyncConflict;
 }
 
 class _AppLocalizationsDelegate

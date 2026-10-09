@@ -42,7 +42,7 @@ class StudentController extends Controller
 
         $student = Student::create($request->validated());
 
-        ActivityLog::record('student.created', $student, "Élève ajouté : {$student->name}");
+        ActivityLog::record('student.created', $student, "Élève ajouté : {$student->name}", ['subject' => $student->name]);
 
         return response()->json($student, 201);
     }
@@ -63,7 +63,7 @@ class StudentController extends Controller
         ActivityLog::recordSyncConflictIfStale($student, 'update');
         $student->update($request->validated());
 
-        ActivityLog::record('student.updated', $student, "Élève modifié : {$student->name}");
+        ActivityLog::record('student.updated', $student, "Élève modifié : {$student->name}", ['subject' => $student->name]);
 
         return response()->json($student);
     }
@@ -79,7 +79,7 @@ class StudentController extends Controller
         ActivityLog::recordSyncConflictIfStale($student, 'delete');
         $student->delete();
 
-        ActivityLog::record('student.archived', $student, "Élève archivé : {$student->name}");
+        ActivityLog::record('student.archived', $student, "Élève archivé : {$student->name}", ['subject' => $student->name]);
 
         return response()->json(null, 204);
     }

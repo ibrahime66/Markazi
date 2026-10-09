@@ -34,7 +34,7 @@ class ClassController extends Controller
 
         $class = ClassModel::create($request->validated());
 
-        ActivityLog::record('class.created', $class, "Classe créée : {$class->name}");
+        ActivityLog::record('class.created', $class, "Classe créée : {$class->name}", ['subject' => $class->name]);
 
         return response()->json($class, 201);
     }
@@ -55,7 +55,7 @@ class ClassController extends Controller
         ActivityLog::recordSyncConflictIfStale($class, 'update');
         $class->update($request->validated());
 
-        ActivityLog::record('class.updated', $class, "Classe modifiée : {$class->name}");
+        ActivityLog::record('class.updated', $class, "Classe modifiée : {$class->name}", ['subject' => $class->name]);
 
         return response()->json($class);
     }
@@ -68,7 +68,7 @@ class ClassController extends Controller
         ActivityLog::recordSyncConflictIfStale($class, 'delete');
         $class->delete();
 
-        ActivityLog::record('class.deleted', $class, "Classe archivée : {$class->name}");
+        ActivityLog::record('class.deleted', $class, "Classe archivée : {$class->name}", ['subject' => $class->name]);
 
         return response()->json(null, 204);
     }

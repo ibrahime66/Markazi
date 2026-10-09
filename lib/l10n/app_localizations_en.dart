@@ -1722,4 +1722,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errServerCommunication => 'Error communicating with the server.';
+
+  @override
+  String get activityActionPaymentRecorded => 'Payment recorded';
+
+  @override
+  String get activityActionPaymentStatusUpdated => 'Payment status updated';
+
+  @override
+  String get activityActionAttendanceRecorded => 'Attendance recorded';
+
+  @override
+  String get activityActionAttendanceUpdated => 'Attendance corrected';
+
+  @override
+  String get activityActionAttendanceDeleted => 'Attendance deleted';
+
+  @override
+  String get activityActionClassCreated => 'Group created';
+
+  @override
+  String get activityActionClassUpdated => 'Group updated';
+
+  @override
+  String get activityActionClassDeleted => 'Group archived';
+
+  @override
+  String get activityActionGuardianCreated => 'Guardian added';
+
+  @override
+  String get activityActionGuardianUpdated => 'Guardian updated';
+
+  @override
+  String get activityActionGuardianDeleted => 'Guardian deleted';
+
+  @override
+  String get activityActionStudentCreated => 'Student added';
+
+  @override
+  String get activityActionStudentUpdated => 'Student updated';
+
+  @override
+  String get activityActionStudentArchived => 'Student archived';
+
+  @override
+  String get activityActionUserRegistered => 'Sign-up and Markaz creation';
+
+  @override
+  String get activityActionUserLoggedIn => 'Login';
+
+  @override
+  String get activityActionRecitationRecorded => 'Recitation recorded';
+
+  @override
+  String get activityActionRecitationUpdated => 'Recitation corrected';
+
+  @override
+  String get activityActionRecitationDeleted => 'Recitation deleted';
+
+  @override
+  String get activityActionMarkazUpdated => 'Markaz details updated';
+
+  @override
+  String get activityActionSyncConflict => 'Sync conflict';
 }

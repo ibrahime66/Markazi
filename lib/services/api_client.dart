@@ -22,6 +22,9 @@ class ApiClient {
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
+        // Les messages du serveur suivent la langue de l'app (fr, en, ar —
+        // doc/audit.md K8 ; middleware SetLocaleFromRequest côté Laravel).
+        options.headers['Accept-Language'] = AppLocale.current.languageCode;
         handler.next(options);
       },
       onResponse: (response, handler) {

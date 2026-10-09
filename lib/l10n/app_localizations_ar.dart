@@ -1709,4 +1709,67 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errServerCommunication => 'خطأ في الاتصال بالخادم.';
+
+  @override
+  String get activityActionPaymentRecorded => 'تم تسجيل دفعة';
+
+  @override
+  String get activityActionPaymentStatusUpdated => 'تم تحديث حالة الدفعة';
+
+  @override
+  String get activityActionAttendanceRecorded => 'تم تسجيل الحضور';
+
+  @override
+  String get activityActionAttendanceUpdated => 'تم تصحيح الحضور';
+
+  @override
+  String get activityActionAttendanceDeleted => 'تم حذف الحضور';
+
+  @override
+  String get activityActionClassCreated => 'تم إنشاء مجموعة';
+
+  @override
+  String get activityActionClassUpdated => 'تم تعديل مجموعة';
+
+  @override
+  String get activityActionClassDeleted => 'تمت أرشفة مجموعة';
+
+  @override
+  String get activityActionGuardianCreated => 'تمت إضافة ولي أمر';
+
+  @override
+  String get activityActionGuardianUpdated => 'تم تعديل ولي أمر';
+
+  @override
+  String get activityActionGuardianDeleted => 'تم حذف ولي أمر';
+
+  @override
+  String get activityActionStudentCreated => 'تمت إضافة طالب';
+
+  @override
+  String get activityActionStudentUpdated => 'تم تعديل طالب';
+
+  @override
+  String get activityActionStudentArchived => 'تمت أرشفة طالب';
+
+  @override
+  String get activityActionUserRegistered => 'التسجيل وإنشاء المركز';
+
+  @override
+  String get activityActionUserLoggedIn => 'تسجيل الدخول';
+
+  @override
+  String get activityActionRecitationRecorded => 'تم تسجيل تسميع';
+
+  @override
+  String get activityActionRecitationUpdated => 'تم تصحيح تسميع';
+
+  @override
+  String get activityActionRecitationDeleted => 'تم حذف تسميع';
+
+  @override
+  String get activityActionMarkazUpdated => 'تم تحديث بيانات المركز';
+
+  @override
+  String get activityActionSyncConflict => 'تعارض في المزامنة';
 }

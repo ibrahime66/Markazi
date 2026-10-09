@@ -1735,4 +1735,69 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errServerCommunication =>
       'Erreur de communication avec le serveur.';
+
+  @override
+  String get activityActionPaymentRecorded => 'Paiement enregistré';
+
+  @override
+  String get activityActionPaymentStatusUpdated =>
+      'Statut de paiement mis à jour';
+
+  @override
+  String get activityActionAttendanceRecorded => 'Présence enregistrée';
+
+  @override
+  String get activityActionAttendanceUpdated => 'Présence corrigée';
+
+  @override
+  String get activityActionAttendanceDeleted => 'Présence supprimée';
+
+  @override
+  String get activityActionClassCreated => 'Groupe créé';
+
+  @override
+  String get activityActionClassUpdated => 'Groupe modifié';
+
+  @override
+  String get activityActionClassDeleted => 'Groupe archivé';
+
+  @override
+  String get activityActionGuardianCreated => 'Parent ajouté';
+
+  @override
+  String get activityActionGuardianUpdated => 'Parent modifié';
+
+  @override
+  String get activityActionGuardianDeleted => 'Parent supprimé';
+
+  @override
+  String get activityActionStudentCreated => 'Élève ajouté';
+
+  @override
+  String get activityActionStudentUpdated => 'Élève modifié';
+
+  @override
+  String get activityActionStudentArchived => 'Élève archivé';
+
+  @override
+  String get activityActionUserRegistered =>
+      'Inscription et création du Markaz';
+
+  @override
+  String get activityActionUserLoggedIn => 'Connexion';
+
+  @override
+  String get activityActionRecitationRecorded => 'Récitation enregistrée';
+
+  @override
+  String get activityActionRecitationUpdated => 'Récitation corrigée';
+
+  @override
+  String get activityActionRecitationDeleted => 'Récitation supprimée';
+
+  @override
+  String get activityActionMarkazUpdated => 'Fiche du Markaz mise à jour';
+
+  @override
+  String get activityActionSyncConflict => 'Conflit de synchronisation';
 }
