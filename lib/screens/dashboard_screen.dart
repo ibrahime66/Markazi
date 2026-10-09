@@ -16,6 +16,7 @@ import '../providers/sync_queue_provider.dart';
 import '../providers/guardian_provider.dart';
 import '../providers/recitation_provider.dart';
 import '../widgets/sync_status_banner.dart';
+import '../utils/student_filter.dart';
 import '../services/auth_service.dart';
 import '../services/student_service.dart';
 import '../services/payment_service.dart';
@@ -46,6 +47,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   AppLocalizations get _l10n => AppLocalizations.of(context);
 
   int _selectedTabIndex = 0;
+
+  // Recherche et filtre de l'onglet Élèves (CDC §8.3).
+  String _studentSearch = '';
+  String _studentGroupFilter = studentFilterAllGroups;
 
   /// Devise configurée pour ce Markaz, utilisée partout où un montant est
   /// affiché (doc/audit.md, point I4 : auparavant "FGN" codé en dur dans
@@ -844,17 +849,100 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildStudentsTab() {
-    return Consumer<StudentProvider>(
-      builder: (context, studentProvider, _) {
+    return Consumer2<StudentProvider, ClassProvider>(
+      builder: (context, studentProvider, classProvider, _) {
+        final l10n = AppLocalizations.of(context);
+        final classes = classProvider.classes;
+        // Groupe filtré supprimé entre-temps : retour à "tous".
+        final groupFilter = _studentGroupFilter == studentFilterAllGroups ||
+                _studentGroupFilter == studentFilterNoGroup ||
+                classes.any((c) => c.id == _studentGroupFilter)
+            ? _studentGroupFilter
+            : studentFilterAllGroups;
+        final students = filterStudents(
+          studentProvider.students,
+          query: _studentSearch,
+          groupFilter: groupFilter,
+          classes: classes,
+        );
         return Column(
           children: [
             _buildTabHeader(
-              AppLocalizations.of(context).navStudents,
-              AppLocalizations.of(context).dashStudentsCount(studentProvider.students.length),
+              l10n.navStudents,
+              l10n.dashStudentsCount(studentProvider.students.length),
               _showAddStudentDialog,
             ),
+            if (studentProvider.students.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: TextField(
+                        onChanged: (value) => setState(() => _studentSearch = value),
+                        decoration: InputDecoration(
+                          hintText: l10n.studentSearchHint,
+                          prefixIcon: const Icon(Icons.search),
+                          isDense: true,
+                          filled: true,
+                          fillColor: AppColors.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 2,
+                      child: DropdownButtonFormField<String>(
+                        initialValue: groupFilter,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          filled: true,
+                          fillColor: AppColors.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: studentFilterAllGroups,
+                            child: Text(l10n.studentFilterAllGroups, overflow: TextOverflow.ellipsis),
+                          ),
+                          DropdownMenuItem(
+                            value: studentFilterNoGroup,
+                            child: Text(l10n.studentFilterNoGroup, overflow: TextOverflow.ellipsis),
+                          ),
+                          for (final c in classes)
+                            DropdownMenuItem(
+                              value: c.id,
+                              child: Text(c.name, overflow: TextOverflow.ellipsis),
+                            ),
+                        ],
+                        onChanged: (value) => setState(
+                          () => _studentGroupFilter = value ?? studentFilterAllGroups,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Expanded(
-              child: studentProvider.students.isEmpty
+              child: studentProvider.students.isNotEmpty && students.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          l10n.studentSearchNoResult,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
+                        ),
+                      ),
+                    )
+                  : studentProvider.students.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -870,9 +958,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.all(16),
-                      itemCount: studentProvider.students.length,
+                      itemCount: students.length,
                       itemBuilder: (context, index) {
-                        final student = studentProvider.students[index];
+                        final student = students[index];
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12),
                           child: ListTile(
@@ -1555,6 +1643,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String? selectedStudentId;
     final amountController = TextEditingController();
     String selectedStatus = 'paid';
+    // Mode et observation (CDC §8.7) — 'cash' / 'other', valeurs de l'API.
+    String selectedMode = 'cash';
+    final observationController = TextEditingController();
     final now = DateTime.now();
     DateTime selectedMonth = DateTime(now.year, now.month, 1);
     DateTime selectedPaidDay = now;
@@ -1694,6 +1785,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                     ],
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedMode,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context).fieldPaymentMode,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
+                      ),
+                      items: [
+                        DropdownMenuItem(value: 'cash', child: Text(AppLocalizations.of(context).paymentModeCash)),
+                        DropdownMenuItem(value: 'other', child: Text(AppLocalizations.of(context).paymentModeOther)),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => selectedMode = value);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: observationController,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context).fieldObservationOptional,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        prefixIcon: const Icon(Icons.notes_rounded),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1736,6 +1859,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           : PaymentStatus.unpaid,
                       month: selectedMonth,
                       paidAt: selectedStatus == 'paid' ? selectedPaidDay : null,
+                      paymentMode: selectedMode,
+                      observation: observationController.text,
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -1763,6 +1888,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required PaymentStatus status,
     required DateTime month,
     DateTime? paidAt,
+    String paymentMode = 'cash',
+    String? observation,
     bool confirmDuplicate = false,
   }) async {
     try {
@@ -1773,6 +1900,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         status: status,
         date: month,
         paidAt: paidAt,
+        paymentMode: paymentMode,
+        observation: observation,
         confirmDuplicate: confirmDuplicate,
       );
 
@@ -1821,6 +1950,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           status: status,
           month: month,
           paidAt: paidAt,
+          paymentMode: paymentMode,
+          observation: observation,
           confirmDuplicate: true,
         );
       }
@@ -2465,6 +2596,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Colors.purple,
               ),
               const SizedBox(height: 12),
+
+              // Mode de paiement et observation (CDC §8.7)
+              _buildPaymentDetailRow(
+                AppLocalizations.of(context).fieldPaymentMode,
+                payment.mode == 'cash'
+                    ? AppLocalizations.of(context).paymentModeCash
+                    : AppLocalizations.of(context).paymentModeOther,
+                Colors.teal,
+              ),
+              const SizedBox(height: 12),
+              if (payment.observation != null && payment.observation!.isNotEmpty) ...[
+                _buildPaymentDetailRow(
+                  AppLocalizations.of(context).fieldObservation,
+                  payment.observation!,
+                  Colors.grey,
+                ),
+                const SizedBox(height: 12),
+              ],
 
               // Téléphone de l'élève/parent
               _buildPaymentDetailRow(
@@ -3707,7 +3856,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
 
-              if (classModel.schedule != null) ...[
+              if (classModel.schedule?.isNotEmpty ?? false) ...[
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -3730,7 +3879,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
 
-              if (classModel.room != null) ...[
+              if (classModel.room?.isNotEmpty ?? false) ...[
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -3839,7 +3988,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       parentPhone: student.parentPhone,
       amountPaid: payment.amount,
       month: '${_moisFr[payment.date.month - 1]} ${payment.date.year}',
-      paymentMethod: 'Espèces',
+      // Texte du reçu (en français, CDC §21) selon le mode réel (§8.7).
+      paymentMethod: payment.mode == 'cash' ? 'Espèces' : 'Autre',
       // Contenu du reçu PDF : reste en français (documents V1, CDC §21).
       status: 'Payé',
       recordedByName: teacherName,
@@ -4242,6 +4392,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final descriptionController = TextEditingController();
     final teacherController = TextEditingController();
     final maxStudentsController = TextEditingController(text: '30');
+    final scheduleController = TextEditingController();
+    final roomController = TextEditingController();
 
     showDialog(
       context: context,
@@ -4294,6 +4446,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   keyboardType: TextInputType.number,
                 ),
+                const SizedBox(height: 12),
+                // Horaire et salle (doc/audit.md, notes de la section H : le
+                // modèle et le serveur les géraient déjà, pas le formulaire).
+                TextField(
+                  controller: scheduleController,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldSchedule,
+                    hintText: AppLocalizations.of(context).groupScheduleHint,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: roomController,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldRoom,
+                  ),
+                ),
               ],
             ),
           ),
@@ -4311,7 +4480,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     level: levelController.text,
                     description: descriptionController.text,
                     teacherName: teacherController.text,
-                    maxStudents: int.tryParse(maxStudentsController.text) ?? 20,
+                    maxStudents: int.tryParse(maxStudentsController.text) ?? 30,
+                    schedule: scheduleController.text,
+                    room: roomController.text,
                   );
                   
                   if (context.mounted) {
@@ -4351,6 +4522,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final descriptionController = TextEditingController(text: classModel.description);
     final teacherController = TextEditingController(text: classModel.teacherName);
     final maxStudentsController = TextEditingController(text: classModel.maxStudents.toString());
+    final scheduleController = TextEditingController(text: classModel.schedule ?? '');
+    final roomController = TextEditingController(text: classModel.room ?? '');
 
     showDialog(
       context: context,
@@ -4399,6 +4572,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   keyboardType: TextInputType.number,
                 ),
+                const SizedBox(height: 12),
+                // Horaire et salle (doc/audit.md, notes de la section H : le
+                // modèle et le serveur les géraient déjà, pas le formulaire).
+                TextField(
+                  controller: scheduleController,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldSchedule,
+                    hintText: AppLocalizations.of(context).groupScheduleHint,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: roomController,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).fieldRoom,
+                  ),
+                ),
               ],
             ),
           ),
@@ -4417,7 +4607,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     level: levelController.text,
                     description: descriptionController.text,
                     teacherName: teacherController.text,
-                    maxStudents: int.tryParse(maxStudentsController.text) ?? 20,
+                    maxStudents: int.tryParse(maxStudentsController.text) ?? 30,
+                    schedule: scheduleController.text,
+                    room: roomController.text,
                   );
                   
                   if (context.mounted) {

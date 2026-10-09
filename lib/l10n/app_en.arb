@@ -543,5 +543,15 @@
   "groupReport": "Group report",
   "groupReportChoose": "Report for the whole group: choose the period.",
   "groupReportWeekly": "This week",
-  "groupReportMonthly": "This month"
+  "groupReportMonthly": "This month",
+  "fieldPaymentMode": "Payment method",
+  "paymentModeCash": "Cash",
+  "paymentModeOther": "Other (mobile money, transfer…)",
+  "fieldObservationOptional": "Note (optional)",
+  "fieldObservation": "Note",
+  "groupScheduleHint": "e.g. Mon, Wed, Fri — 4-6 pm",
+  "studentSearchHint": "Search (name or phone)",
+  "studentFilterAllGroups": "All groups",
+  "studentFilterNoGroup": "No group",
+  "studentSearchNoResult": "No student matches the search."
 }

@@ -1798,4 +1798,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupReportMonthly => 'This month';
+
+  @override
+  String get fieldPaymentMode => 'Payment method';
+
+  @override
+  String get paymentModeCash => 'Cash';
+
+  @override
+  String get paymentModeOther => 'Other (mobile money, transfer…)';
+
+  @override
+  String get fieldObservationOptional => 'Note (optional)';
+
+  @override
+  String get fieldObservation => 'Note';
+
+  @override
+  String get groupScheduleHint => 'e.g. Mon, Wed, Fri — 4-6 pm';
+
+  @override
+  String get studentSearchHint => 'Search (name or phone)';
+
+  @override
+  String get studentFilterAllGroups => 'All groups';
+
+  @override
+  String get studentFilterNoGroup => 'No group';
+
+  @override
+  String get studentSearchNoResult => 'No student matches the search.';
 }

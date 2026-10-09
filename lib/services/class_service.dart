@@ -65,8 +65,8 @@ class ClassService {
       studentIds: [],
       markazId: markazId,
       createdAt: DateTime.now(),
-      schedule: schedule?.trim(),
-      room: room?.trim(),
+      schedule: (schedule == null || schedule.trim().isEmpty) ? null : schedule.trim(),
+      room: (room == null || room.trim().isEmpty) ? null : room.trim(),
     );
 
     return await _repository.addClass(newClass);

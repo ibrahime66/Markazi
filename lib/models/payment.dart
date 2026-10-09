@@ -45,6 +45,19 @@ class Payment extends Equatable {
   @HiveField(7)
   final DateTime? paidAt;
 
+  /// Mode de paiement (CDC §8.7) : 'cash' (espèces) ou 'other' (autre :
+  /// mobile money, virement…), mêmes valeurs que l'API. Nullable pour les
+  /// paiements déjà en cache avant l'ajout du champ : voir [mode].
+  @HiveField(8)
+  final String? paymentMode;
+
+  /// Observation libre saisie avec le paiement (CDC §8.7).
+  @HiveField(9)
+  final String? observation;
+
+  /// Mode de paiement effectif ('cash' par défaut).
+  String get mode => paymentMode ?? 'cash';
+
   const Payment({
     required this.id,
     required this.studentId,
@@ -54,6 +67,8 @@ class Payment extends Equatable {
     required this.date,
     this.receiptNumber,
     this.paidAt,
+    this.paymentMode,
+    this.observation,
   });
 
   /// Crée une nouvelle instance avec les modifications
@@ -66,6 +81,8 @@ class Payment extends Equatable {
     DateTime? date,
     String? receiptNumber,
     DateTime? paidAt,
+    String? paymentMode,
+    String? observation,
   }) {
     return Payment(
       id: id ?? this.id,
@@ -76,6 +93,8 @@ class Payment extends Equatable {
       date: date ?? this.date,
       receiptNumber: receiptNumber ?? this.receiptNumber,
       paidAt: paidAt ?? this.paidAt,
+      paymentMode: paymentMode ?? this.paymentMode,
+      observation: observation ?? this.observation,
     );
   }
 
@@ -90,6 +109,8 @@ class Payment extends Equatable {
       'date': date.toIso8601String(),
       'receiptNumber': receiptNumber,
       'paidAt': paidAt?.toIso8601String(),
+      'paymentMode': paymentMode,
+      'observation': observation,
     };
   }
 
@@ -109,12 +130,24 @@ class Payment extends Equatable {
       paidAt: json['paidAt'] != null
           ? DateTime.parse(json['paidAt'] as String)
           : null,
+      paymentMode: json['paymentMode'] as String?,
+      observation: json['observation'] as String?,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [id, studentId, markazId, amount, status, date, receiptNumber, paidAt];
+  List<Object?> get props => [
+        id,
+        studentId,
+        markazId,
+        amount,
+        status,
+        date,
+        receiptNumber,
+        paidAt,
+        paymentMode,
+        observation,
+      ];
 
   @override
   String toString() =>

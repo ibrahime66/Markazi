@@ -1813,4 +1813,35 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get groupReportMonthly => 'Ce mois-ci';
+
+  @override
+  String get fieldPaymentMode => 'Mode de paiement';
+
+  @override
+  String get paymentModeCash => 'Espèces';
+
+  @override
+  String get paymentModeOther => 'Autre (mobile money, virement…)';
+
+  @override
+  String get fieldObservationOptional => 'Observation (optionnel)';
+
+  @override
+  String get fieldObservation => 'Observation';
+
+  @override
+  String get groupScheduleHint => 'Ex : Lun, Mer, Ven — 16h-18h';
+
+  @override
+  String get studentSearchHint => 'Rechercher (nom ou téléphone)';
+
+  @override
+  String get studentFilterAllGroups => 'Tous les groupes';
+
+  @override
+  String get studentFilterNoGroup => 'Sans groupe';
+
+  @override
+  String get studentSearchNoResult =>
+      'Aucun élève ne correspond à la recherche.';
 }

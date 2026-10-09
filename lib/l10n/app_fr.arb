@@ -921,5 +921,15 @@
   "groupReport": "Rapport du groupe",
   "groupReportChoose": "Rapport de tout le groupe : choisissez la période.",
   "groupReportWeekly": "Cette semaine",
-  "groupReportMonthly": "Ce mois-ci"
+  "groupReportMonthly": "Ce mois-ci",
+  "fieldPaymentMode": "Mode de paiement",
+  "paymentModeCash": "Espèces",
+  "paymentModeOther": "Autre (mobile money, virement…)",
+  "fieldObservationOptional": "Observation (optionnel)",
+  "fieldObservation": "Observation",
+  "groupScheduleHint": "Ex : Lun, Mer, Ven — 16h-18h",
+  "studentSearchHint": "Rechercher (nom ou téléphone)",
+  "studentFilterAllGroups": "Tous les groupes",
+  "studentFilterNoGroup": "Sans groupe",
+  "studentSearchNoResult": "Aucun élève ne correspond à la recherche."
 }
