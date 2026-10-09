@@ -1,6 +1,5 @@
 {
   "@@locale": "ar",
-
   "navOverview": "نظرة عامة",
   "navStudents": "الطلاب",
   "navGroups": "المجموعات",
@@ -12,7 +11,6 @@
   "navRecitations": "التسميع",
   "navLogout": "تسجيل الخروج",
   "navDarkMode": "الوضع الداكن",
-
   "actionSave": "حفظ",
   "actionSaving": "جارٍ الحفظ...",
   "actionCancel": "إلغاء",
@@ -23,7 +21,6 @@
   "actionConfirm": "تأكيد",
   "actionShare": "مشاركة",
   "actionDownload": "تنزيل",
-
   "markazSettingsTitle": "مركزي",
   "markazHeaderSubtitle": "تُستخدم هذه المعلومات في جميع أنحاء التطبيق.",
   "markazSectionIdentity": "الهوية",
@@ -37,7 +34,6 @@
   "markazSectionAppearanceSubtitle": "اختر مظهر التطبيق على هذا الجهاز.",
   "markazSectionLanguage": "اللغة",
   "markazSectionLanguageSubtitle": "اختر لغة التطبيق.",
-
   "fieldMarkazName": "اسم المركز",
   "fieldSlogan": "الشعار",
   "fieldAddress": "العنوان",
@@ -46,16 +42,37 @@
   "fieldCurrency": "العملة (مثال: GNF, XOF, EUR)",
   "fieldPhone": "الهاتف",
   "fieldEmail": "البريد الإلكتروني",
-
   "appearanceSystem": "النظام",
   "appearanceLight": "فاتح",
   "appearanceDark": "داكن",
-
   "languageFrench": "Français",
   "languageEnglish": "English",
   "languageArabic": "العربية",
-
   "markazNameRequired": "اسم المركز إلزامي",
   "markazUpdated": "تم تحديث بيانات المركز",
-  "genericError": "خطأ"
+  "genericError": "خطأ",
+  "navActivityLog": "سجل النشاط",
+  "actionRetry": "إعادة المحاولة",
+  "activityFilterAll": "الكل",
+  "activityCategoryStudent": "الطلاب",
+  "activityCategoryClass": "المجموعات",
+  "activityCategoryGuardian": "أولياء الأمور",
+  "activityCategoryAttendance": "الحضور",
+  "activityCategoryRecitation": "التسميع",
+  "activityCategoryPayment": "المدفوعات",
+  "activityCategoryMarkaz": "المركز",
+  "activityCategoryUser": "الحساب",
+  "activityCategorySync": "التعارضات",
+  "activityPeriodAll": "كل التواريخ",
+  "activityPeriod7": "آخر 7 أيام",
+  "activityPeriod30": "آخر 30 يومًا",
+  "activityToday": "اليوم",
+  "activityYesterday": "أمس",
+  "activityEmpty": "لا يوجد نشاط لهذا الاختيار.",
+  "activityLoadError": "تعذّر تحميل السجل. تحقق من اتصالك.",
+  "activityOfflineBadge": "أُدخل دون اتصال",
+  "activityByUser": "بواسطة {name}",
+  "activityConflictTitle": "تعارض في المزامنة",
+  "activityConflictExplanation": "تم تنفيذ هذا الإجراء دون اتصال في {performedAt}، لكن البيانات كانت قد تغيّرت على الخادم في هذه الأثناء (في {serverUpdatedAt}). تم تطبيق النسخة غير المتصلة. نسخة الخادم المستبدلة:",
+  "activityConflictHint": "اضغط لعرض النسخة المستبدلة"
 }

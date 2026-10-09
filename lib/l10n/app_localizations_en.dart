@@ -165,4 +165,82 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get genericError => 'Error';
+
+  @override
+  String get navActivityLog => 'Activity log';
+
+  @override
+  String get actionRetry => 'Retry';
+
+  @override
+  String get activityFilterAll => 'All';
+
+  @override
+  String get activityCategoryStudent => 'Students';
+
+  @override
+  String get activityCategoryClass => 'Groups';
+
+  @override
+  String get activityCategoryGuardian => 'Guardians';
+
+  @override
+  String get activityCategoryAttendance => 'Attendance';
+
+  @override
+  String get activityCategoryRecitation => 'Recitations';
+
+  @override
+  String get activityCategoryPayment => 'Payments';
+
+  @override
+  String get activityCategoryMarkaz => 'Markaz';
+
+  @override
+  String get activityCategoryUser => 'Account';
+
+  @override
+  String get activityCategorySync => 'Conflicts';
+
+  @override
+  String get activityPeriodAll => 'All dates';
+
+  @override
+  String get activityPeriod7 => 'Last 7 days';
+
+  @override
+  String get activityPeriod30 => 'Last 30 days';
+
+  @override
+  String get activityToday => 'Today';
+
+  @override
+  String get activityYesterday => 'Yesterday';
+
+  @override
+  String get activityEmpty => 'No activity for this filter.';
+
+  @override
+  String get activityLoadError =>
+      'Could not load the activity log. Check your connection.';
+
+  @override
+  String get activityOfflineBadge => 'Entered offline';
+
+  @override
+  String activityByUser(String name) {
+    return 'by $name';
+  }
+
+  @override
+  String get activityConflictTitle => 'Sync conflict';
+
+  @override
+  String activityConflictExplanation(
+      String performedAt, String serverUpdatedAt) {
+    return 'This action was made offline on $performedAt, but the data had been changed on the server in the meantime (on $serverUpdatedAt). The offline version was applied. Replaced server version:';
+  }
+
+  @override
+  String get activityConflictHint => 'Tap to see the replaced version';
 }

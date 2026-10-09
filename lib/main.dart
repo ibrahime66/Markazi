@@ -33,6 +33,9 @@ import 'datasources/api_attendance_datasource.dart';
 import 'datasources/api_class_datasource.dart';
 import 'datasources/api_guardian_datasource.dart';
 import 'datasources/api_recitation_datasource.dart';
+import 'datasources/api_activity_log_datasource.dart';
+import 'providers/activity_log_provider.dart';
+import 'screens/activity_log_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -200,6 +203,9 @@ void main() async {
           create: (_) => RecitationProvider(recitationService),
         ),
         ChangeNotifierProvider(
+          create: (_) => ActivityLogProvider(ApiActivityLogDatasource()),
+        ),
+        ChangeNotifierProvider(
           create: (_) => SyncQueueProvider(syncOrchestrator),
         ),
       ],
@@ -248,6 +254,7 @@ class MarkaziApp extends StatelessWidget {
             '/markaz-settings': (context) => const MarkazSettingsScreen(),
             '/guardians': (context) => const GuardianScreen(),
             '/recitations': (context) => const RecitationScreen(),
+            '/activity-log': (context) => const ActivityLogScreen(),
           },
         );
       },

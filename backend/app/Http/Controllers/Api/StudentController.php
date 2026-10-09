@@ -60,6 +60,7 @@ class StudentController extends Controller
         $student = Student::findOrFail($id);
         $this->authorize('update', $student);
 
+        ActivityLog::recordSyncConflictIfStale($student, 'update');
         $student->update($request->validated());
 
         ActivityLog::record('student.updated', $student, "Élève modifié : {$student->name}");
@@ -75,6 +76,7 @@ class StudentController extends Controller
         $student = Student::findOrFail($id);
         $this->authorize('delete', $student);
 
+        ActivityLog::recordSyncConflictIfStale($student, 'delete');
         $student->delete();
 
         ActivityLog::record('student.archived', $student, "Élève archivé : {$student->name}");

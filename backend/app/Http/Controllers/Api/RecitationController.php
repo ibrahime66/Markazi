@@ -58,6 +58,7 @@ class RecitationController extends Controller
         $recitation = Recitation::findOrFail($id);
         $this->authorize('update', $recitation);
 
+        ActivityLog::recordSyncConflictIfStale($recitation, 'update');
         $recitation->update($request->validated());
 
         ActivityLog::record('recitation.updated', $recitation, 'Récitation corrigée');
@@ -73,6 +74,7 @@ class RecitationController extends Controller
         $recitation = Recitation::findOrFail($id);
         $this->authorize('delete', $recitation);
 
+        ActivityLog::recordSyncConflictIfStale($recitation, 'delete');
         $recitation->delete();
 
         ActivityLog::record('recitation.deleted', $recitation, 'Récitation supprimée');

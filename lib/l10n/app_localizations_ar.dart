@@ -164,4 +164,81 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get genericError => 'خطأ';
+
+  @override
+  String get navActivityLog => 'سجل النشاط';
+
+  @override
+  String get actionRetry => 'إعادة المحاولة';
+
+  @override
+  String get activityFilterAll => 'الكل';
+
+  @override
+  String get activityCategoryStudent => 'الطلاب';
+
+  @override
+  String get activityCategoryClass => 'المجموعات';
+
+  @override
+  String get activityCategoryGuardian => 'أولياء الأمور';
+
+  @override
+  String get activityCategoryAttendance => 'الحضور';
+
+  @override
+  String get activityCategoryRecitation => 'التسميع';
+
+  @override
+  String get activityCategoryPayment => 'المدفوعات';
+
+  @override
+  String get activityCategoryMarkaz => 'المركز';
+
+  @override
+  String get activityCategoryUser => 'الحساب';
+
+  @override
+  String get activityCategorySync => 'التعارضات';
+
+  @override
+  String get activityPeriodAll => 'كل التواريخ';
+
+  @override
+  String get activityPeriod7 => 'آخر 7 أيام';
+
+  @override
+  String get activityPeriod30 => 'آخر 30 يومًا';
+
+  @override
+  String get activityToday => 'اليوم';
+
+  @override
+  String get activityYesterday => 'أمس';
+
+  @override
+  String get activityEmpty => 'لا يوجد نشاط لهذا الاختيار.';
+
+  @override
+  String get activityLoadError => 'تعذّر تحميل السجل. تحقق من اتصالك.';
+
+  @override
+  String get activityOfflineBadge => 'أُدخل دون اتصال';
+
+  @override
+  String activityByUser(String name) {
+    return 'بواسطة $name';
+  }
+
+  @override
+  String get activityConflictTitle => 'تعارض في المزامنة';
+
+  @override
+  String activityConflictExplanation(
+      String performedAt, String serverUpdatedAt) {
+    return 'تم تنفيذ هذا الإجراء دون اتصال في $performedAt، لكن البيانات كانت قد تغيّرت على الخادم في هذه الأثناء (في $serverUpdatedAt). تم تطبيق النسخة غير المتصلة. نسخة الخادم المستبدلة:';
+  }
+
+  @override
+  String get activityConflictHint => 'اضغط لعرض النسخة المستبدلة';
 }

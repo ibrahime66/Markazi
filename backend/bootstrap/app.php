@@ -21,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // vers route('login') (doc/audit.md, point E2 — bug découvert en
         // écrivant les tests automatisés d'authentification).
         $middleware->redirectGuestsTo(fn () => null);
+
+        // CDC §20 / §27 (doc/audit.md, point F5) : date réelle d'une action
+        // rejouée après une période hors ligne (en-tête X-Performed-At).
+        $middleware->api(append: [\App\Http\Middleware\CapturePerformedAt::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

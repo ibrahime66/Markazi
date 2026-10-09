@@ -8,6 +8,15 @@ info:
     Markaz de l'utilisateur authentifié (isolation multi-tenant, CDC §16) —
     aucun identifiant de Markaz n'est jamais accepté depuis le client.
 
+    Mode hors ligne (CDC §20/§27, doc/audit.md point F5) : quand l'app rejoue
+    une action saisie hors ligne, elle envoie l'en-tête optionnel
+    `X-Performed-At` (date ISO 8601 de l'action réelle). Le journal
+    d'activité est alors daté de cette date, et si la ressource a été
+    modifiée côté serveur après elle, la modification est appliquée
+    (dernière écriture serveur gagnante) et une entrée `sync.conflict`
+    conserve la version écrasée. En-tête ignoré s'il est invalide, futur ou
+    vieux de plus d'un an.
+
     Document maintenu à la main (doc/audit.md, point F8) plutôt que généré
     par un package Swagger : à mettre à jour manuellement à chaque évolution
     des routes (`backend/routes/api.php`) ou des Form Requests.
@@ -545,9 +554,38 @@ paths:
     get:
       tags: [Journal]
       summary: Historique d'activité horodaté (CDC §8.9)
-      parameters: [{ $ref: '#/components/parameters/PerPage' }]
+      description: >
+        Trié par date réelle de l'action (`performed_at`), la plus récente en
+        premier. Les bornes de date portent aussi sur `performed_at`.
+      parameters:
+        - { $ref: '#/components/parameters/PerPage' }
+        - name: category
+          in: query
+          description: Famille d'action (préfixe de `action`)
+          schema:
+            type: string
+            enum: [student, class, guardian, attendance, recitation, payment, markaz, user, sync]
+        - name: entity_type
+          in: query
+          description: Nom de classe PHP complet (ex. `App\\Models\\Student`) — conservé pour compatibilité
+          schema: { type: string }
+        - { $ref: '#/components/parameters/DateFrom' }
+        - { $ref: '#/components/parameters/DateTo' }
       responses:
-        "200": { description: OK }
+        "200":
+          description: Page d'entrées du journal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ActivityLog' }
+                  current_page: { type: integer }
+                  last_page: { type: integer }
+                  total: { type: integer }
+        "422": { description: Catégorie ou date invalide }
 
 components:
   securitySchemes:
@@ -773,3 +811,26 @@ components:
         receipt_number: { type: string, nullable: true, example: "MK-1-2026-000001" }
         paid_at: { type: string, format: date-time, nullable: true }
         recorded_by: { type: integer, nullable: true }
+
+    ActivityLog:
+      type: object
+      properties:
+        id: { type: integer }
+        action: { type: string, example: payment.recorded }
+        entity_type: { type: string, nullable: true }
+        entity_id: { type: integer, nullable: true }
+        description: { type: string, nullable: true }
+        meta:
+          type: object
+          description: >
+            Données libres. `synced_offline: true` pour une action rejouée
+            hors ligne ; pour `sync.conflict` : `operation`, `performed_at`,
+            `server_updated_at`, `overwritten_server_version`.
+        performed_at: { type: string, format: date-time, description: Date réelle de l'action (CDC §27) }
+        created_at: { type: string, format: date-time, description: Date d'écriture serveur }
+        user:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer }
+            name: { type: string }

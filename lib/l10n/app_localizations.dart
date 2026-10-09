@@ -405,6 +405,151 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Erreur'**
   String get genericError;
+
+  /// No description provided for @navActivityLog.
+  ///
+  /// In fr, this message translates to:
+  /// **'Journal d\'activité'**
+  String get navActivityLog;
+
+  /// No description provided for @actionRetry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer'**
+  String get actionRetry;
+
+  /// No description provided for @activityFilterAll.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout'**
+  String get activityFilterAll;
+
+  /// No description provided for @activityCategoryStudent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élèves'**
+  String get activityCategoryStudent;
+
+  /// No description provided for @activityCategoryClass.
+  ///
+  /// In fr, this message translates to:
+  /// **'Groupes'**
+  String get activityCategoryClass;
+
+  /// No description provided for @activityCategoryGuardian.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tuteurs'**
+  String get activityCategoryGuardian;
+
+  /// No description provided for @activityCategoryAttendance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Présences'**
+  String get activityCategoryAttendance;
+
+  /// No description provided for @activityCategoryRecitation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Récitations'**
+  String get activityCategoryRecitation;
+
+  /// No description provided for @activityCategoryPayment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiements'**
+  String get activityCategoryPayment;
+
+  /// No description provided for @activityCategoryMarkaz.
+  ///
+  /// In fr, this message translates to:
+  /// **'Markaz'**
+  String get activityCategoryMarkaz;
+
+  /// No description provided for @activityCategoryUser.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte'**
+  String get activityCategoryUser;
+
+  /// No description provided for @activityCategorySync.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conflits'**
+  String get activityCategorySync;
+
+  /// No description provided for @activityPeriodAll.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les dates'**
+  String get activityPeriodAll;
+
+  /// No description provided for @activityPeriod7.
+  ///
+  /// In fr, this message translates to:
+  /// **'7 derniers jours'**
+  String get activityPeriod7;
+
+  /// No description provided for @activityPeriod30.
+  ///
+  /// In fr, this message translates to:
+  /// **'30 derniers jours'**
+  String get activityPeriod30;
+
+  /// No description provided for @activityToday.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aujourd\'hui'**
+  String get activityToday;
+
+  /// No description provided for @activityYesterday.
+  ///
+  /// In fr, this message translates to:
+  /// **'Hier'**
+  String get activityYesterday;
+
+  /// No description provided for @activityEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune activité pour ce filtre.'**
+  String get activityEmpty;
+
+  /// No description provided for @activityLoadError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger le journal. Vérifiez votre connexion.'**
+  String get activityLoadError;
+
+  /// No description provided for @activityOfflineBadge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisi hors ligne'**
+  String get activityOfflineBadge;
+
+  /// No description provided for @activityByUser.
+  ///
+  /// In fr, this message translates to:
+  /// **'par {name}'**
+  String activityByUser(String name);
+
+  /// No description provided for @activityConflictTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conflit de synchronisation'**
+  String get activityConflictTitle;
+
+  /// No description provided for @activityConflictExplanation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette action a été faite hors ligne le {performedAt}, mais la donnée avait été modifiée entre-temps sur le serveur (le {serverUpdatedAt}). La version hors ligne a été appliquée. Version serveur remplacée :'**
+  String activityConflictExplanation(
+      String performedAt, String serverUpdatedAt);
+
+  /// No description provided for @activityConflictHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Touchez pour voir la version remplacée'**
+  String get activityConflictHint;
 }
 
 class _AppLocalizationsDelegate

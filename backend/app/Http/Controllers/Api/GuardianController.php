@@ -53,6 +53,7 @@ class GuardianController extends Controller
         $guardian = Guardian::findOrFail($id);
         $this->authorize('update', $guardian);
 
+        ActivityLog::recordSyncConflictIfStale($guardian, 'update');
         $guardian->update($request->validated());
 
         ActivityLog::record('guardian.updated', $guardian, "Parent modifié : {$guardian->name}");
@@ -65,6 +66,7 @@ class GuardianController extends Controller
         $guardian = Guardian::findOrFail($id);
         $this->authorize('delete', $guardian);
 
+        ActivityLog::recordSyncConflictIfStale($guardian, 'delete');
         $guardian->delete();
 
         ActivityLog::record('guardian.deleted', $guardian, "Parent supprimé : {$guardian->name}");
