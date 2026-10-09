@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markazi/document_engine/document_service.dart';
 import 'package:markazi/document_engine/models/markaz_branding.dart';
@@ -184,6 +186,37 @@ void main() {
     final bytes = await tester.runAsync(() => DocumentService().generateClassReport(report));
     expect(bytes, isNotNull);
     // Signature d'un fichier PDF.
+    expect(String.fromCharCodes(bytes!.take(4)), '%PDF');
+  });
+
+  testWidgets('un logo illisible n’empêche pas la génération du document', (tester) async {
+    final report = ClassReportBuilder.build(
+      markaz: MarkazBranding(
+        markazName: 'Markaz Al-Nour',
+        logoBytes: Uint8List.fromList(List.filled(32, 7)),
+      ),
+      workingDays: const [],
+      group: ClassModel(
+        id: 'c1',
+        name: 'Groupe',
+        level: '',
+        description: '',
+        teacherId: '',
+        teacherName: '',
+        maxStudents: 30,
+        studentIds: const [],
+        markazId: 'm1',
+        createdAt: DateTime(2026, 1, 1),
+      ),
+      students: const [],
+      attendances: const [],
+      recitations: const [],
+      payments: const [],
+      monthly: false,
+      now: DateTime(2026, 8, 7),
+    );
+
+    final bytes = await tester.runAsync(() => DocumentService().generateClassReport(report));
     expect(String.fromCharCodes(bytes!.take(4)), '%PDF');
   });
 }

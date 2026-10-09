@@ -1828,4 +1828,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get studentSearchNoResult => 'No student matches the search.';
+
+  @override
+  String get markazLogo => 'Markaz logo';
+
+  @override
+  String get markazLogoHelp => 'Shown on receipts and reports (PNG or JPEG).';
+
+  @override
+  String get markazLogoChoose => 'Choose a logo';
+
+  @override
+  String get markazLogoChange => 'Change';
+
+  @override
+  String get markazLogoRemove => 'Remove';
+
+  @override
+  String get markazLogoUpdated => 'Logo saved';
+
+  @override
+  String get markazLogoRemoved => 'Logo removed';
 }

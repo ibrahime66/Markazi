@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../providers/locale_provider.dart';
 import '../providers/markaz_provider.dart';
@@ -151,6 +152,8 @@ class _MarkazSettingsScreenState extends State<MarkazSettingsScreen> {
                   title: l10n.markazSectionIdentity,
                   subtitle: l10n.markazSectionIdentitySubtitle,
                   children: [
+                    _logoRow(l10n, provider),
+                    const SizedBox(height: 16),
                     _field(_nameController, l10n.fieldMarkazName, Icons.badge_outlined, required: true),
                     const SizedBox(height: 14),
                     _field(_sloganController, l10n.fieldSlogan, Icons.short_text),
@@ -286,6 +289,90 @@ class _MarkazSettingsScreenState extends State<MarkazSettingsScreen> {
 
   /// Regroupe un ensemble de champs liés dans une carte avec un en-tête
   /// (icône + titre), au lieu de la longue liste de champs à plat d'avant.
+  /// Logo du Markaz (CDC §8.2 / §21) : aperçu, choix d'une image, retrait.
+  Widget _logoRow(AppLocalizations l10n, MarkazProvider provider) {
+    final logo = provider.logoBytes;
+    return Row(
+      children: [
+        Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.textLight.withValues(alpha: 0.3)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: logo == null
+              ? Icon(Icons.image_outlined, color: AppColors.textMedium)
+              : Image.memory(logo, fit: BoxFit.contain),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.markazLogo,
+                style: GoogleFonts.cairo(fontWeight: FontWeight.w600, color: AppColors.textDark),
+              ),
+              Text(
+                l10n.markazLogoHelp,
+                style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textMedium),
+              ),
+              Wrap(
+                spacing: 4,
+                children: [
+                  TextButton.icon(
+                    onPressed: provider.isLoading ? null : () => _pickLogo(l10n, provider),
+                    icon: const Icon(Icons.upload_rounded, size: 18),
+                    label: Text(logo == null ? l10n.markazLogoChoose : l10n.markazLogoChange),
+                  ),
+                  if (logo != null)
+                    TextButton.icon(
+                      onPressed: provider.isLoading ? null : () => _removeLogo(l10n, provider),
+                      icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                      label: Text(l10n.markazLogoRemove, style: const TextStyle(color: Colors.red)),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickLogo(AppLocalizations l10n, MarkazProvider provider) async {
+    // Image réduite avant l'envoi (CDC §25 : compression des logos).
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 85,
+    );
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    final name = RegExp(r'\.(png|jpe?g)$', caseSensitive: false).hasMatch(picked.name)
+        ? picked.name
+        : 'logo.jpg';
+    final success = await provider.setLogo(bytes, name);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(success ? l10n.markazLogoUpdated : (provider.errorMessage ?? l10n.genericError)),
+      backgroundColor: success ? Colors.green : Colors.red,
+    ));
+  }
+
+  Future<void> _removeLogo(AppLocalizations l10n, MarkazProvider provider) async {
+    final success = await provider.removeLogo();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(success ? l10n.markazLogoRemoved : (provider.errorMessage ?? l10n.genericError)),
+      backgroundColor: success ? Colors.green : Colors.red,
+    ));
+  }
+
   Widget _section({
     required IconData icon,
     required String title,

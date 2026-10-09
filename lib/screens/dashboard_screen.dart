@@ -4054,9 +4054,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   MarkazBranding _currentBranding() {
-    final markaz = context.read<MarkazProvider>().markaz;
+    final markazProvider = context.read<MarkazProvider>();
+    final markaz = markazProvider.markaz;
     return MarkazBranding(
       markazName: markaz?.name ?? 'Markazi',
+      logoBytes: markazProvider.logoBytes,
       slogan: markaz?.slogan,
       address: markaz?.address,
       city: markaz?.city,

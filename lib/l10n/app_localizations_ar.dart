@@ -1814,4 +1814,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get studentSearchNoResult => 'لا يوجد طالب يطابق البحث.';
+
+  @override
+  String get markazLogo => 'شعار المركز';
+
+  @override
+  String get markazLogoHelp => 'يظهر على الإيصالات والتقارير (PNG أو JPEG).';
+
+  @override
+  String get markazLogoChoose => 'اختيار شعار';
+
+  @override
+  String get markazLogoChange => 'تغيير';
+
+  @override
+  String get markazLogoRemove => 'إزالة';
+
+  @override
+  String get markazLogoUpdated => 'تم حفظ الشعار';
+
+  @override
+  String get markazLogoRemoved => 'تمت إزالة الشعار';
 }

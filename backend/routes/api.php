@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClassController;
 use App\Http\Controllers\Api\GuardianController;
 use App\Http\Controllers\Api\MarkazController;
+use App\Http\Controllers\Api\MarkazLogoController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\RecitationController;
 use App\Http\Controllers\Api\StudentController;
@@ -43,6 +44,10 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/markaz', [MarkazController::class, 'show']);
     Route::put('/markaz', [MarkazController::class, 'update']);
+    // Logo du Markaz (CDC §8.2 / §21), servi uniquement au Markaz concerné.
+    Route::get('/markaz/logo', [MarkazLogoController::class, 'show']);
+    Route::post('/markaz/logo', [MarkazLogoController::class, 'store']);
+    Route::delete('/markaz/logo', [MarkazLogoController::class, 'destroy']);
 
     Route::apiResource('classes', ClassController::class);
     Route::apiResource('students', StudentController::class);

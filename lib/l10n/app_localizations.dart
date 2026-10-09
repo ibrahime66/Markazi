@@ -3425,6 +3425,48 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Aucun élève ne correspond à la recherche.'**
   String get studentSearchNoResult;
+
+  /// No description provided for @markazLogo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Logo du Markaz'**
+  String get markazLogo;
+
+  /// No description provided for @markazLogoHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Affiché sur les reçus et rapports (PNG ou JPEG).'**
+  String get markazLogoHelp;
+
+  /// No description provided for @markazLogoChoose.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir un logo'**
+  String get markazLogoChoose;
+
+  /// No description provided for @markazLogoChange.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer'**
+  String get markazLogoChange;
+
+  /// No description provided for @markazLogoRemove.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer'**
+  String get markazLogoRemove;
+
+  /// No description provided for @markazLogoUpdated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Logo enregistré'**
+  String get markazLogoUpdated;
+
+  /// No description provided for @markazLogoRemoved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Logo retiré'**
+  String get markazLogoRemoved;
 }
 
 class _AppLocalizationsDelegate

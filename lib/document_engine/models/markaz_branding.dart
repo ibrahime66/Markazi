@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
 
 /// Informations du Markaz réutilisées dans tous les documents générés
@@ -5,6 +6,9 @@ import 'package:pdf/pdf.dart';
 class MarkazBranding {
   final String markazName;
   final String? logoPath; // chemin d'asset local (ex: assets/logo/app_icon.png)
+  /// Logo du Markaz (PNG/JPEG), affiché dans l'en-tête des documents
+  /// (CDC §21 : "logo du Markaz si disponible").
+  final Uint8List? logoBytes;
   final String? address;
   final String? city;
   final String? country;
@@ -21,6 +25,7 @@ class MarkazBranding {
   const MarkazBranding({
     required this.markazName,
     this.logoPath,
+    this.logoBytes,
     this.address,
     this.city,
     this.country,

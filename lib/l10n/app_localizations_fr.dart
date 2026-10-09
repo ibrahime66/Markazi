@@ -1844,4 +1844,26 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get studentSearchNoResult =>
       'Aucun élève ne correspond à la recherche.';
+
+  @override
+  String get markazLogo => 'Logo du Markaz';
+
+  @override
+  String get markazLogoHelp =>
+      'Affiché sur les reçus et rapports (PNG ou JPEG).';
+
+  @override
+  String get markazLogoChoose => 'Choisir un logo';
+
+  @override
+  String get markazLogoChange => 'Changer';
+
+  @override
+  String get markazLogoRemove => 'Retirer';
+
+  @override
+  String get markazLogoUpdated => 'Logo enregistré';
+
+  @override
+  String get markazLogoRemoved => 'Logo retiré';
 }
