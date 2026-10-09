@@ -58,10 +58,22 @@ class AttendanceController extends Controller
         $data = $request->validated();
         $data['recorded_by'] = $request->user()->id;
 
-        $attendance = Attendance::updateOrCreate(
-            ['student_id' => $data['student_id'], 'date' => $data['date']],
-            $data
-        );
+        // Une présence existe déjà ce jour-là (autre appareil ou saisie
+        // antérieure) : si elle est plus récente que l'action rejouée hors
+        // ligne, le remplacement est tracé comme conflit (CDC §20).
+        $existing = Attendance::where('student_id', $data['student_id'])
+            ->whereDate('date', $data['date'])
+            ->first();
+        if ($existing) {
+            ActivityLog::recordSyncConflictIfStale($existing, 'update');
+            // Recherche par whereDate (et non updateOrCreate sur 'date') :
+            // robuste quel que soit le format de stockage de la date selon
+            // le moteur SQL, sinon la contrainte unique lève une erreur 500.
+            $existing->update($data);
+            $attendance = $existing;
+        } else {
+            $attendance = Attendance::create($data);
+        }
 
         ActivityLog::record('attendance.recorded', $attendance, 'Présence enregistrée');
 
@@ -79,6 +91,7 @@ class AttendanceController extends Controller
         $attendance = Attendance::findOrFail($id);
         $this->authorize('update', $attendance);
 
+        ActivityLog::recordSyncConflictIfStale($attendance, 'update');
         $attendance->update($request->validated());
 
         ActivityLog::record('attendance.updated', $attendance, 'Présence corrigée');
@@ -94,6 +107,7 @@ class AttendanceController extends Controller
         $attendance = Attendance::findOrFail($id);
         $this->authorize('delete', $attendance);
 
+        ActivityLog::recordSyncConflictIfStale($attendance, 'delete');
         $attendance->delete();
 
         ActivityLog::record('attendance.deleted', $attendance, 'Présence supprimée');

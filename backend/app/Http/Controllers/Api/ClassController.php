@@ -52,6 +52,7 @@ class ClassController extends Controller
         $class = ClassModel::findOrFail($id);
         $this->authorize('update', $class);
 
+        ActivityLog::recordSyncConflictIfStale($class, 'update');
         $class->update($request->validated());
 
         ActivityLog::record('class.updated', $class, "Classe modifiée : {$class->name}");
@@ -64,6 +65,7 @@ class ClassController extends Controller
         $class = ClassModel::findOrFail($id);
         $this->authorize('delete', $class);
 
+        ActivityLog::recordSyncConflictIfStale($class, 'delete');
         $class->delete();
 
         ActivityLog::record('class.deleted', $class, "Classe archivée : {$class->name}");

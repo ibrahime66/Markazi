@@ -82,7 +82,7 @@ class PaymentController extends Controller
         // à défaut, on retombe sur "maintenant" pour un paiement créé déjà
         // marqué payé (même logique que updateStatus() ci-dessous).
         if (($data['status'] ?? null) === 'paid' && empty($data['paid_at'])) {
-            $data['paid_at'] = now();
+            $data['paid_at'] = ActivityLog::performedAt() ?? now();
         }
 
         $payment = Payment::create($data);
@@ -126,12 +126,15 @@ class PaymentController extends Controller
             'status' => ['required', Rule::in(['paid', 'unpaid', 'partial'])],
         ]);
 
+        ActivityLog::recordSyncConflictIfStale($payment, 'update');
+
         $wasPaid = $payment->status === 'paid';
         $payment->status = $data['status'];
 
         if ($payment->status === 'paid') {
             if (! $wasPaid) {
-                $payment->paid_at = now();
+                // Hors ligne (CDC §20) : jour réel où le paiement a été marqué.
+                $payment->paid_at = ActivityLog::performedAt() ?? now();
             }
             if (! $payment->receipt_number) {
                 $payment->receipt_number = GeneratedDocument::nextNumber(
