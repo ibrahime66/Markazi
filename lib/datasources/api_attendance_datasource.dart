@@ -6,37 +6,51 @@ import '../services/api_client.dart';
 class ApiAttendanceDatasource {
   final _dio = ApiClient.instance.dio;
 
-  Future<Attendance> addAttendance(Attendance attendance, String markazId) async {
-    final response = await _dio.post('/attendances', data: {
-      'student_id': int.parse(attendance.studentId),
-      'date': attendance.date.toIso8601String().split('T').first,
-      'status': _statusToApi(attendance.status),
-      'lesson': attendance.lesson,
-    });
-    return _mapJsonToAttendance(response.data as Map<String, dynamic>, markazId);
+  /// [performedAt] : date réelle d'une saisie hors ligne rejouée (CDC §27).
+  Future<Attendance> addAttendance(Attendance attendance, String markazId,
+      {DateTime? performedAt}) async {
+    final response = await _dio.post('/attendances',
+        options: ApiClient.performedAtOptions(performedAt),
+        data: {
+          'student_id': int.parse(attendance.studentId),
+          'date': attendance.date.toIso8601String().split('T').first,
+          'status': _statusToApi(attendance.status),
+          'lesson': attendance.lesson,
+        });
+    return _mapJsonToAttendance(
+        response.data as Map<String, dynamic>, markazId);
   }
 
   /// Corrige une présence existante via PUT /attendances/{id} (doc/audit.md,
   /// point B3 — cette route n'existait pas auparavant).
-  Future<Attendance> updateAttendance(Attendance attendance) async {
-    final response = await _dio.put('/attendances/${attendance.id}', data: {
-      'student_id': int.parse(attendance.studentId),
-      'date': attendance.date.toIso8601String().split('T').first,
-      'status': _statusToApi(attendance.status),
-      'lesson': attendance.lesson,
-    });
-    return _mapJsonToAttendance(response.data as Map<String, dynamic>, attendance.markazId);
+  Future<Attendance> updateAttendance(Attendance attendance,
+      {DateTime? performedAt}) async {
+    final response = await _dio.put('/attendances/${attendance.id}',
+        options: ApiClient.performedAtOptions(performedAt),
+        data: {
+          'student_id': int.parse(attendance.studentId),
+          'date': attendance.date.toIso8601String().split('T').first,
+          'status': _statusToApi(attendance.status),
+          'lesson': attendance.lesson,
+        });
+    return _mapJsonToAttendance(
+        response.data as Map<String, dynamic>, attendance.markazId);
   }
 
-  Future<void> deleteAttendance(String attendanceId) async {
-    await _dio.delete('/attendances/$attendanceId');
+  Future<void> deleteAttendance(String attendanceId,
+      {DateTime? performedAt}) async {
+    await _dio.delete('/attendances/$attendanceId',
+        options: ApiClient.performedAtOptions(performedAt));
   }
 
   Future<List<Attendance>> getAttendanceByMarkaz(String markazId) async {
-    final response = await _dio.get('/attendances', queryParameters: {'per_page': 500});
-    final data = (response.data as Map<String, dynamic>)['data'] as List<dynamic>;
+    final response =
+        await _dio.get('/attendances', queryParameters: {'per_page': 500});
+    final data =
+        (response.data as Map<String, dynamic>)['data'] as List<dynamic>;
     return data
-        .map((json) => _mapJsonToAttendance(json as Map<String, dynamic>, markazId))
+        .map((json) =>
+            _mapJsonToAttendance(json as Map<String, dynamic>, markazId))
         .toList();
   }
 

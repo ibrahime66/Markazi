@@ -550,6 +550,180 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Touchez pour voir la version remplacée'**
   String get activityConflictHint;
+
+  /// No description provided for @receiptPendingSync.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement enregistré hors ligne. Le reçu sera disponible après synchronisation (son numéro est attribué par le serveur).'**
+  String get receiptPendingSync;
+
+  /// No description provided for @navSync.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchronisation'**
+  String get navSync;
+
+  /// No description provided for @syncOnline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connecté au serveur'**
+  String get syncOnline;
+
+  /// No description provided for @syncOffline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Hors ligne'**
+  String get syncOffline;
+
+  /// No description provided for @syncOfflineBanner.
+  ///
+  /// In fr, this message translates to:
+  /// **'Hors ligne — vos saisies sont enregistrées sur l\'appareil et seront envoyées automatiquement.'**
+  String get syncOfflineBanner;
+
+  /// No description provided for @syncPendingBanner.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} action(s) en attente de synchronisation'**
+  String syncPendingBanner(String count);
+
+  /// No description provided for @syncFailedBanner.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} action(s) refusée(s) par le serveur — à vérifier'**
+  String syncFailedBanner(String count);
+
+  /// No description provided for @syncNow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchroniser maintenant'**
+  String get syncNow;
+
+  /// No description provided for @syncInProgress.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchronisation en cours…'**
+  String get syncInProgress;
+
+  /// No description provided for @syncAllDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout est synchronisé.'**
+  String get syncAllDone;
+
+  /// No description provided for @syncResult.
+  ///
+  /// In fr, this message translates to:
+  /// **'{synced} action(s) envoyée(s), {failed} refusée(s).'**
+  String syncResult(String synced, String failed);
+
+  /// No description provided for @syncStillOffline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Serveur toujours injoignable. Nouvel essai automatique dès le retour de la connexion.'**
+  String get syncStillOffline;
+
+  /// No description provided for @syncEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune action en attente. Toutes vos saisies sont sur le serveur.'**
+  String get syncEmpty;
+
+  /// No description provided for @syncPendingTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Actions en attente'**
+  String get syncPendingTitle;
+
+  /// No description provided for @syncOpCreate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Création'**
+  String get syncOpCreate;
+
+  /// No description provided for @syncOpUpdate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification'**
+  String get syncOpUpdate;
+
+  /// No description provided for @syncOpDelete.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suppression'**
+  String get syncOpDelete;
+
+  /// No description provided for @syncEntityPayment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement'**
+  String get syncEntityPayment;
+
+  /// No description provided for @syncEntityAttendance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Présence'**
+  String get syncEntityAttendance;
+
+  /// No description provided for @syncEntityGuardian.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tuteur'**
+  String get syncEntityGuardian;
+
+  /// No description provided for @syncEntityRecitation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Récitation'**
+  String get syncEntityRecitation;
+
+  /// No description provided for @syncEntityClass.
+  ///
+  /// In fr, this message translates to:
+  /// **'Groupe'**
+  String get syncEntityClass;
+
+  /// No description provided for @syncEntityStudentClass.
+  ///
+  /// In fr, this message translates to:
+  /// **'Affectation à un groupe'**
+  String get syncEntityStudentClass;
+
+  /// No description provided for @syncDoneAt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisi le {date}'**
+  String syncDoneAt(String date);
+
+  /// No description provided for @syncRejected.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refusé par le serveur : {message}'**
+  String syncRejected(String message);
+
+  /// No description provided for @syncDiscard.
+  ///
+  /// In fr, this message translates to:
+  /// **'Abandonner cette action'**
+  String get syncDiscard;
+
+  /// No description provided for @syncDiscardConfirmTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Abandonner cette action ?'**
+  String get syncDiscardConfirmTitle;
+
+  /// No description provided for @syncDiscardConfirmBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Elle ne sera jamais envoyée au serveur. Une création sera retirée de l\'appareil ; une modification sera remplacée par la version du serveur à la prochaine synchronisation.'**
+  String get syncDiscardConfirmBody;
+
+  /// No description provided for @syncConflictsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les conflits éventuels (donnée modifiée entre-temps sur le serveur) sont consultables dans le journal d\'activité.'**
+  String get syncConflictsHint;
 }
 
 class _AppLocalizationsDelegate

@@ -24,21 +24,30 @@ class ApiPaymentDatasource {
     Payment payment,
     String markazId, {
     bool confirmDuplicate = false,
+    DateTime? performedAt,
   }) async {
     try {
-      final response = await _dio.post('/payments', data: {
-        'student_id': int.parse(payment.studentId),
-        'amount': payment.amount,
-        'month': payment.date.toIso8601String().split('T').first,
-        'status': _statusToApi(payment.status),
-        'payment_mode': 'cash',
-        if (payment.paidAt != null) 'paid_at': payment.paidAt!.toIso8601String(),
-        if (confirmDuplicate) 'confirm_duplicate': true,
-      });
+      final response = await _dio.post('/payments',
+          options: ApiClient.performedAtOptions(performedAt),
+          data: {
+            'student_id': int.parse(payment.studentId),
+            'amount': payment.amount,
+            'month': payment.date.toIso8601String().split('T').first,
+            'status': _statusToApi(payment.status),
+            'payment_mode': 'cash',
+            if (payment.paidAt != null)
+              'paid_at': payment.paidAt!.toIso8601String(),
+            if (confirmDuplicate) 'confirm_duplicate': true,
+          });
       return _mapJsonToPayment(response.data as Map<String, dynamic>, markazId);
     } on DioException catch (e) {
+      // Serveur injoignable : l'erreur réseau doit remonter telle quelle
+      // pour que le repository mette la saisie en file (CDC §20).
+      if (ApiClient.isOfflineError(e)) rethrow;
       final data = e.response?.data;
-      if (e.response?.statusCode == 409 && data is Map && data['duplicate'] == true) {
+      if (e.response?.statusCode == 409 &&
+          data is Map &&
+          data['duplicate'] == true) {
         throw PaymentDuplicateException(
           data['message'] as String? ??
               'Un paiement existe déjà pour cet élève ce mois-ci.',
@@ -53,11 +62,15 @@ class ApiPaymentDatasource {
   /// recréer un (voir doc/audit.md, point A2 : l'ancienne implémentation
   /// re-postait un nouveau paiement, doublant le montant compté et perdant
   /// le vrai numéro de reçu).
-  Future<Payment> updatePayment(Payment payment) async {
-    final response = await _dio.patch('/payments/${payment.id}', data: {
-      'status': _statusToApi(payment.status),
-    });
-    return _mapJsonToPayment(response.data as Map<String, dynamic>, payment.markazId);
+  Future<Payment> updatePayment(Payment payment,
+      {DateTime? performedAt}) async {
+    final response = await _dio.patch('/payments/${payment.id}',
+        options: ApiClient.performedAtOptions(performedAt),
+        data: {
+          'status': _statusToApi(payment.status),
+        });
+    return _mapJsonToPayment(
+        response.data as Map<String, dynamic>, payment.markazId);
   }
 
   Future<void> deletePayment(String paymentId) async {
@@ -67,10 +80,13 @@ class ApiPaymentDatasource {
   }
 
   Future<List<Payment>> getPaymentsByMarkaz(String markazId) async {
-    final response = await _dio.get('/payments', queryParameters: {'per_page': 500});
-    final data = (response.data as Map<String, dynamic>)['data'] as List<dynamic>;
+    final response =
+        await _dio.get('/payments', queryParameters: {'per_page': 500});
+    final data =
+        (response.data as Map<String, dynamic>)['data'] as List<dynamic>;
     return data
-        .map((json) => _mapJsonToPayment(json as Map<String, dynamic>, markazId))
+        .map(
+            (json) => _mapJsonToPayment(json as Map<String, dynamic>, markazId))
         .toList();
   }
 
@@ -86,10 +102,13 @@ class ApiPaymentDatasource {
       amount: (json['amount'] is String)
           ? double.parse(json['amount'] as String)
           : (json['amount'] as num).toDouble(),
-      status: json['status'] == 'paid' ? PaymentStatus.paid : PaymentStatus.unpaid,
+      status:
+          json['status'] == 'paid' ? PaymentStatus.paid : PaymentStatus.unpaid,
       date: DateTime.parse(json['month'] as String),
       receiptNumber: json['receipt_number'] as String?,
-      paidAt: json['paid_at'] != null ? DateTime.parse(json['paid_at'] as String) : null,
+      paidAt: json['paid_at'] != null
+          ? DateTime.parse(json['paid_at'] as String)
+          : null,
     );
   }
 }

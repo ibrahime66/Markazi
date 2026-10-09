@@ -70,6 +70,16 @@ class ApiClient {
     }
   }
 
+  /// Relance une erreur de requête sous une forme lisible par l'utilisateur
+  /// ([ApiException] portant le message du serveur ou une explication en
+  /// français) ; toute autre erreur est relancée telle quelle.
+  static Never throwReadable(Object error, StackTrace stackTrace) {
+    if (error is DioException) {
+      Error.throwWithStackTrace(ApiException(describeError(error)), stackTrace);
+    }
+    Error.throwWithStackTrace(error, stackTrace);
+  }
+
   /// En-tête portant la date réelle d'une action rejouée après une période
   /// hors ligne (lu côté serveur par le middleware CapturePerformedAt —
   /// CDC §27 : l'historique garde la date de réalisation).
@@ -100,4 +110,15 @@ class ApiClient {
     }
     return error.toString();
   }
+}
+
+/// Refus du serveur (validation, droits…) présenté à l'utilisateur :
+/// `toString()` renvoie directement le message, sans préfixe technique.
+class ApiException implements Exception {
+  final String message;
+
+  const ApiException(this.message);
+
+  @override
+  String toString() => message;
 }
