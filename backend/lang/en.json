@@ -1,0 +1,22 @@
+{
+    "Email ou mot de passe incorrect.": "Incorrect email or password.",
+    "Déconnecté.": "Logged out.",
+    "Lien de réinitialisation envoyé.": "Reset code sent.",
+    "Impossible d'envoyer le lien de réinitialisation.": "Unable to send the reset code.",
+    "Mot de passe réinitialisé.": "Password reset.",
+    "Jeton invalide ou expiré.": "Invalid or expired code.",
+    "Mot de passe actuel incorrect.": "Incorrect current password.",
+    "Mot de passe modifié.": "Password changed.",
+    "Un paiement payé existe déjà pour cet élève ce mois-ci. Voulez-vous quand même enregistrer ce nouveau paiement ?": "A paid payment already exists for this student this month. Do you still want to record this new payment?",
+    "Réinitialisation de votre mot de passe Markazi": "Reset your Markazi password",
+    "Bonjour,": "Hello,",
+    "Vous avez demandé la réinitialisation de votre mot de passe Markazi.": "You requested a reset of your Markazi password.",
+    "Voici votre code de réinitialisation :": "Here is your reset code:",
+    "Saisissez ce code avec votre adresse email dans l'application pour choisir un nouveau mot de passe.": "Enter this code with your email address in the app to choose a new password.",
+    "Ce code expire dans :minutes minutes.": "This code expires in :minutes minutes.",
+    "Si vous n'êtes pas à l'origine de cette demande, aucune action n'est nécessaire.": "If you did not make this request, no action is needed.",
+    "Trop de tentatives. Réessayez dans une minute.": "Too many attempts. Try again in a minute.",
+    "Élément introuvable.": "Item not found.",
+    "Action non autorisée.": "Action not allowed.",
+    "Session expirée. Veuillez vous reconnecter.": "Session expired. Please log in again."
+}

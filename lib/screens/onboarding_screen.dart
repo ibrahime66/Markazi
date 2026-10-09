@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import '../l10n/app_localizations.dart';
 
 /// Écran d'onboarding avec 4 pages swipables
 class OnboardingScreen extends StatefulWidget {
@@ -11,39 +12,44 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
+  /// Textes traduits (doc/audit.md K8).
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
   // Données visuelles de chaque page
-  final List<_OnboardingData> _pages = [
-    const _OnboardingData(
-      title: 'Gérez vos élèves\nfacilement',
+  // Getter (et non champ initialisé) : les textes traduits dépendent du
+  // contexte (doc/audit.md K8).
+  List<_OnboardingData> get _pages => [
+    _OnboardingData(
+      title: _l10n.onboardingTitle1,
       description:
-          'Ajoutez vos élèves et leurs informations complètes en quelques secondes. Retrouvez-les facilement à tout moment.',
+          _l10n.onboardingBody1,
       icon: Icons.people_alt_rounded,
       gradientColors: [Color(0xFF1A7F55), Color(0xFF2EAA73)],
       illustrationIcon: Icons.school_rounded,
     ),
-    const _OnboardingData(
-      title: 'Suivez les\npaiements',
+    _OnboardingData(
+      title: _l10n.onboardingTitle2,
       description:
-          'Enregistrez les paiements et générez automatiquement des reçus. Plus de confusion dans la gestion financière.',
+          _l10n.onboardingBody2,
       icon: Icons.payments_rounded,
       gradientColors: [Color(0xFF1565C0), Color(0xFF1976D2)],
       illustrationIcon: Icons.receipt_long_rounded,
     ),
-    const _OnboardingData(
-      title: 'Suivi journalier\ndes cours',
+    _OnboardingData(
+      title: _l10n.onboardingTitle3,
       description:
-          'Notez chaque jour la progression des élèves et leur récitation. Un suivi précis et structuré pour chaque séance.',
+          _l10n.onboardingBody3,
       icon: Icons.menu_book_rounded,
       gradientColors: [Color(0xFF7B1FA2), Color(0xFF9C27B0)],
       illustrationIcon: Icons.auto_stories_rounded,
     ),
-    const _OnboardingData(
-      title: 'Rapports\nautomatiques',
+    _OnboardingData(
+      title: _l10n.onboardingTitle4,
       description:
-          'Obtenez des statistiques hebdomadaires et mensuelles exportables en PDF. Partagez facilement avec les parents.',
+          _l10n.onboardingBody4,
       icon: Icons.bar_chart_rounded,
       gradientColors: [Color(0xFFE65100), Color(0xFFF57C00)],
       illustrationIcon: Icons.analytics_rounded,
@@ -93,7 +99,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: TextButton(
               onPressed: _goToHome,
               child: Text(
-                'Passer',
+                _l10n.onboardingSkip,
                 style: GoogleFonts.cairo(
                   color: Colors.white.withValues(alpha: 0.85),
                   fontSize: 14,

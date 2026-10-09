@@ -41,6 +41,7 @@ class _FakeDatasource extends Fake implements ApiActivityLogDatasource {
           'description': 'Conflit de synchronisation (Guardian #3)',
           'performed_at': now,
           'meta': {
+            'subject': 'Guardian #3',
             'operation': 'update',
             'performed_at': now,
             'server_updated_at': now,
@@ -84,7 +85,7 @@ void main() {
     expect(find.text('Saisi hors ligne'), findsOneWidget);
     expect(find.textContaining('Oustaz Mamadou'), findsOneWidget);
 
-    await tester.tap(find.text('Conflit de synchronisation (Guardian #3)'));
+    await tester.tap(find.text('Conflit de synchronisation : Guardian #3'));
     await tester.pumpAndSettle();
     expect(find.text('Conflit de synchronisation'), findsOneWidget);
     expect(find.text('name : Version serveur'), findsOneWidget);

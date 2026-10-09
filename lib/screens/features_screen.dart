@@ -3,94 +3,96 @@ import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_colors.dart';
 import '../widgets/common_widgets.dart';
 import 'login_screen.dart';
+import '../l10n/app_localizations.dart';
 
 /// Page des fonctionnalités détaillées de Markazi
 class FeaturesScreen extends StatelessWidget {
   const FeaturesScreen({super.key});
 
-  static const List<_DetailedFeature> _features = [
+  /// Fonctionnalités présentées (textes traduits — doc/audit.md K8).
+  static List<_DetailedFeature> _features(BuildContext context) => [
     _DetailedFeature(
       icon: Icons.people_alt_rounded,
-      title: 'Gestion des élèves',
+      title: AppLocalizations.of(context).featStudentsTitle,
       description:
-          'Créez une fiche complète pour chaque élève : nom, prénom, date de naissance, informations des parents, niveau en Coran, date d\'inscription. Recherchez, filtrez et gérez facilement tous vos élèves depuis une seule page.',
+          AppLocalizations.of(context).featStudentsBody,
       cardColor: AppColors.cardGreen,
       iconColor: AppColors.iconGreen,
       highlights: [
-        'Fiche individuelle complète',
-        'Informations des parents',
-        'Historique de progression',
-        'Recherche et filtrage rapides',
+        AppLocalizations.of(context).featStudentsH1,
+        AppLocalizations.of(context).featStudentsH2,
+        AppLocalizations.of(context).featStudentsH3,
+        AppLocalizations.of(context).featStudentsH4,
       ],
     ),
     _DetailedFeature(
       icon: Icons.receipt_long_rounded,
-      title: 'Paiements & Reçus',
+      title: AppLocalizations.of(context).featPaymentsTitle,
       description:
-          'Gérez les mensualités de chaque élève. Enregistrez les paiements reçus et générez automatiquement des reçus PDF professionnels. Consultez l\'historique des paiements et identifiez facilement les retards.',
+          AppLocalizations.of(context).featPaymentsBody,
       cardColor: AppColors.cardBlue,
       iconColor: AppColors.iconBlue,
       highlights: [
-        'Suivi des mensualités',
-        'Génération de reçus PDF',
-        'Historique des paiements',
-        'Alertes de retard',
+        AppLocalizations.of(context).featPaymentsH1,
+        AppLocalizations.of(context).featPaymentsH2,
+        AppLocalizations.of(context).featPaymentsH3,
+        AppLocalizations.of(context).featPaymentsH4,
       ],
     ),
     _DetailedFeature(
       icon: Icons.fact_check_rounded,
-      title: 'Présence & Récitation',
+      title: AppLocalizations.of(context).featAttendanceTitle,
       description:
-          'Pointez les présences et les absences chaque jour en quelques secondes. Évaluez la récitation de chaque élève à chaque séance. Un historique complet pour suivre l\'assiduité et la progression.',
+          AppLocalizations.of(context).featAttendanceBody,
       cardColor: AppColors.cardPurple,
       iconColor: AppColors.iconPurple,
       highlights: [
-        'Pointage quotidien rapide',
-        'Évaluation de récitation',
-        'Historique de présence',
-        'Notes personnalisées',
+        AppLocalizations.of(context).featAttendanceH1,
+        AppLocalizations.of(context).featAttendanceH2,
+        AppLocalizations.of(context).featAttendanceH3,
+        AppLocalizations.of(context).featAttendanceH4,
       ],
     ),
     _DetailedFeature(
       icon: Icons.insights_rounded,
-      title: 'Statistiques hebdomadaires',
+      title: AppLocalizations.of(context).featStatsTitle,
       description:
-          'Obtenez une vue d\'ensemble de votre classe chaque semaine. Taux d\'assiduité, progression en récitation, paiements reçus — toutes les métriques importantes visualisées clairement.',
+          AppLocalizations.of(context).featStatsBody,
       cardColor: AppColors.cardTeal,
       iconColor: AppColors.iconTeal,
       highlights: [
-        'Tableau de bord hebdomadaire',
-        'Graphiques de progression',
-        'Taux d\'assiduité',
-        'Comparaison des élèves',
+        AppLocalizations.of(context).featStatsH1,
+        AppLocalizations.of(context).featStatsH2,
+        AppLocalizations.of(context).featStatsH3,
+        AppLocalizations.of(context).featStatsH4,
       ],
     ),
     _DetailedFeature(
       icon: Icons.picture_as_pdf_rounded,
-      title: 'Rapport mensuel PDF',
+      title: AppLocalizations.of(context).featReportTitle,
       description:
-          'Générez un rapport mensuel complet pour chaque élève ou pour toute la classe. Partagez-le directement avec les parents par WhatsApp ou email. Rapport professionnel avec toutes les informations importantes.',
+          AppLocalizations.of(context).featReportBody,
       cardColor: AppColors.cardRed,
       iconColor: AppColors.iconRed,
       highlights: [
-        'Rapport élève individuel',
-        'Rapport de classe complet',
-        'Partage direct WhatsApp',
-        'Format PDF professionnel',
+        AppLocalizations.of(context).featReportH1,
+        AppLocalizations.of(context).featReportH2,
+        AppLocalizations.of(context).featReportH3,
+        AppLocalizations.of(context).featReportH4,
       ],
     ),
     _DetailedFeature(
       icon: Icons.event_busy_rounded,
-      title: "Gestion des absences",
+      title: AppLocalizations.of(context).featAbsenceTitle,
       description:
-          'Suivez le taux d\'absentéisme de chaque élève. Définissez un seuil d\'alerte et recevez une notification quand un élève dépasse ce seuil. Informez les parents automatiquement en cas d\'absences répétées.',
+          AppLocalizations.of(context).featAbsenceBody,
       cardColor: AppColors.cardOrange,
       iconColor: AppColors.iconOrange,
       highlights: [
-        'Taux d\'absentéisme par élève',
-        'Alertes personnalisables',
-        'Notifications aux parents',
-        'Justifications d\'absence',
+        AppLocalizations.of(context).featAbsenceH1,
+        AppLocalizations.of(context).featAbsenceH2,
+        AppLocalizations.of(context).featAbsenceH3,
+        AppLocalizations.of(context).featAbsenceH4,
       ],
     ),
   ];
@@ -99,18 +101,18 @@ class FeaturesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const MarkaziAppBar(title: 'Fonctionnalités'),
+      appBar: MarkaziAppBar(title: AppLocalizations.of(context).navFeatures),
       body: SingleChildScrollView(
         child: Column(
           children: [
             // Header
-            _buildHeader(),
+            _buildHeader(context),
 
             // Liste des fonctionnalités
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
-                children: _features.map((f) {
+                children: _features(context).map((f) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: _FeatureDetailCard(feature: f),
@@ -128,7 +130,7 @@ class FeaturesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
@@ -145,7 +147,7 @@ class FeaturesScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '6 fonctionnalités essentielles',
+              AppLocalizations.of(context).featHeaderBadge,
               style: GoogleFonts.cairo(
                 color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 12,
@@ -155,7 +157,7 @@ class FeaturesScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Tout ce qu\'il vous faut\npour gérer votre markaz',
+            AppLocalizations.of(context).featHeaderTitle,
             style: GoogleFonts.cairo(
               fontSize: 26,
               fontWeight: FontWeight.w900,
@@ -165,7 +167,7 @@ class FeaturesScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Markazi regroupe tous les outils nécessaires à la gestion quotidienne de votre markaz dans une application simple et intuitive.',
+            AppLocalizations.of(context).featHeaderBody,
             style: GoogleFonts.cairo(
               fontSize: 14,
               color: Colors.white.withValues(alpha: 0.85),
@@ -193,7 +195,7 @@ class FeaturesScreen extends StatelessWidget {
                 color: AppColors.primary, size: 36),
             const SizedBox(height: 12),
             Text(
-              'Essayez Markazi gratuitement',
+              AppLocalizations.of(context).featCtaTitle,
               style: GoogleFonts.cairo(
                 fontWeight: FontWeight.w800,
                 fontSize: 18,
@@ -202,7 +204,7 @@ class FeaturesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Créez votre compte et démarrez en moins de 5 minutes.',
+              AppLocalizations.of(context).featCtaBody,
               textAlign: TextAlign.center,
               style: GoogleFonts.cairo(
                 fontSize: 13,
@@ -212,7 +214,7 @@ class FeaturesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             PrimaryButton(
-              text: 'Créer mon compte',
+              text: AppLocalizations.of(context).featCtaButton,
               onPressed: () {
                 Navigator.push(
                   context,

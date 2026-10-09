@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../utils/app_exception.dart';
 import 'api_config.dart';
 import 'token_storage.dart';
 
@@ -21,6 +22,9 @@ class ApiClient {
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
+        // Les messages du serveur suivent la langue de l'app (fr, en, ar —
+        // doc/audit.md K8 ; middleware SetLocaleFromRequest côté Laravel).
+        options.headers['Accept-Language'] = AppLocale.current.languageCode;
         handler.next(options);
       },
       onResponse: (response, handler) {
@@ -101,11 +105,11 @@ class ApiClient {
         case DioExceptionType.connectionTimeout:
         case DioExceptionType.sendTimeout:
         case DioExceptionType.receiveTimeout:
-          return 'Le serveur ne répond pas. Vérifiez votre connexion.';
+          return AppLocale.l10n.errServerTimeout;
         case DioExceptionType.connectionError:
-          return 'Impossible de joindre le serveur. Vérifiez votre connexion internet.';
+          return AppLocale.l10n.errServerUnreachable;
         default:
-          return 'Erreur de communication avec le serveur.';
+          return AppLocale.l10n.errServerCommunication;
       }
     }
     return error.toString();

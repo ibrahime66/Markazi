@@ -35,7 +35,7 @@ class GuardianController extends Controller
 
         $guardian = Guardian::create($request->validated());
 
-        ActivityLog::record('guardian.created', $guardian, "Parent ajouté : {$guardian->name}");
+        ActivityLog::record('guardian.created', $guardian, "Parent ajouté : {$guardian->name}", ['subject' => $guardian->name]);
 
         return response()->json($guardian, 201);
     }
@@ -56,7 +56,7 @@ class GuardianController extends Controller
         ActivityLog::recordSyncConflictIfStale($guardian, 'update');
         $guardian->update($request->validated());
 
-        ActivityLog::record('guardian.updated', $guardian, "Parent modifié : {$guardian->name}");
+        ActivityLog::record('guardian.updated', $guardian, "Parent modifié : {$guardian->name}", ['subject' => $guardian->name]);
 
         return response()->json($guardian);
     }
@@ -69,7 +69,7 @@ class GuardianController extends Controller
         ActivityLog::recordSyncConflictIfStale($guardian, 'delete');
         $guardian->delete();
 
-        ActivityLog::record('guardian.deleted', $guardian, "Parent supprimé : {$guardian->name}");
+        ActivityLog::record('guardian.deleted', $guardian, "Parent supprimé : {$guardian->name}", ['subject' => $guardian->name]);
 
         return response()->json(null, 204);
     }

@@ -20,6 +20,9 @@ class GuardianScreen extends StatefulWidget {
 }
 
 class _GuardianScreenState extends State<GuardianScreen> {
+  /// Textes traduits (doc/audit.md K8).
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   @override
   void initState() {
     super.initState();
@@ -43,13 +46,13 @@ class _GuardianScreenState extends State<GuardianScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Supprimer ce tuteur ?'),
-        content: Text('« ${guardian.name} » sera définitivement supprimé.'),
+        title: Text(_l10n.guardianDeleteTitle),
+        content: Text(_l10n.guardianDeleteBody(guardian.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(_l10n.actionCancel)),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
+            child: Text(_l10n.actionDelete, style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -61,12 +64,12 @@ class _GuardianScreenState extends State<GuardianScreen> {
       await context.read<GuardianProvider>().removeGuardian(guardian.id);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tuteur supprimé'), backgroundColor: Colors.green),
+        SnackBar(content: Text(_l10n.guardianDeleted), backgroundColor: Colors.green),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(_l10n.commonErrorWithDetail(e)), backgroundColor: Colors.red),
       );
     }
   }
@@ -96,12 +99,12 @@ class _GuardianScreenState extends State<GuardianScreen> {
                     Icon(Icons.family_restroom, size: 56, color: AppColors.textMedium.withValues(alpha: 0.4)),
                     const SizedBox(height: 16),
                     Text(
-                      'Aucun tuteur enregistré',
+                      _l10n.guardianEmptyTitle,
                       style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textDark),
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Ajoutez les parents/tuteurs pour les rattacher aux élèves.',
+                      _l10n.guardianEmptyBody,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textMedium),
                     ),
@@ -179,6 +182,9 @@ class _GuardianFormDialog extends StatefulWidget {
 }
 
 class _GuardianFormDialogState extends State<_GuardianFormDialog> {
+  /// Textes traduits (doc/audit.md K8).
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   late final _nameController = TextEditingController(text: widget.guardian?.name);
   late final _phoneController = TextEditingController(text: widget.guardian?.phone);
   late final _emailController = TextEditingController(text: widget.guardian?.email);
@@ -216,7 +222,7 @@ class _GuardianFormDialogState extends State<_GuardianFormDialog> {
   Future<void> _save() async {
     if (_nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nom et téléphone sont obligatoires')),
+        SnackBar(content: Text(_l10n.guardianNamePhoneRequired)),
       );
       return;
     }
@@ -263,7 +269,7 @@ class _GuardianFormDialogState extends State<_GuardianFormDialog> {
       if (!mounted) return;
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(_l10n.commonErrorWithDetail(e)), backgroundColor: Colors.red),
       );
     }
   }
@@ -273,38 +279,38 @@ class _GuardianFormDialogState extends State<_GuardianFormDialog> {
     final isEdit = widget.guardian != null;
     final students = context.watch<StudentProvider>().students;
     return AlertDialog(
-      title: Text(isEdit ? 'Modifier le tuteur' : 'Ajouter un tuteur'),
+      title: Text(isEdit ? _l10n.guardianEditTitle : _l10n.guardianAddTitle),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Nom *', prefixIcon: Icon(Icons.person_outline)),
+              decoration: InputDecoration(labelText: _l10n.fieldNameRequired, prefixIcon: Icon(Icons.person_outline)),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(labelText: 'Téléphone *', prefixIcon: Icon(Icons.phone_outlined)),
+              decoration: InputDecoration(labelText: _l10n.fieldPhoneRequired, prefixIcon: Icon(Icons.phone_outlined)),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
+              decoration: InputDecoration(labelText: _l10n.fieldEmail, prefixIcon: Icon(Icons.email_outlined)),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _addressController,
-              decoration: const InputDecoration(labelText: 'Adresse', prefixIcon: Icon(Icons.location_on_outlined)),
+              decoration: InputDecoration(labelText: _l10n.fieldAddress, prefixIcon: Icon(Icons.location_on_outlined)),
             ),
             if (students.isNotEmpty) ...[
               const SizedBox(height: 16),
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Élèves rattachés',
+                  _l10n.guardianLinkedStudents,
                   style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 13),
                 ),
               ),
@@ -336,8 +342,8 @@ class _GuardianFormDialogState extends State<_GuardianFormDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: _isSaving ? null : () => Navigator.pop(context), child: const Text('Annuler')),
-        TextButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? 'Enregistrement...' : 'Enregistrer')),
+        TextButton(onPressed: _isSaving ? null : () => Navigator.pop(context), child: Text(_l10n.actionCancel)),
+        TextButton(onPressed: _isSaving ? null : _save, child: Text(_isSaving ? _l10n.actionSaving : _l10n.actionSave)),
       ],
     );
   }

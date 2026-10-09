@@ -37,6 +37,7 @@ import 'datasources/api_activity_log_datasource.dart';
 import 'providers/activity_log_provider.dart';
 import 'screens/activity_log_screen.dart';
 import 'screens/sync_status_screen.dart';
+import 'utils/app_exception.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -239,6 +240,12 @@ class MarkaziApp extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
+          // Mémorise la langue réellement affichée pour les messages traduits
+          // hors de l'arbre de widgets (AppException, ApiClient — K8).
+          builder: (context, child) {
+            AppLocale.current = Localizations.localeOf(context);
+            return child ?? const SizedBox.shrink();
+          },
           initialRoute: '/splash',
           routes: {
             '/splash': (context) => const SplashScreen(),

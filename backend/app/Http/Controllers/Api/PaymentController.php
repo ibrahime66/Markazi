@@ -67,8 +67,7 @@ class PaymentController extends Controller
             // technique type "confirm_duplicate=true", l'app gère la ré-
             // soumission via le paramètre `duplicate` ci-dessous.
             return response()->json([
-                'message' => 'Un paiement payé existe déjà pour cet élève ce mois-ci. '
-                    .'Voulez-vous quand même enregistrer ce nouveau paiement ?',
+                'message' => __('Un paiement payé existe déjà pour cet élève ce mois-ci. Voulez-vous quand même enregistrer ce nouveau paiement ?'),
                 'duplicate' => true,
             ], 409);
         }

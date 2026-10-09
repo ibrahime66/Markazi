@@ -99,6 +99,7 @@ class ActivityLog extends Model
             'operation' => $operation,
             'server_updated_at' => Carbon::parse($serverUpdatedAt)->toIso8601String(),
             'performed_at' => $performedAt->toIso8601String(),
+            'subject' => "{$label} #{$entity->getKey()}",
             'overwritten_server_version' => collect($entity->getAttributes())
                 ->except(['markaz_id', 'created_at', 'deleted_at'])
                 ->all(),

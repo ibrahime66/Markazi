@@ -13,7 +13,7 @@ class MarkazService {
       final response = await _dio.get('/markaz');
       return Markaz.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      throw Exception(ApiClient.describeError(e));
+      throw ApiException(ApiClient.describeError(e));
     }
   }
 
@@ -22,7 +22,7 @@ class MarkazService {
       final response = await _dio.put('/markaz', data: data);
       return Markaz.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      throw Exception(ApiClient.describeError(e));
+      throw ApiException(ApiClient.describeError(e));
     }
   }
 }

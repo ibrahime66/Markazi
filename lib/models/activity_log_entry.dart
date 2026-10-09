@@ -29,6 +29,17 @@ class ActivityLogEntry {
   /// Action saisie hors ligne puis rejouée à la reconnexion.
   bool get syncedOffline => meta['synced_offline'] == true;
 
+  /// Nom de l'élément concerné (élève, groupe, tuteur…), pour un libellé
+  /// traduit côté app (doc/audit.md K8) : `meta.subject` envoyé par le
+  /// serveur, sinon la partie après « : » des descriptions enregistrées
+  /// avant cet ajout (ex. « Élève ajouté : Ahmed »).
+  String? get subject {
+    final fromMeta = meta['subject'];
+    if (fromMeta is String && fromMeta.isNotEmpty) return fromMeta;
+    final index = description.indexOf(' : ');
+    return index >= 0 ? description.substring(index + 3) : null;
+  }
+
   /// Conflit de synchronisation : la version serveur, plus récente que
   /// l'action hors ligne, a été remplacée (CDC §20).
   bool get isConflict => action == 'sync.conflict';

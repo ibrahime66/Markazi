@@ -33,10 +33,27 @@ class _MarkazSettingsScreenState extends State<MarkazSettingsScreen> {
 
   /// Jours de cours du Markaz (CDC 8.6 : "samedi/dimanche non travaillés par
   /// défaut"). Utilisé par le calcul du taux de présence côté serveur.
-  static const _dayLabels = {
-    'mon': 'Lun', 'tue': 'Mar', 'wed': 'Mer', 'thu': 'Jeu',
-    'fri': 'Ven', 'sat': 'Sam', 'sun': 'Dim',
-  };
+  static const _dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+  /// Abréviation traduite d'un jour (doc/audit.md K8).
+  String _dayLabel(AppLocalizations l10n, String key) {
+    switch (key) {
+      case 'mon':
+        return l10n.dayShortMon;
+      case 'tue':
+        return l10n.dayShortTue;
+      case 'wed':
+        return l10n.dayShortWed;
+      case 'thu':
+        return l10n.dayShortThu;
+      case 'fri':
+        return l10n.dayShortFri;
+      case 'sat':
+        return l10n.dayShortSat;
+      default:
+        return l10n.dayShortSun;
+    }
+  }
   static const _defaultWorkingDays = ['mon', 'tue', 'wed', 'thu', 'fri'];
   Set<String> _workingDays = _defaultWorkingDays.toSet();
 
@@ -92,7 +109,7 @@ class _MarkazSettingsScreenState extends State<MarkazSettingsScreen> {
       'phone': _phoneController.text.trim(),
       'email': _emailController.text.trim(),
       // Ordre stable (lun→dim) plutôt que l'ordre d'insertion du Set.
-      'working_days': _dayLabels.keys.where(_workingDays.contains).toList(),
+      'working_days': _dayKeys.where(_workingDays.contains).toList(),
     });
 
     if (!mounted) return;
@@ -181,19 +198,19 @@ class _MarkazSettingsScreenState extends State<MarkazSettingsScreen> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: _dayLabels.entries.map((entry) {
-                        final selected = _workingDays.contains(entry.key);
+                      children: _dayKeys.map((key) {
+                        final selected = _workingDays.contains(key);
                         return FilterChip(
-                          label: Text(entry.value, style: GoogleFonts.cairo(fontSize: 13)),
+                          label: Text(_dayLabel(l10n, key), style: GoogleFonts.cairo(fontSize: 13)),
                           selected: selected,
                           selectedColor: AppColors.primary.withValues(alpha: 0.15),
                           checkmarkColor: AppColors.primary,
                           onSelected: (value) {
                             setState(() {
                               if (value) {
-                                _workingDays.add(entry.key);
+                                _workingDays.add(key);
                               } else {
-                                _workingDays.remove(entry.key);
+                                _workingDays.remove(key);
                               }
                             });
                           },

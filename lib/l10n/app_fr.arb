@@ -158,5 +158,764 @@
   "syncDiscard": "Abandonner cette action",
   "syncDiscardConfirmTitle": "Abandonner cette action ?",
   "syncDiscardConfirmBody": "Elle ne sera jamais envoyée au serveur. Une création sera retirée de l'appareil ; une modification sera remplacée par la version du serveur à la prochaine synchronisation.",
-  "syncConflictsHint": "Les conflits éventuels (donnée modifiée entre-temps sur le serveur) sont consultables dans le journal d'activité."
+  "syncConflictsHint": "Les conflits éventuels (donnée modifiée entre-temps sur le serveur) sont consultables dans le journal d'activité.",
+  "guardianDeleteTitle": "Supprimer ce tuteur ?",
+  "guardianDeleteBody": "« {guardian} » sera définitivement supprimé.",
+  "@guardianDeleteBody": {
+    "placeholders": {
+      "guardian": {
+        "type": "Object"
+      }
+    }
+  },
+  "guardianDeleted": "Tuteur supprimé",
+  "commonErrorWithDetail": "Erreur : {error}",
+  "@commonErrorWithDetail": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "guardianEmptyTitle": "Aucun tuteur enregistré",
+  "guardianEmptyBody": "Ajoutez les parents/tuteurs pour les rattacher aux élèves.",
+  "guardianNamePhoneRequired": "Nom et téléphone sont obligatoires",
+  "guardianEditTitle": "Modifier le tuteur",
+  "guardianAddTitle": "Ajouter un tuteur",
+  "fieldNameRequired": "Nom *",
+  "fieldPhoneRequired": "Téléphone *",
+  "guardianLinkedStudents": "Élèves rattachés",
+  "commonAddStudentFirst": "Ajoutez d'abord un élève",
+  "recitationDeleteTitle": "Supprimer cette séance ?",
+  "recitationDeleteBody": "Cette récitation sera définitivement supprimée.",
+  "recitationDeleted": "Récitation supprimée",
+  "recitationStatusRecited": "Récité",
+  "recitationStatusPartial": "Partiel",
+  "recitationStatusNotRecited": "Non récité",
+  "recitationEmptyTitle": "Aucune récitation enregistrée",
+  "recitationEmptyBody": "Enregistrez la sourate étudiée par chaque élève après chaque séance.",
+  "commonStudentDeleted": "Élève supprimé",
+  "recitationVerseRange": " (versets {ayahFrom}-{ayahTo})",
+  "@recitationVerseRange": {
+    "placeholders": {
+      "ayahFrom": {
+        "type": "Object"
+      },
+      "ayahTo": {
+        "type": "Object"
+      }
+    }
+  },
+  "recitationSurahRequired": "La sourate est obligatoire",
+  "recitationEditTitle": "Modifier la récitation",
+  "recitationAddTitle": "Enregistrer une récitation",
+  "fieldStudentRequired": "Élève *",
+  "commonDateDmy": "Date : {day}/{month}/{year}",
+  "@commonDateDmy": {
+    "placeholders": {
+      "day": {
+        "type": "Object"
+      },
+      "month": {
+        "type": "Object"
+      },
+      "year": {
+        "type": "Object"
+      }
+    }
+  },
+  "fieldSurahRequired": "Sourate *",
+  "fieldAyahFrom": "Verset début",
+  "fieldAyahTo": "Verset fin",
+  "fieldStatus": "Statut",
+  "fieldNoteOptional": "Note (optionnel)",
+  "groupInfoTitle": "Informations du groupe",
+  "fieldLevel": "Niveau",
+  "fieldTeacher": "Enseignant",
+  "fieldCapacity": "Capacité",
+  "groupCapacityValue": "{studentIdsCount}/{maxStudents} élèves",
+  "@groupCapacityValue": {
+    "placeholders": {
+      "studentIdsCount": {
+        "type": "Object"
+      },
+      "maxStudents": {
+        "type": "Object"
+      }
+    }
+  },
+  "fieldDescription": "Description",
+  "fieldSchedule": "Emploi du temps",
+  "fieldRoom": "Salle",
+  "commonInactive": "Inactif",
+  "fieldCreatedOn": "Créé le",
+  "groupStatsTitle": "Statistiques du groupe",
+  "statAttendanceRate": "Taux présence",
+  "statPaymentRate": "Taux paiement",
+  "statTotalPaid": "Total payé",
+  "groupNoStudents": "Aucun élève dans ce groupe",
+  "groupStudentsTitle": "Élèves du groupe",
+  "fieldStudentName": "Nom de l'élève",
+  "fieldAmount": "Montant",
+  "authEnterValidEmail": "Entrez un email valide",
+  "forgotCodeSent": "Code envoyé par email. Vérifiez aussi vos spams.",
+  "authAllFieldsRequired": "Tous les champs doivent être remplis",
+  "authPasswordsDoNotMatch": "Les mots de passe ne correspondent pas",
+  "forgotPasswordReset": "Mot de passe réinitialisé. Connectez-vous.",
+  "forgotTitle": "Mot de passe oublié",
+  "forgotStepCode": "Entrez le code reçu par email et votre nouveau mot de passe.",
+  "forgotStepEmail": "Entrez votre email, un code de réinitialisation vous sera envoyé.",
+  "authEmailHint": "votre.email@exemple.com",
+  "forgotSendCode": "Envoyer le code",
+  "forgotCodeLabel": "Code reçu par email",
+  "forgotCodeHint": "Collez le code ici",
+  "forgotNewPassword": "Nouveau mot de passe",
+  "authPasswordHint": "Au moins 6 caractères",
+  "forgotConfirmPassword": "Confirmer le mot de passe",
+  "forgotResetButton": "Réinitialiser le mot de passe",
+  "forgotRestart": "Je n'ai pas reçu de code, recommencer",
+  "authInvalidEmail": "Email invalide",
+  "loginUnknownError": "Erreur inconnue lors de la connexion",
+  "loginError": "Erreur de connexion. Veuillez réessayer.",
+  "registerUnknownError": "Erreur inconnue lors de la création du compte",
+  "registerError": "Erreur lors de la création du compte. Veuillez réessayer.",
+  "authLogin": "Se connecter",
+  "loginSubtitle": "Accédez à votre compte markaz",
+  "authPassword": "Mot de passe",
+  "loginForgotPassword": "Mot de passe oublié ?",
+  "loginNoAccount": "Pas encore de compte ? ",
+  "authCreateAccount": "Créer un compte",
+  "registerSubtitle": "Rejoignez Markazi en quelques secondes",
+  "fieldFullName": "Nom complet",
+  "registerNameHint": "Ex: Ahmed Ben Ali",
+  "registerMarkazHint": "Ex: Markaz Al-Nour",
+  "registerHaveAccount": "Vous avez déjà un compte ? ",
+  "splashTagline": "Gérez votre markaz\nsimplement et efficacement",
+  "commonLoading": "Chargement...",
+  "dayShortMon": "Lun",
+  "dayShortTue": "Mar",
+  "dayShortWed": "Mer",
+  "dayShortThu": "Jeu",
+  "dayShortFri": "Ven",
+  "dayShortSat": "Sam",
+  "dayShortSun": "Dim",
+  "onboardingTitle1": "Gérez vos élèves\nfacilement",
+  "onboardingBody1": "Ajoutez vos élèves et leurs informations complètes en quelques secondes. Retrouvez-les facilement à tout moment.",
+  "onboardingTitle2": "Suivez les\npaiements",
+  "onboardingBody2": "Enregistrez les paiements et générez automatiquement des reçus. Plus de confusion dans la gestion financière.",
+  "onboardingTitle3": "Suivi journalier\ndes cours",
+  "onboardingBody3": "Notez chaque jour la progression des élèves et leur récitation. Un suivi précis et structuré pour chaque séance.",
+  "onboardingTitle4": "Rapports\nautomatiques",
+  "onboardingBody4": "Obtenez des statistiques hebdomadaires et mensuelles exportables en PDF. Partagez facilement avec les parents.",
+  "onboardingSkip": "Passer",
+  "homeMainFeatures": "Fonctionnalités principales",
+  "homeMainFeaturesSubtitle": "Tout ce dont vous avez besoin pour gérer votre markaz",
+  "homeWhyTitle": "Pourquoi choisir Markazi ?",
+  "homeWhySubtitle": "Les avantages qui font la différence",
+  "navFeatures": "Fonctionnalités",
+  "navAbout": "À propos",
+  "homeBadge": "Solution pour maîtres de markaz",
+  "homeHeroTitle": "Gérez votre markaz\nde façon moderne",
+  "homeHeroBody": "Élèves, paiements, présences, récitation — tout centralisé dans une seule application simple et efficace.",
+  "homeStatFree": "Gratuit",
+  "homeStatFiveMin": "5 min",
+  "homeStatToStart": "Pour démarrer",
+  "homeStatMulti": "Multi",
+  "homeFeatureStudents": "Gestion élèves",
+  "homeFeatureStats": "Statistiques",
+  "homeFeatureReports": "Rapports PDF",
+  "homeAdvTimeTitle": "Gain de temps",
+  "homeAdvTimeBody": "Réduisez le temps administratif de 80%. Concentrez-vous sur ce qui compte : l'enseignement.",
+  "homeAdvOrgTitle": "Mieux organisé",
+  "homeAdvOrgBody": "Toutes vos données centralisées, accessibles partout et à tout moment depuis votre téléphone.",
+  "homeAdvParentsTitle": "Communication parents",
+  "homeAdvParentsBody": "Partagez reçus et rapports PDF avec les familles de vos élèves en un geste.",
+  "homeCtaTitle": "Prêt à digitaliser votre markaz ?",
+  "homeCtaBody": "Rejoignez les maîtres qui gèrent leur markaz avec Markazi.",
+  "homeStart": "Commencer",
+  "homeLearnMore": "En savoir plus",
+  "appTagline": "La solution digitale pour les markaz islamiques",
+  "aboutBadgeIslamic": "Islamique",
+  "aboutBadgeMobile": "Mobile First",
+  "aboutBadgeAfrica": "Afrique",
+  "aboutGoalTitle": "Notre objectif",
+  "aboutGoalSubtitle": "Digitaliser les markaz",
+  "aboutGoalBody1": "Markazi est né d'un constat simple : les maîtres de markaz gèrent encore leur école avec des cahiers, des notes manuscrites et de la mémoire.",
+  "aboutGoalBody2": "Notre objectif est de leur offrir un outil numérique moderne, simple et adapté à leurs besoins, pour qu'ils puissent se concentrer sur l'essentiel : transmettre le savoir islamique.",
+  "aboutVisionTitle": "Notre vision",
+  "aboutVisionModernTitle": "Solution moderne",
+  "aboutVisionModernBody": "Une application pensée pour les réalités des maîtres africains : simple, rapide et fonctionnant même avec une connexion limitée.",
+  "aboutVisionEcosystemTitle": "Écosystème connecté",
+  "aboutVisionEcosystemBody": "À terme, relier les maîtres, les élèves et les parents dans un seul écosystème pour une meilleure communication et suivi.",
+  "aboutVisionImpactTitle": "Impact continental",
+  "aboutVisionImpactBody": "Devenir la référence en gestion de markaz à travers l'Afrique francophone et au-delà.",
+  "aboutApproachTitle": "Notre approche",
+  "aboutApproachUserTitle": "Centré utilisateur",
+  "aboutApproachUserBody": "Conçu avec et pour les maîtres de markaz",
+  "aboutApproachOfflineBody": "Fonctionne sans connexion internet permanente",
+  "aboutApproachSecureTitle": "Sécurisé",
+  "aboutApproachSecureBody": "Vos données protégées et confidentielles",
+  "aboutApproachLangTitle": "Multilingue",
+  "aboutApproachLangBody": "Français, anglais et arabe",
+  "aboutValuesTitle": "Nos valeurs",
+  "aboutValueSimplicityTitle": "Simplicité",
+  "aboutValueSimplicityBody": "Un outil qui ne demande pas de formation. Intuitif dès le premier jour.",
+  "aboutValueRespectTitle": "Respect",
+  "aboutValueRespectBody": "Respectueux des valeurs islamiques et des pratiques des communautés.",
+  "aboutValueImpactTitle": "Impact",
+  "aboutValueImpactBody": "Chaque fonctionnalité est conçue pour avoir un impact réel sur le quotidien du maître.",
+  "aboutContactTitle": "Contactez-nous",
+  "aboutContactBody": "Une question, une suggestion ou un partenariat ?\nNous sommes à votre écoute.",
+  "aboutContactButton": "Nous contacter",
+  "featStudentsTitle": "Gestion des élèves",
+  "featStudentsBody": "Créez une fiche complète pour chaque élève : nom, prénom, date de naissance, informations des parents, niveau en Coran, date d'inscription. Recherchez, filtrez et gérez facilement tous vos élèves depuis une seule page.",
+  "featStudentsH1": "Fiche individuelle complète",
+  "featStudentsH2": "Informations des parents",
+  "featStudentsH3": "Historique de progression",
+  "featStudentsH4": "Recherche et filtrage rapides",
+  "featPaymentsTitle": "Paiements & Reçus",
+  "featPaymentsBody": "Gérez les mensualités de chaque élève. Enregistrez les paiements reçus et générez automatiquement des reçus PDF professionnels. Consultez l'historique des paiements et identifiez facilement les retards.",
+  "featPaymentsH1": "Suivi des mensualités",
+  "featPaymentsH2": "Génération de reçus PDF",
+  "featPaymentsH3": "Historique des paiements",
+  "featPaymentsH4": "Alertes de retard",
+  "featAttendanceTitle": "Présence & Récitation",
+  "featAttendanceBody": "Pointez les présences et les absences chaque jour en quelques secondes. Évaluez la récitation de chaque élève à chaque séance. Un historique complet pour suivre l'assiduité et la progression.",
+  "featAttendanceH1": "Pointage quotidien rapide",
+  "featAttendanceH2": "Évaluation de récitation",
+  "featAttendanceH3": "Historique de présence",
+  "featAttendanceH4": "Notes personnalisées",
+  "featStatsTitle": "Statistiques hebdomadaires",
+  "featStatsBody": "Obtenez une vue d'ensemble de votre classe chaque semaine. Taux d'assiduité, progression en récitation, paiements reçus — toutes les métriques importantes visualisées clairement.",
+  "featStatsH1": "Tableau de bord hebdomadaire",
+  "featStatsH2": "Graphiques de progression",
+  "featStatsH3": "Taux d'assiduité",
+  "featStatsH4": "Comparaison des élèves",
+  "featReportTitle": "Rapport mensuel PDF",
+  "featReportBody": "Générez un rapport mensuel complet pour chaque élève ou pour toute la classe. Partagez-le avec les parents par WhatsApp, e-mail ou toute application de votre téléphone. Rapport professionnel avec toutes les informations importantes.",
+  "featReportH1": "Rapport élève individuel",
+  "featReportH2": "Rapport de classe complet",
+  "featReportH3": "Partage WhatsApp, e-mail…",
+  "featReportH4": "Format PDF professionnel",
+  "featAbsenceTitle": "Gestion des absences",
+  "featAbsenceBody": "Suivez le taux d'absentéisme de chaque élève sur les jours de cours réels du markaz. Distinguez les absences justifiées et partagez les rapports d'assiduité avec les parents.",
+  "featAbsenceH1": "Taux d'absentéisme par élève",
+  "featAbsenceH2": "Jours de cours configurables",
+  "featAbsenceH3": "Rapports d'assiduité à partager",
+  "featAbsenceH4": "Justifications d'absence",
+  "featHeaderBadge": "6 fonctionnalités essentielles",
+  "featHeaderTitle": "Tout ce qu'il vous faut\npour gérer votre markaz",
+  "featHeaderBody": "Markazi regroupe tous les outils nécessaires à la gestion quotidienne de votre markaz dans une application simple et intuitive.",
+  "featCtaTitle": "Essayez Markazi gratuitement",
+  "featCtaBody": "Créez votre compte et démarrez en moins de 5 minutes.",
+  "featCtaButton": "Créer mon compte",
+  "dashUserFallback": "Utilisateur",
+  "dashWelcome": "Bienvenue, {userName}",
+  "@dashWelcome": {
+    "placeholders": {
+      "userName": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashGeneralStats": "Statistiques générales",
+  "dashQuickActions": "Actions rapides",
+  "dashMyGroups": "Mes groupes",
+  "dashRecentPayments": "Paiements récents",
+  "dashSeeAll": "Tout voir",
+  "dashNoGroupYet": "Aucun groupe créé pour l'instant",
+  "dashActiveGroups": "{activeCount} groupe(s) actif(s)",
+  "@dashActiveGroups": {
+    "placeholders": {
+      "activeCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashSeatsOccupied": "{occupied} / {capacity} places occupées",
+  "@dashSeatsOccupied": {
+    "placeholders": {
+      "occupied": {
+        "type": "Object"
+      },
+      "capacity": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashNoPaymentYet": "Aucun paiement enregistré pour l'instant",
+  "dashStudentsCount": "{studentsCount} élève(s)",
+  "@dashStudentsCount": {
+    "placeholders": {
+      "studentsCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashNoStudent": "Aucun élève enregistré",
+  "dashPhoneShort": "Tél: {parentPhone}",
+  "@dashPhoneShort": {
+    "placeholders": {
+      "parentPhone": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashEditStudent": "Modifier l'élève",
+  "dashDeleteStudent": "Supprimer l'élève",
+  "dashPaymentsCount": "{validPaymentsCount} paiement(s)",
+  "@dashPaymentsCount": {
+    "placeholders": {
+      "validPaymentsCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashNoPayment": "Aucun paiement enregistré",
+  "dashNoValidPayment": "Aucun paiement valide (élèves supprimés)",
+  "dashPaymentsOfRemoved": "{paymentsCount} paiement(s) lié(s) à des élèves supprimés",
+  "@dashPaymentsOfRemoved": {
+    "placeholders": {
+      "paymentsCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashAttendancesCount": "{validAttendancesCount} présence(s)",
+  "@dashAttendancesCount": {
+    "placeholders": {
+      "validAttendancesCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashNoAttendance": "Aucune présence enregistrée",
+  "dashNoValidAttendance": "Aucune présence valide (élèves supprimés)",
+  "dashAttendancesOfRemoved": "{attendancesCount} présence(s) liée(s) à des élèves supprimés",
+  "@dashAttendancesOfRemoved": {
+    "placeholders": {
+      "attendancesCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "attendancePresent": "Présent",
+  "attendanceAbsent": "Absent",
+  "attendanceJustified": "Absence justifiée",
+  "attendanceLate": "Tardif",
+  "dashGenerateReports": "Générer des rapports",
+  "dashWeeklyReport": "Rapport hebdomadaire",
+  "dashMonthlyReport": "Rapport mensuel",
+  "dashPaymentReport": "Rapport des paiements",
+  "dashPerformanceReport": "Rapport de performance",
+  "dashAttendanceByStudentShort": "Taux présence par élève",
+  "dashExport": "Export",
+  "dashExportPdf": "Exporter en PDF",
+  "dashAddNewStudent": "Ajouter un nouvel élève",
+  "fieldParentPhone": "Téléphone du parent",
+  "dashPhoneHint": "Ex: 622180933",
+  "commonFillAllFields": "Veuillez remplir tous les champs",
+  "commonInvalidPhone": "Numéro de téléphone invalide",
+  "dashStudentAdded": "Élève ajouté avec succès!",
+  "commonErrorColon": "Erreur: {error}",
+  "@commonErrorColon": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashStudentUpdated": "Élève modifié avec succès!",
+  "dashArchiveStudentTitle": "Archiver cet élève ?",
+  "dashArchiveStudentQuestion": "Êtes-vous sûr de vouloir retirer cet élève de la liste ?",
+  "dashNameLine": "Nom: {student}",
+  "@dashNameLine": {
+    "placeholders": {
+      "student": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashArchiveStudentBody": "L'élève sera archivé : il n'apparaîtra plus dans les listes, mais son historique (paiements, présences, récitations) est conservé et reste compté dans les totaux financiers.",
+  "dashStudentArchived": "Élève archivé avec succès",
+  "actionArchive": "Archiver",
+  "dashAddPayment": "Ajouter un paiement",
+  "dashNoStudentAddFirst": "Aucun élève enregistré. Veuillez d'abord ajouter des élèves.",
+  "dashRecordPayment": "Enregistrer un paiement",
+  "dashSelectStudent": "Sélectionner un élève",
+  "dashAmountWithCurrency": "Montant ({currency})",
+  "@dashAmountWithCurrency": {
+    "placeholders": {
+      "currency": {
+        "type": "Object"
+      }
+    }
+  },
+  "fieldMonth": "Mois",
+  "paymentPaid": "Payé",
+  "paymentUnpaid": "Non payé",
+  "dashPaymentDay": "Jour du paiement",
+  "dashInvalidAmount": "Montant invalide",
+  "dashPaymentRecorded": "Paiement pour {month} enregistré!",
+  "@dashPaymentRecorded": {
+    "placeholders": {
+      "month": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashPaymentAlreadyRecorded": "Paiement déjà enregistré",
+  "dashConfirmAnyway": "Confirmer quand même",
+  "dashMarkAttendance": "Marquer présence",
+  "dashLessonField": "Leçon/Cours",
+  "dashLessonHint": "Ex: Coran, Hadith",
+  "dashSelectStudentAndStatus": "Veuillez sélectionner un élève et un statut",
+  "dashNoLessonDefault": "Absence de cours",
+  "dashAttendanceRecorded": "Présence enregistrée avec succès!",
+  "dashWeekRange": "Semaine du {day}/{month} au {day2}/{month2}",
+  "@dashWeekRange": {
+    "placeholders": {
+      "day": {
+        "type": "Object"
+      },
+      "month": {
+        "type": "Object"
+      },
+      "day2": {
+        "type": "Object"
+      },
+      "month2": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashPresentPlural": "Présents",
+  "dashAbsentPlural": "Absents",
+  "dashLatePlural": "Tardifs",
+  "dashTotalSessionsWeek": "Total sessions: {weeklyAttendancesCount}",
+  "@dashTotalSessionsWeek": {
+    "placeholders": {
+      "weeklyAttendancesCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashMonthLine": "Mois: {month}/{year}",
+  "@dashMonthLine": {
+    "placeholders": {
+      "month": {
+        "type": "Object"
+      },
+      "year": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashTotalSessionsMonth": "Total sessions: {monthlyAttendancesCount}",
+  "@dashTotalSessionsMonth": {
+    "placeholders": {
+      "monthlyAttendancesCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashAttendanceRateLine": "Taux de présence: {length}%",
+  "@dashAttendanceRateLine": {
+    "placeholders": {
+      "length": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashAttendanceAlreadyRecorded": "Présence déjà enregistrée",
+  "dashReplaceAttendanceBody": "Cet élève a déjà une présence aujourd'hui :\n• Statut : {status}\n• Leçon : {lesson}\n\nUne seule présence est conservée par élève et par jour. Voulez-vous la remplacer par « {newStatus} — {newLesson} » ?",
+  "@dashReplaceAttendanceBody": {
+    "placeholders": {
+      "status": {
+        "type": "Object"
+      },
+      "lesson": {
+        "type": "Object"
+      },
+      "newStatus": {
+        "type": "Object"
+      },
+      "newLesson": {
+        "type": "Object"
+      }
+    }
+  },
+  "actionReplace": "Remplacer",
+  "dashAttendanceReplaced": "Présence remplacée",
+  "dashTotalPending": "Total en attente",
+  "dashGrandTotal": "Total général",
+  "dashPaymentsNumber": "Nombre de paiements: {paymentsCount}",
+  "@dashPaymentsNumber": {
+    "placeholders": {
+      "paymentsCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashActiveStudents": "Élèves actifs: {studentsCount}",
+  "@dashActiveStudents": {
+    "placeholders": {
+      "studentsCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashManagementMetrics": "Métriques de gestion:",
+  "statAttendanceRateFull": "Taux de présence",
+  "statPaymentRateFull": "Taux de paiement",
+  "dashSummary": "Résumé:",
+  "dashSummaryStudents": "• Total élèves: {totalStudents}",
+  "@dashSummaryStudents": {
+    "placeholders": {
+      "totalStudents": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashSummarySessions": "• Sessions enregistrées: {totalAttendance}",
+  "@dashSummarySessions": {
+    "placeholders": {
+      "totalAttendance": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashSummaryPayments": "• Paiements enregistrés: {paymentsCount}",
+  "@dashSummaryPayments": {
+    "placeholders": {
+      "paymentsCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashSummaryPaid": "• Paiements complétés: {paidCount}",
+  "@dashSummaryPaid": {
+    "placeholders": {
+      "paidCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "commonNotAvailable": "Non disponible",
+  "dashPaymentDetails": "Détails du paiement",
+  "fieldStudent": "Élève",
+  "paymentPending": "En attente",
+  "dashPaymentDate": "Date du paiement",
+  "dashPaymentId": "ID Paiement",
+  "dashPaymentMarkedPaid": "Paiement marqué comme payé",
+  "dashMarkAsPaid": "Marquer comme payé",
+  "dashReceipt": "Reçu",
+  "commonNotSpecified": "Non spécifié",
+  "dashAttendanceDetails": "Détails de la présence",
+  "fieldLesson": "Leçon",
+  "fieldDate": "Date",
+  "dashAttendanceId": "ID Présence",
+  "dashEditAttendance": "Modifier la présence",
+  "dashAttendanceCorrected": "Présence corrigée",
+  "dashStudentProfile": "Profil de l'élève",
+  "fieldContact": "Contact",
+  "dashPaidPayments": "Paiements payés",
+  "dashStudentId": "ID Élève",
+  "dashAttendanceByStudent": "Taux de présence par élève",
+  "dashThisWeekSessions": "Cette semaine ({weekAttendancesCount} sessions)",
+  "@dashThisWeekSessions": {
+    "placeholders": {
+      "weekAttendancesCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashThisMonthSessions": "Ce mois ({monthAttendancesCount} sessions)",
+  "@dashThisMonthSessions": {
+    "placeholders": {
+      "monthAttendancesCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashGroupsCount": "{classesCount} groupes",
+  "@dashGroupsCount": {
+    "placeholders": {
+      "classesCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashNoGroup": "Aucun groupe",
+  "dashCreateFirstGroup": "Commencez par créer votre premier groupe",
+  "dashCreateGroup": "Créer un groupe",
+  "groupFull": "Complet",
+  "groupAlmostFull": "Presque complet",
+  "groupAvailable": "Disponible",
+  "dashAddStudentToGroup": "Ajouter un élève",
+  "dashRemoveStudentFromGroup": "Retirer un élève",
+  "dashEditGroup": "Modifier le groupe",
+  "dashDeleteGroup": "Supprimer le groupe",
+  "dashOccupancy": "Occupation",
+  "dashReceiptTitle": "Reçu de paiement",
+  "dashReceiptGenerated": "Le reçu a été généré. Que voulez-vous en faire ?",
+  "actionLater": "Plus tard",
+  "actionPreviewPrint": "Aperçu / Imprimer",
+  "dashGeneratingReport": "Génération du rapport...",
+  "dashGenerationError": "Erreur lors de la génération : {error}",
+  "@dashGenerationError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashReportGenerated": "Rapport généré",
+  "dashReportWhatToDo": "Que voulez-vous faire de ce rapport ?",
+  "dashLogoutConfirm": "Êtes-vous sûr de vouloir vous déconnecter?",
+  "actionLogout": "Déconnecter",
+  "dashLogoutError": "Erreur déconnexion: {error}",
+  "@dashLogoutError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashAddGroup": "Ajouter un groupe",
+  "fieldGroupName": "Nom du groupe",
+  "dashGroupNameHint": "Ex: Groupe Nouroul Bayan",
+  "fieldGroupLevel": "Niveau du groupe",
+  "dashGroupLevelHint": "Ex: Djouzou Amma, Nouroul Bayan, etc.",
+  "fieldGroupDescription": "Description du groupe",
+  "fieldTeacherName": "Nom de l'enseignant",
+  "dashTeacherHint": "Ex: Cheikh Ibrahim",
+  "fieldMaxStudents": "Nombre maximum d'élèves",
+  "dashMaxStudentsHint": "Ex: 30 (modifiable, jusqu'à 500)",
+  "dashMaxStudentsHelp": "Vous pouvez augmenter ce nombre à tout moment.",
+  "dashGroupAdded": "Classe ajoutée avec succès!",
+  "dashEditNamed": "Modifier: {classModel}",
+  "@dashEditNamed": {
+    "placeholders": {
+      "classModel": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashGroupUpdated": "Classe modifiée avec succès!",
+  "dashDeleteNamed": "Supprimer: {classModel}",
+  "@dashDeleteNamed": {
+    "placeholders": {
+      "classModel": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashDeleteGroupConfirm": "Êtes-vous sûr de vouloir supprimer ce groupe ? Le groupe sera archivé et tous ses élèves en seront retirés.",
+  "dashGroupDeleted": "Classe supprimée avec succès!",
+  "dashAllStudentsInGroup": "Tous les élèves sont déjà dans ce groupe.",
+  "dashAddStudentTo": "Ajouter un élève à {groupModel}",
+  "@dashAddStudentTo": {
+    "placeholders": {
+      "groupModel": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashSelectStudentToAdd": "Sélectionnez un élève à ajouter:",
+  "dashChooseStudent": "Choisissez un élève",
+  "dashStudentAddedToGroup": "Élève ajouté au groupe avec succès!",
+  "dashGroupEmpty": "Ce groupe ne contient aucun élève.",
+  "dashRemoveStudentFrom": "Retirer un élève de {groupModel}",
+  "@dashRemoveStudentFrom": {
+    "placeholders": {
+      "groupModel": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashSelectStudentToRemove": "Sélectionnez un élève à retirer:",
+  "dashStudentRemovedFromGroup": "Élève retiré du groupe avec succès!",
+  "actionRemove": "Retirer",
+  "dashGenerateReport": "Générer un rapport",
+  "dashChooseReportPeriod": "Choisissez la période du rapport :",
+  "dashWeekly": "Hebdomadaire",
+  "dashMonthly": "Mensuel",
+  "forgotResetting": "Réinitialisation...",
+  "forgotSending": "Envoi...",
+  "commonActive": "Actif",
+  "errClassNotFound": "Classe non trouvée",
+  "errStudentNotFound": "Élève non trouvé",
+  "errMarkazAccessDenied": "Accès refusé à cette Markaz",
+  "errLessonRequired": "Le nom de la leçon est obligatoire",
+  "errAttendanceNotFound": "Présence non trouvée",
+  "errStudentAccessDenied": "Accès refusé à cet élève",
+  "errNotAuthenticated": "Utilisateur non authentifié",
+  "errEmailPasswordRequired": "Email et mot de passe requis",
+  "errRequiredFieldsMissing": "Tous les champs obligatoires doivent être remplis",
+  "errPasswordTooShort": "Mot de passe trop court (6+ caractères)",
+  "errEmailRequired": "Email requis",
+  "errAllFieldsRequired": "Tous les champs sont obligatoires",
+  "errGroupNameRequired": "Le nom de la classe est obligatoire",
+  "errGroupLevelRequired": "Le niveau de la classe est obligatoire",
+  "errTeacherNameRequired": "Le nom de l'enseignant est obligatoire",
+  "errMaxStudentsRange": "Le nombre maximum d'élèves doit être entre 1 et 500",
+  "errGroupNameExists": "Un groupe avec ce nom existe déjà",
+  "errGroupNotFound": "Groupe non trouvé",
+  "errGroupAccessDenied": "Accès refusé à ce groupe",
+  "errCapacityBelowCount": "Impossible de réduire le nombre de places en dessous du nombre actuel d'élèves ({currentStudentCount})",
+  "@errCapacityBelowCount": {
+    "placeholders": {
+      "currentStudentCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "errGroupNotEmpty": "Impossible de supprimer un groupe contenant des élèves",
+  "errGroupFull": "Le groupe est déjà plein ({maxStudents} élèves)",
+  "@errGroupFull": {
+    "placeholders": {
+      "maxStudents": {
+        "type": "Object"
+      }
+    }
+  },
+  "errStudentAlreadyInGroup": "L'élève est déjà dans ce groupe",
+  "errStudentNotInGroup": "L'élève n'est pas dans ce groupe",
+  "errGuardianNameRequired": "Le nom du tuteur est obligatoire",
+  "errGuardianPhoneRequired": "Le téléphone du tuteur est obligatoire",
+  "errGuardianNotFound": "Tuteur non trouvé",
+  "errGuardianAccessDenied": "Accès refusé à ce tuteur",
+  "errAmountPositive": "Le montant doit être supérieur à 0",
+  "errPaymentNotFound": "Paiement non trouvé",
+  "errRecitationNotFound": "Récitation non trouvée",
+  "errRecitationAccessDenied": "Accès refusé à cette récitation",
+  "errStudentNameRequired": "Le nom de l'élève est obligatoire",
+  "errNameMinLength": "Le nom doit contenir au moins 3 caractères",
+  "errMarkazRequired": "Markaz ID obligatoire et pas d'utilisateur connecté",
+  "errNameInvalid": "Nom invalide (3+ caractères)",
+  "errServerTimeout": "Le serveur ne répond pas. Vérifiez votre connexion.",
+  "errServerUnreachable": "Impossible de joindre le serveur. Vérifiez votre connexion internet.",
+  "errServerCommunication": "Erreur de communication avec le serveur.",
+  "activityActionPaymentRecorded": "Paiement enregistré",
+  "activityActionPaymentStatusUpdated": "Statut de paiement mis à jour",
+  "activityActionAttendanceRecorded": "Présence enregistrée",
+  "activityActionAttendanceUpdated": "Présence corrigée",
+  "activityActionAttendanceDeleted": "Présence supprimée",
+  "activityActionClassCreated": "Groupe créé",
+  "activityActionClassUpdated": "Groupe modifié",
+  "activityActionClassDeleted": "Groupe archivé",
+  "activityActionGuardianCreated": "Parent ajouté",
+  "activityActionGuardianUpdated": "Parent modifié",
+  "activityActionGuardianDeleted": "Parent supprimé",
+  "activityActionStudentCreated": "Élève ajouté",
+  "activityActionStudentUpdated": "Élève modifié",
+  "activityActionStudentArchived": "Élève archivé",
+  "activityActionUserRegistered": "Inscription et création du Markaz",
+  "activityActionUserLoggedIn": "Connexion",
+  "activityActionRecitationRecorded": "Récitation enregistrée",
+  "activityActionRecitationUpdated": "Récitation corrigée",
+  "activityActionRecitationDeleted": "Récitation supprimée",
+  "activityActionMarkazUpdated": "Fiche du Markaz mise à jour",
+  "activityActionSyncConflict": "Conflit de synchronisation"
 }

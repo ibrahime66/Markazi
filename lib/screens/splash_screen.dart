@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../services/auth_service.dart';
+import '../l10n/app_localizations.dart';
 
 /// Splash screen avec animation d'entrée
 class SplashScreen extends StatefulWidget {
@@ -186,7 +187,7 @@ class _SplashScreenState extends State<SplashScreen>
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 48),
                         child: Text(
-                          'Gérez votre markaz\nsimplement et efficacement',
+                          AppLocalizations.of(context).splashTagline,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.cairo(
                             fontSize: 16,
@@ -220,7 +221,7 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Chargement...',
+                        AppLocalizations.of(context).commonLoading,
                         style: GoogleFonts.cairo(
                           color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 12,

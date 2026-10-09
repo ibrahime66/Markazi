@@ -37,15 +37,17 @@ class AppServiceProvider extends ServiceProvider
         ResetPassword::toMailUsing(function (object $notifiable, string $token) {
             $expireMinutes = config('auth.passwords.'.config('auth.defaults.passwords').'.expire');
 
+            // Textes passés par __() : l'email suit la langue de l'app qui a
+            // fait la demande (en-tête Accept-Language, doc/audit.md K8).
             return (new MailMessage)
-                ->subject('Réinitialisation de votre mot de passe Markazi')
-                ->greeting('Bonjour,')
-                ->line('Vous avez demandé la réinitialisation de votre mot de passe Markazi.')
-                ->line('Voici votre code de réinitialisation :')
+                ->subject(__('Réinitialisation de votre mot de passe Markazi'))
+                ->greeting(__('Bonjour,'))
+                ->line(__('Vous avez demandé la réinitialisation de votre mot de passe Markazi.'))
+                ->line(__('Voici votre code de réinitialisation :'))
                 ->line('**'.$token.'**')
-                ->line('Saisissez ce code avec votre adresse email dans l\'application pour choisir un nouveau mot de passe.')
-                ->line("Ce code expire dans {$expireMinutes} minutes.")
-                ->line("Si vous n'êtes pas à l'origine de cette demande, aucune action n'est nécessaire.");
+                ->line(__('Saisissez ce code avec votre adresse email dans l\'application pour choisir un nouveau mot de passe.'))
+                ->line(__('Ce code expire dans :minutes minutes.', ['minutes' => $expireMinutes]))
+                ->line(__("Si vous n'êtes pas à l'origine de cette demande, aucune action n'est nécessaire."));
         });
     }
 }

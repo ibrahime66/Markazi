@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../models/user.dart';
 import 'api_client.dart';
 import 'token_storage.dart';
+import '../utils/app_exception.dart';
 
 /// Service d'authentification — CDC section 8.1 / 14.
 /// Authentification par token via l'API Laravel (Sanctum), un token par
@@ -41,7 +42,7 @@ class AuthService {
     required String password,
   }) async {
     if (email.isEmpty || password.isEmpty) {
-      throw Exception('Email et mot de passe requis');
+      throw AppException((l) => l.errEmailPasswordRequired);
     }
 
     try {
@@ -57,7 +58,7 @@ class AuthService {
 
       return _currentUser!;
     } on DioException catch (e) {
-      throw Exception(ApiClient.describeError(e));
+      throw ApiException(ApiClient.describeError(e));
     }
   }
 
@@ -73,11 +74,11 @@ class AuthService {
     String? markazAddress,
   }) async {
     if (name.isEmpty || email.isEmpty || password.isEmpty || markazName.isEmpty) {
-      throw Exception('Tous les champs obligatoires doivent être remplis');
+      throw AppException((l) => l.errRequiredFieldsMissing);
     }
 
     if (password.length < 6) {
-      throw Exception('Mot de passe trop court (6+ caractères)');
+      throw AppException((l) => l.errPasswordTooShort);
     }
 
     try {
@@ -98,7 +99,7 @@ class AuthService {
 
       return _currentUser!;
     } on DioException catch (e) {
-      throw Exception(ApiClient.describeError(e));
+      throw ApiException(ApiClient.describeError(e));
     }
   }
 
@@ -107,12 +108,12 @@ class AuthService {
   /// côté app (aucun écran, aucune méthode) alors que l'API le supportait.
   Future<void> forgotPassword({required String email}) async {
     if (email.isEmpty) {
-      throw Exception('Email requis');
+      throw AppException((l) => l.errEmailRequired);
     }
     try {
       await _dio.post('/auth/password/forgot', data: {'email': email});
     } on DioException catch (e) {
-      throw Exception(ApiClient.describeError(e));
+      throw ApiException(ApiClient.describeError(e));
     }
   }
 
@@ -123,10 +124,10 @@ class AuthService {
     required String password,
   }) async {
     if (email.isEmpty || token.isEmpty || password.isEmpty) {
-      throw Exception('Tous les champs sont obligatoires');
+      throw AppException((l) => l.errAllFieldsRequired);
     }
     if (password.length < 6) {
-      throw Exception('Mot de passe trop court (6+ caractères)');
+      throw AppException((l) => l.errPasswordTooShort);
     }
     try {
       await _dio.post('/auth/password/reset', data: {
@@ -136,7 +137,7 @@ class AuthService {
         'password_confirmation': password,
       });
     } on DioException catch (e) {
-      throw Exception(ApiClient.describeError(e));
+      throw ApiException(ApiClient.describeError(e));
     }
   }
 

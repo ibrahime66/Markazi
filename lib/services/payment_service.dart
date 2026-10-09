@@ -5,6 +5,7 @@ import '../models/payment.dart';
 import '../repositories/payment_repository.dart';
 import '../repositories/student_repository.dart';
 import 'auth_service.dart';
+import '../utils/app_exception.dart';
 
 /// Service métier pour la gestion des paiements
 /// Centralise la logique métier, les validations et la génération de rapports
@@ -37,13 +38,13 @@ class PaymentService {
   }) async {
     // Validations
     if (amount <= 0) {
-      throw Exception('Le montant doit être supérieur à 0');
+      throw AppException((l) => l.errAmountPositive);
     }
 
     // Vérifier que l'élève existe
     final student = _studentRepository.getStudentById(studentId);
     if (student == null) {
-      throw Exception('Élève non trouvé');
+      throw AppException((l) => l.errStudentNotFound);
     }
 
     // Utiliser le markazId de l'élève ou celui fourni
@@ -51,7 +52,7 @@ class PaymentService {
 
     // Vérifier l'accès multi-markaz
     if (!_authService.hasAccessToMarkaz(finalMarkazId)) {
-      throw Exception('Accès refusé à cette Markaz');
+      throw AppException((l) => l.errMarkazAccessDenied);
     }
 
     // Créer le paiement
@@ -73,12 +74,12 @@ class PaymentService {
   Future<Payment> markAsPaid(String paymentId) async {
     final payment = _repository.getPaymentById(paymentId);
     if (payment == null) {
-      throw Exception('Paiement non trouvé');
+      throw AppException((l) => l.errPaymentNotFound);
     }
 
     // Vérifier l'accès multi-markaz
     if (!_authService.hasAccessToMarkaz(payment.markazId)) {
-      throw Exception('Accès refusé à cette Markaz');
+      throw AppException((l) => l.errMarkazAccessDenied);
     }
 
     final updatedPayment = payment.copyWith(
@@ -94,12 +95,12 @@ class PaymentService {
   Future<Payment> markAsUnpaid(String paymentId) async {
     final payment = _repository.getPaymentById(paymentId);
     if (payment == null) {
-      throw Exception('Paiement non trouvé');
+      throw AppException((l) => l.errPaymentNotFound);
     }
 
     // Vérifier l'accès multi-markaz
     if (!_authService.hasAccessToMarkaz(payment.markazId)) {
-      throw Exception('Accès refusé à cette Markaz');
+      throw AppException((l) => l.errMarkazAccessDenied);
     }
 
     final updatedPayment = payment.copyWith(
@@ -116,17 +117,17 @@ class PaymentService {
   ) async {
     final payment = _repository.getPaymentById(paymentId);
     if (payment == null) {
-      throw Exception('Paiement non trouvé');
+      throw AppException((l) => l.errPaymentNotFound);
     }
 
     // Vérifier l'accès multi-markaz
     if (!_authService.hasAccessToMarkaz(payment.markazId)) {
-      throw Exception('Accès refusé à cette Markaz');
+      throw AppException((l) => l.errMarkazAccessDenied);
     }
 
     final student = _studentRepository.getStudentById(payment.studentId);
     if (student == null) {
-      throw Exception('Élève non trouvé');
+      throw AppException((l) => l.errStudentNotFound);
     }
 
     // Retourner un modèle simulé (Phase 4: générer vrai PDF)
@@ -147,7 +148,7 @@ class PaymentService {
   Map<String, dynamic> getPaymentStatistics() {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     final allPayments = _repository.getAllPayments();
@@ -179,7 +180,7 @@ class PaymentService {
   List<Payment> getPendingPayments() {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     return _repository.getPendingPaymentsByMarkaz(markazId);
@@ -189,7 +190,7 @@ class PaymentService {
   List<Payment> getAllPayments() {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     return _repository.getPaymentsByMarkaz(markazId);

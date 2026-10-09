@@ -53,7 +53,7 @@ class ApiPaymentDatasource {
               'Un paiement existe déjà pour cet élève ce mois-ci.',
         );
       }
-      throw Exception(ApiClient.describeError(e));
+      throw ApiException(ApiClient.describeError(e));
     }
   }
 

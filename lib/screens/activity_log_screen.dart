@@ -241,6 +241,68 @@ class _Filters extends StatelessWidget {
   }
 }
 
+/// Titre traduit d'une entrée : libellé de l'action (selon son code, et
+/// non la description enregistrée en français côté serveur — K8), suivi du
+/// nom concerné. Description d'origine en secours pour une action inconnue.
+String _entryTitle(AppLocalizations l10n, ActivityLogEntry entry) {
+  final label = actionLabel(l10n, entry.action);
+  if (label == null) {
+    return entry.description.isNotEmpty ? entry.description : entry.action;
+  }
+  final subject = entry.subject;
+  return subject == null || subject.isEmpty ? label : '$label : $subject';
+}
+
+/// Libellé traduit d'un code d'action du journal, ou null s'il est inconnu.
+String? actionLabel(AppLocalizations l10n, String action) {
+  switch (action) {
+    case 'payment.recorded':
+      return l10n.activityActionPaymentRecorded;
+    case 'payment.status_updated':
+      return l10n.activityActionPaymentStatusUpdated;
+    case 'attendance.recorded':
+      return l10n.activityActionAttendanceRecorded;
+    case 'attendance.updated':
+      return l10n.activityActionAttendanceUpdated;
+    case 'attendance.deleted':
+      return l10n.activityActionAttendanceDeleted;
+    case 'class.created':
+      return l10n.activityActionClassCreated;
+    case 'class.updated':
+      return l10n.activityActionClassUpdated;
+    case 'class.deleted':
+      return l10n.activityActionClassDeleted;
+    case 'guardian.created':
+      return l10n.activityActionGuardianCreated;
+    case 'guardian.updated':
+      return l10n.activityActionGuardianUpdated;
+    case 'guardian.deleted':
+      return l10n.activityActionGuardianDeleted;
+    case 'student.created':
+      return l10n.activityActionStudentCreated;
+    case 'student.updated':
+      return l10n.activityActionStudentUpdated;
+    case 'student.archived':
+      return l10n.activityActionStudentArchived;
+    case 'user.registered':
+      return l10n.activityActionUserRegistered;
+    case 'user.logged_in':
+      return l10n.activityActionUserLoggedIn;
+    case 'recitation.recorded':
+      return l10n.activityActionRecitationRecorded;
+    case 'recitation.updated':
+      return l10n.activityActionRecitationUpdated;
+    case 'recitation.deleted':
+      return l10n.activityActionRecitationDeleted;
+    case 'markaz.updated':
+      return l10n.activityActionMarkazUpdated;
+    case 'sync.conflict':
+      return l10n.activityActionSyncConflict;
+    default:
+      return null;
+  }
+}
+
 /// Libellé traduit d'une catégorie d'action.
 String categoryLabel(AppLocalizations l10n, String category) {
   switch (category) {
@@ -346,7 +408,7 @@ class _EntryTile extends StatelessWidget {
             child: Icon(_categoryIcon(entry.category), color: color, size: 20),
           ),
           title: Text(
-            entry.description.isNotEmpty ? entry.description : entry.action,
+            _entryTitle(l10n, entry),
             style: GoogleFonts.cairo(
               fontSize: 14,
               fontWeight: FontWeight.w600,

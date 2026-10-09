@@ -119,7 +119,9 @@ class AuthTest extends TestCase
 
         $user = User::factory()->create(['email' => 'ibrahime@markazi.test']);
 
-        $response = $this->postJson('/api/auth/password/forgot', [
+        // L'app envoie sa langue (doc/audit.md K8) ; le client de test de
+        // Laravel enverrait sinon « en-us » par défaut.
+        $response = $this->withHeader('Accept-Language', 'fr')->postJson('/api/auth/password/forgot', [
             'email' => 'ibrahime@markazi.test',
         ]);
 

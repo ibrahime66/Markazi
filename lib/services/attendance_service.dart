@@ -4,6 +4,7 @@ import '../models/attendance.dart';
 import '../repositories/attendance_repository.dart';
 import '../repositories/student_repository.dart';
 import 'auth_service.dart';
+import '../utils/app_exception.dart';
 
 /// Service métier pour la gestion des présences
 /// Centralise la logique métier et les analytics d'assiduité
@@ -84,17 +85,17 @@ class AttendanceService {
     // Vérifier que l'élève existe
     final student = _studentRepository.getStudentById(studentId);
     if (student == null) {
-      throw Exception('Élève non trouvé');
+      throw AppException((l) => l.errStudentNotFound);
     }
 
     // Vérifier l'accès multi-markaz
     if (!_authService.hasAccessToMarkaz(markazId)) {
-      throw Exception('Accès refusé à cette Markaz');
+      throw AppException((l) => l.errMarkazAccessDenied);
     }
 
     // Vérifier que la leçon n'est pas vide
     if (lesson.isEmpty) {
-      throw Exception('Le nom de la leçon est obligatoire');
+      throw AppException((l) => l.errLessonRequired);
     }
 
     // H7 : le serveur n'accepte qu'une présence par élève et par jour, toutes
@@ -134,15 +135,15 @@ class AttendanceService {
   }) async {
     final existing = _repository.getAttendanceById(attendanceId);
     if (existing == null) {
-      throw Exception('Présence non trouvée');
+      throw AppException((l) => l.errAttendanceNotFound);
     }
 
     if (!_authService.hasAccessToMarkaz(existing.markazId)) {
-      throw Exception('Accès refusé à cette Markaz');
+      throw AppException((l) => l.errMarkazAccessDenied);
     }
 
     if (lesson.trim().isEmpty) {
-      throw Exception('Le nom de la leçon est obligatoire');
+      throw AppException((l) => l.errLessonRequired);
     }
 
     final updated = existing.copyWith(status: status, lesson: lesson.trim());
@@ -161,12 +162,12 @@ class AttendanceService {
   }) {
     final student = _studentRepository.getStudentById(studentId);
     if (student == null) {
-      throw Exception('Élève non trouvé');
+      throw AppException((l) => l.errStudentNotFound);
     }
 
     // Vérifier l'accès multi-markaz
     if (!_authService.hasAccessToMarkaz(student.markazId)) {
-      throw Exception('Accès refusé à cet élève');
+      throw AppException((l) => l.errStudentAccessDenied);
     }
 
     final now = referenceDate ?? DateTime.now();
@@ -214,12 +215,12 @@ class AttendanceService {
   }) {
     final student = _studentRepository.getStudentById(studentId);
     if (student == null) {
-      throw Exception('Élève non trouvé');
+      throw AppException((l) => l.errStudentNotFound);
     }
 
     // Vérifier l'accès multi-markaz
     if (!_authService.hasAccessToMarkaz(student.markazId)) {
-      throw Exception('Accès refusé à cet élève');
+      throw AppException((l) => l.errStudentAccessDenied);
     }
 
     final now = DateTime.now();
@@ -267,7 +268,7 @@ class AttendanceService {
   Future<Map<String, dynamic>> generateWeeklyReport() async {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     final allAttendances = _repository.getAllAttendances();
@@ -291,7 +292,7 @@ class AttendanceService {
   }) async {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     final now = DateTime.now();
@@ -313,7 +314,7 @@ class AttendanceService {
   Map<String, dynamic> getMarkzaAttendanceStatistics() {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     final allAttendances = _repository.getAllAttendances();
@@ -345,7 +346,7 @@ class AttendanceService {
   List<Attendance> getTodayAttendance() {
     final markazId = _authService.currentMarkazId;
     if (markazId == null) {
-      throw Exception('Utilisateur non authentifié');
+      throw AppException((l) => l.errNotAuthenticated);
     }
 
     return _repository.getTodayAttendanceByMarkaz(markazId);
