@@ -1,6 +1,5 @@
 {
   "@@locale": "en",
-
   "navOverview": "Overview",
   "navStudents": "Students",
   "navGroups": "Groups",
@@ -12,7 +11,6 @@
   "navRecitations": "Recitations",
   "navLogout": "Log out",
   "navDarkMode": "Dark mode",
-
   "actionSave": "Save",
   "actionSaving": "Saving...",
   "actionCancel": "Cancel",
@@ -23,7 +21,6 @@
   "actionConfirm": "Confirm",
   "actionShare": "Share",
   "actionDownload": "Download",
-
   "markazSettingsTitle": "My Markaz",
   "markazHeaderSubtitle": "This information is used throughout the app.",
   "markazSectionIdentity": "Identity",
@@ -37,7 +34,6 @@
   "markazSectionAppearanceSubtitle": "Choose how the app looks on this device.",
   "markazSectionLanguage": "Language",
   "markazSectionLanguageSubtitle": "Choose the app's language.",
-
   "fieldMarkazName": "Markaz name",
   "fieldSlogan": "Slogan",
   "fieldAddress": "Address",
@@ -46,16 +42,37 @@
   "fieldCurrency": "Currency (e.g. GNF, XOF, EUR)",
   "fieldPhone": "Phone",
   "fieldEmail": "Email",
-
   "appearanceSystem": "System",
   "appearanceLight": "Light",
   "appearanceDark": "Dark",
-
   "languageFrench": "Français",
   "languageEnglish": "English",
   "languageArabic": "العربية",
-
   "markazNameRequired": "The Markaz name is required",
   "markazUpdated": "Markaz profile updated",
-  "genericError": "Error"
+  "genericError": "Error",
+  "navActivityLog": "Activity log",
+  "actionRetry": "Retry",
+  "activityFilterAll": "All",
+  "activityCategoryStudent": "Students",
+  "activityCategoryClass": "Groups",
+  "activityCategoryGuardian": "Guardians",
+  "activityCategoryAttendance": "Attendance",
+  "activityCategoryRecitation": "Recitations",
+  "activityCategoryPayment": "Payments",
+  "activityCategoryMarkaz": "Markaz",
+  "activityCategoryUser": "Account",
+  "activityCategorySync": "Conflicts",
+  "activityPeriodAll": "All dates",
+  "activityPeriod7": "Last 7 days",
+  "activityPeriod30": "Last 30 days",
+  "activityToday": "Today",
+  "activityYesterday": "Yesterday",
+  "activityEmpty": "No activity for this filter.",
+  "activityLoadError": "Could not load the activity log. Check your connection.",
+  "activityOfflineBadge": "Entered offline",
+  "activityByUser": "by {name}",
+  "activityConflictTitle": "Sync conflict",
+  "activityConflictExplanation": "This action was made offline on {performedAt}, but the data had been changed on the server in the meantime (on {serverUpdatedAt}). The offline version was applied. Replaced server version:",
+  "activityConflictHint": "Tap to see the replaced version"
 }

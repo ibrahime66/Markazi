@@ -1,6 +1,5 @@
 {
   "@@locale": "fr",
-
   "navOverview": "Vue d'ensemble",
   "navStudents": "Élèves",
   "navGroups": "Groupes",
@@ -12,7 +11,6 @@
   "navRecitations": "Récitations",
   "navLogout": "Déconnexion",
   "navDarkMode": "Mode sombre",
-
   "actionSave": "Enregistrer",
   "actionSaving": "Enregistrement...",
   "actionCancel": "Annuler",
@@ -23,7 +21,6 @@
   "actionConfirm": "Confirmer",
   "actionShare": "Partager",
   "actionDownload": "Télécharger",
-
   "markazSettingsTitle": "Mon Markaz",
   "markazHeaderSubtitle": "Ces informations sont utilisées dans toute l'application.",
   "markazSectionIdentity": "Identité",
@@ -37,7 +34,6 @@
   "markazSectionAppearanceSubtitle": "Choisissez l'apparence de l'application sur cet appareil.",
   "markazSectionLanguage": "Langue",
   "markazSectionLanguageSubtitle": "Choisissez la langue de l'application.",
-
   "fieldMarkazName": "Nom du Markaz",
   "fieldSlogan": "Slogan",
   "fieldAddress": "Adresse",
@@ -46,16 +42,54 @@
   "fieldCurrency": "Devise (ex: GNF, XOF, EUR)",
   "fieldPhone": "Téléphone",
   "fieldEmail": "Email",
-
   "appearanceSystem": "Système",
   "appearanceLight": "Clair",
   "appearanceDark": "Sombre",
-
   "languageFrench": "Français",
   "languageEnglish": "English",
   "languageArabic": "العربية",
-
   "markazNameRequired": "Le nom du Markaz est obligatoire",
   "markazUpdated": "Fiche Markaz mise à jour",
-  "genericError": "Erreur"
+  "genericError": "Erreur",
+  "navActivityLog": "Journal d'activité",
+  "actionRetry": "Réessayer",
+  "activityFilterAll": "Tout",
+  "activityCategoryStudent": "Élèves",
+  "activityCategoryClass": "Groupes",
+  "activityCategoryGuardian": "Tuteurs",
+  "activityCategoryAttendance": "Présences",
+  "activityCategoryRecitation": "Récitations",
+  "activityCategoryPayment": "Paiements",
+  "activityCategoryMarkaz": "Markaz",
+  "activityCategoryUser": "Compte",
+  "activityCategorySync": "Conflits",
+  "activityPeriodAll": "Toutes les dates",
+  "activityPeriod7": "7 derniers jours",
+  "activityPeriod30": "30 derniers jours",
+  "activityToday": "Aujourd'hui",
+  "activityYesterday": "Hier",
+  "activityEmpty": "Aucune activité pour ce filtre.",
+  "activityLoadError": "Impossible de charger le journal. Vérifiez votre connexion.",
+  "activityOfflineBadge": "Saisi hors ligne",
+  "activityByUser": "par {name}",
+  "@activityByUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "activityConflictTitle": "Conflit de synchronisation",
+  "activityConflictExplanation": "Cette action a été faite hors ligne le {performedAt}, mais la donnée avait été modifiée entre-temps sur le serveur (le {serverUpdatedAt}). La version hors ligne a été appliquée. Version serveur remplacée :",
+  "@activityConflictExplanation": {
+    "placeholders": {
+      "performedAt": {
+        "type": "String"
+      },
+      "serverUpdatedAt": {
+        "type": "String"
+      }
+    }
+  },
+  "activityConflictHint": "Touchez pour voir la version remplacée"
 }

@@ -267,6 +267,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _buildDrawerRoute(Icons.mosque_outlined, l10n.navMyMarkaz, '/markaz-settings'),
                   _buildDrawerRoute(Icons.family_restroom_rounded, l10n.navGuardians, '/guardians'),
                   _buildDrawerRoute(Icons.menu_book_rounded, l10n.navRecitations, '/recitations'),
+                  _buildDrawerRoute(Icons.history_rounded, l10n.navActivityLog, '/activity-log'),
                 ],
               ),
             ),
