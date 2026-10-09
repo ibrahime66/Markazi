@@ -685,6 +685,56 @@ Vérifié : bout en bout via `curl` (créer → corriger via PUT → supprimer,
 
 ---
 
+## M. Nouvel audit — passe de finition du 9 octobre 2026
+
+_Problèmes constatés en traitant les points encore ouverts (F4, F5, H5-H7,
+K8) et en relisant le CDC. Tous corrigés — détail et vérification dans
+plan_resolution.md, étape 12._
+
+### M1. [Corrigé — perte de données] Saisies hors ligne écrasées au démarrage
+`main.dart` rechargeait tous les caches depuis le serveur avant de rejouer
+la file hors ligne : la saisie locale était remplacée par la version
+serveur, qui était ensuite renvoyée. Toute action faite hors ligne était
+perdue au redémarrage. La file ne couvrait pas les créations (exigées par
+le CDC §20) ni les groupes, mettait en file les refus du serveur (rejoués
+sans fin) et n'envoyait pas la date réelle de l'action (CDC §27).
+
+### M2. [Corrigé] Totaux de paiements faux dans le rapport des paiements
+`payment.status.toString().contains('paid')` est vrai aussi pour
+`PaymentStatus.unpaid` : les paiements non payés étaient comptés comme
+payés et le total « en attente » valait toujours 0.
+
+### M3. [Corrigé] Rapports par élève limités au jour même
+Les rapports hebdomadaire et mensuel lisaient `AttendanceProvider`, qui ne
+contient que les présences du jour : le tableau « de la semaine »
+n'affichait qu'une journée et les compteurs du mois étaient faux.
+
+### M4. [Corrigé] Messages du serveur en anglais
+Aucune traduction de la validation Laravel n'existait (et `.env.example`
+fixait `APP_LOCALE=en`) : erreurs du type « The email has already been
+taken. » affichées à un maître francophone.
+
+### M5. [Corrigé] Écarts avec le CDC
+- §8.6 : statut « absence justifiée » accepté par le serveur, absent de
+  l'app (converti en « absent ») ; dernier jour de la période exclu des
+  statistiques de présence (`whereBetween` sur la date brute).
+- §8.7 : mode de paiement toujours envoyé à « cash », pas d'observation.
+- §8.3 : pas de recherche ni de filtre des élèves.
+- §8.2 / §21 : colonne `logo_path` sans aucun moyen de l'alimenter, aucun
+  logo sur les documents.
+- §11.3 : pas de rapport pour une classe entière.
+- Groupes : limite de 50 élèves côté app (500 côté serveur et à l'écran).
+
+### M6. [Corrigé] Documents PDF
+Texte en gras rendu en « Helvetica-Bold » sans Unicode ; titre du
+document poussé hors de la page par un nom de Markaz long.
+
+### M7. [Corrigé] Robustesse serveur
+`AttendanceController::store` (`updateOrCreate` sur la date brute) pouvait
+planter en 500 selon le format de stockage de la date.
+
+---
+
 ## Résumé chiffré
 
 | Catégorie | Nombre de points |
@@ -701,7 +751,8 @@ Vérifié : bout en bout via `curl` (créer → corriger via PUT → supprimer,
 | Expérience utilisateur carte de groupe (section J) | 1 |
 | Perte de données groupes, paiement, apparence, langues (section K) | 8 corrigés |
 | Correction d'une présence (section L) | 1 corrigé |
-| **Total** | **51** |
+| Passe de finition du 9 octobre 2026 (section M) | 7 corrigés |
+| **Total** | **58** |
 
 Le plan de résolution détaillé, avec l'ordre de traitement recommandé et le
 suivi "résolu / non résolu", est dans
