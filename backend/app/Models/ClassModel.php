@@ -20,7 +20,7 @@ class ClassModel extends Model
     protected $table = 'classes';
 
     protected $fillable = [
-        'markaz_id', 'name', 'level', 'description', 'teacher_id',
+        'markaz_id', 'name', 'level', 'description', 'teacher_id', 'teacher_name',
         'max_students', 'schedule', 'room', 'is_active',
     ];
 

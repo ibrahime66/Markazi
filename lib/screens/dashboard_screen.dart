@@ -976,16 +976,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: payment.status.toString().contains('paid')
+                    color: payment.status == PaymentStatus.paid
                         ? Colors.green.withValues(alpha: 0.2)
                         : Colors.orange.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    payment.status.toString().contains('paid')
+                    payment.status == PaymentStatus.paid
                         ? Icons.check_circle
                         : Icons.hourglass_empty,
-                    color: payment.status.toString().contains('paid')
+                    color: payment.status == PaymentStatus.paid
                         ? Colors.green
                         : Colors.orange,
                   ),
@@ -1071,8 +1071,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             final studentName = student.name;
 
             // Déterminer le statut et la couleur
-            final isPresent = attendance.status.toString().contains('present');
-            final isAbsent = attendance.status.toString().contains('absent');
+            final isPresent = attendance.status == AttendanceStatus.present;
+            final isAbsent = attendance.status == AttendanceStatus.absent;
 
             Color statusColor;
             IconData statusIcon;
@@ -1444,12 +1444,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmer la suppression'),
+        title: const Text('Archiver cet élève ?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Êtes-vous sûr de vouloir supprimer cet élève?'),
+            Text('Êtes-vous sûr de vouloir retirer cet élève de la liste ?'),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
@@ -1471,7 +1471,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Cette action est irréversible et supprimera également toutes les données associées (paiements, présences).',
+              "L'élève sera archivé : il n'apparaîtra plus dans les listes, mais son historique (paiements, présences, récitations) est conservé et reste compté dans les totaux financiers.",
               style: TextStyle(color: Colors.red[700], fontSize: 12),
             ),
           ],
@@ -1490,7 +1490,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Élève supprimé avec succès!'),
+                      content: Text('Élève archivé avec succès'),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -1510,7 +1510,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
             ),
-            child: const Text('Supprimer'),
+            child: const Text('Archiver'),
           ),
         ],
       ),
@@ -2049,13 +2049,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               .toList();
 
           final present = weeklyAttendances
-              .where((a) => a.status.toString().contains('present'))
+              .where((a) => a.status == AttendanceStatus.present)
               .length;
           final absent = weeklyAttendances
-              .where((a) => a.status.toString().contains('absent'))
+              .where((a) => a.status == AttendanceStatus.absent)
               .length;
           final late = weeklyAttendances
-              .where((a) => a.status.toString().contains('late'))
+              .where((a) => a.status == AttendanceStatus.late)
               .length;
 
           return AlertDialog(
@@ -2109,13 +2109,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               .toList();
 
           final present = monthlyAttendances
-              .where((a) => a.status.toString().contains('present'))
+              .where((a) => a.status == AttendanceStatus.present)
               .length;
           final absent = monthlyAttendances
-              .where((a) => a.status.toString().contains('absent'))
+              .where((a) => a.status == AttendanceStatus.absent)
               .length;
           final late = monthlyAttendances
-              .where((a) => a.status.toString().contains('late'))
+              .where((a) => a.status == AttendanceStatus.late)
               .length;
 
           return AlertDialog(
@@ -2167,7 +2167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           double totalUnpaid = 0;
 
           for (var payment in paymentProvider.payments) {
-            if (payment.status.toString().contains('paid')) {
+            if (payment.status == PaymentStatus.paid) {
               totalPaid += payment.amount;
             } else {
               totalUnpaid += payment.amount;
@@ -2224,10 +2224,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final totalStudents = studentProvider.students.length;
           final totalAttendance = attendanceProvider.attendances.length;
           final presentCount = attendanceProvider.attendances
-              .where((a) => a.status.toString().contains('present'))
+              .where((a) => a.status == AttendanceStatus.present)
               .length;
           final paidCount = paymentProvider.payments
-              .where((p) => p.status.toString().contains('paid'))
+              .where((p) => p.status == PaymentStatus.paid)
               .length;
 
           final attendanceRate = totalAttendance > 0
@@ -2290,7 +2290,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _showPaymentDetails(
       dynamic payment, String studentName, dynamic student) {
-    final isPaid = payment.status.toString().contains('paid');
+    final isPaid = payment.status == PaymentStatus.paid;
     final formattedDate = payment.date.toString().split(' ')[0];
     final studentPhone = student?.parentPhone ?? 'Non disponible';
 
@@ -2718,14 +2718,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               .toList();
 
           final paidPayments = studentPayments
-              .where((p) => p.status.toString().contains('paid'))
+              .where((p) => p.status == PaymentStatus.paid)
               .length;
 
           final totalPayments =
               studentPayments.fold<double>(0, (sum, p) => sum + p.amount);
 
           final paidAmount = studentPayments
-              .where((p) => p.status.toString().contains('paid'))
+              .where((p) => p.status == PaymentStatus.paid)
               .fold<double>(0, (sum, p) => sum + p.amount);
 
           // Récupérer les présences de cet élève
@@ -2734,15 +2734,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               .toList();
 
           final presentCount = studentAttendances
-              .where((a) => a.status.toString().contains('present'))
+              .where((a) => a.status == AttendanceStatus.present)
               .length;
 
           final absentCount = studentAttendances
-              .where((a) => a.status.toString().contains('absent'))
+              .where((a) => a.status == AttendanceStatus.absent)
               .length;
 
           final lateCount = studentAttendances
-              .where((a) => a.status.toString().contains('late'))
+              .where((a) => a.status == AttendanceStatus.late)
               .length;
 
           final attendanceRate = studentAttendances.isNotEmpty
@@ -3060,7 +3060,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           .toList();
 
                       final weekPresent = weekAttendances
-                          .where((a) => a.status.toString().contains('present'))
+                          .where((a) => a.status == AttendanceStatus.present)
                           .length;
 
                       // Calculer les stats du mois actuel
@@ -3076,24 +3076,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           .toList();
 
                       final monthPresent = monthAttendances
-                          .where((a) => a.status.toString().contains('present'))
+                          .where((a) => a.status == AttendanceStatus.present)
                           .length;
 
                       final monthAbsent = monthAttendances
-                          .where((a) => a.status.toString().contains('absent'))
+                          .where((a) => a.status == AttendanceStatus.absent)
                           .length;
 
                       final monthLate = monthAttendances
-                          .where((a) => a.status.toString().contains('late'))
+                          .where((a) => a.status == AttendanceStatus.late)
                           .length;
 
                       // Calculer les taux pour la semaine
                       final weekAbsent = weekAttendances
-                          .where((a) => a.status.toString().contains('absent'))
+                          .where((a) => a.status == AttendanceStatus.absent)
                           .length;
 
                       final weekLate = weekAttendances
-                          .where((a) => a.status.toString().contains('late'))
+                          .where((a) => a.status == AttendanceStatus.late)
                           .length;
 
                       final weekPresentRate = weekAttendances.isNotEmpty

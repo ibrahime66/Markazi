@@ -72,6 +72,7 @@ class ApiClassDatasource {
       'name': classModel.name,
       'level': classModel.level,
       'description': classModel.description,
+      'teacher_name': classModel.teacherName,
       'max_students': classModel.maxStudents,
       'schedule': classModel.schedule,
       'room': classModel.room,
@@ -90,7 +91,10 @@ class ApiClassDatasource {
       level: json['level'] as String? ?? '',
       description: json['description'] as String? ?? '',
       teacherId: json['teacher_id']?.toString() ?? '',
-      teacherName: json['teacher']?['name'] as String? ?? '',
+      // H5 : nom saisi librement (`teacher_name`), sinon nom du compte lié.
+      teacherName: json['teacher_name'] as String? ??
+          json['teacher']?['name'] as String? ??
+          '',
       maxStudents: json['max_students'] as int? ?? 20,
       studentIds: studentIds,
       markazId: markazId,
