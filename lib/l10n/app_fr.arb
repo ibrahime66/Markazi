@@ -931,5 +931,12 @@
   "studentSearchHint": "Rechercher (nom ou téléphone)",
   "studentFilterAllGroups": "Tous les groupes",
   "studentFilterNoGroup": "Sans groupe",
-  "studentSearchNoResult": "Aucun élève ne correspond à la recherche."
+  "studentSearchNoResult": "Aucun élève ne correspond à la recherche.",
+  "markazLogo": "Logo du Markaz",
+  "markazLogoHelp": "Affiché sur les reçus et rapports (PNG ou JPEG).",
+  "markazLogoChoose": "Choisir un logo",
+  "markazLogoChange": "Changer",
+  "markazLogoRemove": "Retirer",
+  "markazLogoUpdated": "Logo enregistré",
+  "markazLogoRemoved": "Logo retiré"
 }

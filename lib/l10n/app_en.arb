@@ -553,5 +553,12 @@
   "studentSearchHint": "Search (name or phone)",
   "studentFilterAllGroups": "All groups",
   "studentFilterNoGroup": "No group",
-  "studentSearchNoResult": "No student matches the search."
+  "studentSearchNoResult": "No student matches the search.",
+  "markazLogo": "Markaz logo",
+  "markazLogoHelp": "Shown on receipts and reports (PNG or JPEG).",
+  "markazLogoChoose": "Choose a logo",
+  "markazLogoChange": "Change",
+  "markazLogoRemove": "Remove",
+  "markazLogoUpdated": "Logo saved",
+  "markazLogoRemoved": "Logo removed"
 }

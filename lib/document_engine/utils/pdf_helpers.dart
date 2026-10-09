@@ -11,6 +11,10 @@ class PdfHelpers {
 
   static pw.ThemeData? _cachedTheme;
 
+  /// Logo Markazi (CDC §21 : "logo Markazi" sur les documents), chargé avec
+  /// le thème et affiché dans le pied de page.
+  static pw.MemoryImage? _markaziLogo;
+
   /// Thème PDF avec police Unicode (Noto Sans + repli Noto Sans Arabic).
   ///
   /// Par défaut, `pdf` utilise la police de base "Helvetica" (PDF standard),
@@ -48,6 +52,14 @@ class PdfHelpers {
     // Pas de police italique embarquée : l'italique (slogan) utilise les
     // mêmes polices que le texte droit plutôt qu'une police PDF standard
     // sans Unicode.
+    try {
+      _markaziLogo = pw.MemoryImage(
+        (await rootBundle.load('assets/logo/app_icon.png')).buffer.asUint8List(),
+      );
+    } catch (_) {
+      _markaziLogo = null;
+    }
+
     _cachedTheme = pw.ThemeData.withFont(
       base: base,
       bold: bold,
@@ -71,6 +83,10 @@ class PdfHelpers {
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
+            if (_markazLogo(markaz) case final logo?) ...[
+              pw.SizedBox(width: 56, height: 56, child: pw.Image(logo, fit: pw.BoxFit.contain)),
+              pw.SizedBox(width: 12),
+            ],
             // Expanded : un nom de Markaz long passe à la ligne au lieu de
             // pousser le titre du document hors de la page.
             pw.Expanded(
@@ -140,10 +156,16 @@ class PdfHelpers {
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
-            pw.Text(
-              'Document généré automatiquement par Markazi',
-              style: pw.TextStyle(fontSize: DocumentTheme.captionSize, color: theme.mutedTextColor),
-            ),
+            pw.Row(children: [
+              if (_markaziLogo != null) ...[
+                pw.SizedBox(width: 14, height: 14, child: pw.Image(_markaziLogo!)),
+                pw.SizedBox(width: 6),
+              ],
+              pw.Text(
+                'Document généré automatiquement par Markazi',
+                style: pw.TextStyle(fontSize: DocumentTheme.captionSize, color: theme.mutedTextColor),
+              ),
+            ]),
             pw.Text(
               'Page ${context.pageNumber} / ${context.pagesCount}',
               style: pw.TextStyle(fontSize: DocumentTheme.captionSize, color: theme.mutedTextColor),
@@ -152,6 +174,18 @@ class PdfHelpers {
         ),
       ],
     );
+  }
+
+  /// Logo du Markaz prêt pour le PDF, ou null (absent ou format illisible :
+  /// le document est alors généré sans logo plutôt que d'échouer).
+  static pw.MemoryImage? _markazLogo(MarkazBranding markaz) {
+    final bytes = markaz.logoBytes;
+    if (bytes == null || bytes.isEmpty) return null;
+    try {
+      return pw.MemoryImage(bytes);
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Une ligne "libellé : valeur" utilisée dans les blocs d'information.

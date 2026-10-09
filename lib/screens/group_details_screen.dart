@@ -88,6 +88,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       final metadata = ClassReportBuilder.build(
         markaz: MarkazBranding(
           markazName: markaz?.name ?? 'Markazi',
+          logoBytes: context.read<MarkazProvider>().logoBytes,
           slogan: markaz?.slogan,
           address: markaz?.address,
           city: markaz?.city,

@@ -553,5 +553,12 @@
   "studentSearchHint": "بحث (الاسم أو الهاتف)",
   "studentFilterAllGroups": "كل المجموعات",
   "studentFilterNoGroup": "بدون مجموعة",
-  "studentSearchNoResult": "لا يوجد طالب يطابق البحث."
+  "studentSearchNoResult": "لا يوجد طالب يطابق البحث.",
+  "markazLogo": "شعار المركز",
+  "markazLogoHelp": "يظهر على الإيصالات والتقارير (PNG أو JPEG).",
+  "markazLogoChoose": "اختيار شعار",
+  "markazLogoChange": "تغيير",
+  "markazLogoRemove": "إزالة",
+  "markazLogoUpdated": "تم حفظ الشعار",
+  "markazLogoRemoved": "تمت إزالة الشعار"
 }
